@@ -1,0 +1,84 @@
+{
+  "id": "pib-curitiba-campus",
+  "level": "L00",
+  "mapCenter": {
+    "latitude": -25.442099,
+    "longitude": -49.284715
+  },
+  "geofenceUrl": "js/pib-curitiba-location-config.js",
+  "controlPoints": [
+    {
+      "id": "C",
+      "label": "Entrada Av. Batel — posto",
+      "latitude": -25.441556,
+      "longitude": -49.284917,
+      "svgX": 21.5,
+      "svgY": 347,
+      "weight": 1.4
+    },
+    {
+      "id": "D",
+      "label": "Esquina entrada CF",
+      "latitude": -25.44125,
+      "longitude": -49.284222,
+      "svgX": 100,
+      "svgY": 140,
+      "weight": 1.1
+    },
+    {
+      "id": "J",
+      "label": "Fundo Seven Pass",
+      "latitude": -25.442488,
+      "longitude": -49.284353,
+      "svgX": 739.48,
+      "svgY": 513.26,
+      "weight": 1.2
+    },
+    {
+      "id": "K",
+      "label": "Fundo Espaço Kids",
+      "latitude": -25.442753,
+      "longitude": -49.284258,
+      "svgX": 860.56,
+      "svgY": 513.26,
+      "weight": 1.1
+    },
+    {
+      "id": "N",
+      "label": "Entrada estacionamento Av. Bento Viana",
+      "latitude": -25.442469,
+      "longitude": -49.285246,
+      "svgX": 591.08,
+      "svgY": 826.85,
+      "weight": 1.4
+    },
+    {
+      "id": "O",
+      "label": "Lateral jardim / pedestre Bento Viana",
+      "latitude": -25.442106,
+      "longitude": -49.285379,
+      "svgX": 514.38,
+      "svgY": 846.6,
+      "weight": 1.3
+    },
+    {
+      "id": "M",
+      "label": "Esquina Av. Visconde com Bento Viana",
+      "latitude": -25.443038,
+      "longitude": -49.284959,
+      "svgX": 940.95,
+      "svgY": 830,
+      "weight": 1
+    },
+    {
+      "id": "A",
+      "label": "Esquina Av. Batel com Bento Viana — posto",
+      "latitude": -25.441694,
+      "longitude": -49.285528,
+      "svgX": 40,
+      "svgY": 780,
+      "weight": 1
+    }
+  ],
+  "notes": "Calibração multi-ponto SVG↔WGS84. Geofence/regras GPS: js/pib-curitiba-location-config.js."
+}

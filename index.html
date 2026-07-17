@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="theme-color" content="#0a1220" />
+  <title>Mapa Interativo — Encontre sua rota</title>
+  <meta name="description" content="Mapa interno interativo com rota do ponto de partida ao destino, estilo passo a passo." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=76" />
+</head>
+<body>
+  <div class="app-bg" aria-hidden="true">
+    <img class="app-bg__img" src="assets/bg-igreja-pib.jpg" alt="" decoding="async" fetchpriority="low" />
+  </div>
+  <div class="app" id="app">
+    <!-- ============ PAINEL LATERAL (glass) ============ -->
+    <aside class="panel" id="panel">
+      <header class="panel__head">
+        <div class="brand">
+          <span class="brand__dot" aria-hidden="true"></span>
+          <div>
+            <h1 class="brand__title">Mapa Interativo</h1>
+            <p class="brand__sub" id="floorHint">Térreo · Campus (L00)</p>
+          </div>
+        </div>
+        <div class="panel__actions">
+          <div class="area-picker" id="areaPicker">
+            <button type="button" class="floor-toggle area-toggle" id="areaBtn"
+                    aria-haspopup="listbox" aria-expanded="false" aria-controls="areaMenu"
+                    title="Filtrar áreas" aria-label="Filtrar áreas">
+              <svg class="floor-toggle__ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <path d="M4 5h16l-6.2 7.4V19l-3.6 2v-8.6L4 5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+              </svg>
+              <span class="area-toggle__badge" id="areaBadge" hidden></span>
+            </button>
+            <ul class="floor-menu area-menu" id="areaMenu" role="listbox" aria-label="Áreas" hidden></ul>
+          </div>
+          <div class="floor-picker" id="floorPicker">
+            <button type="button" class="floor-toggle" id="floorBtn"
+                    aria-haspopup="listbox" aria-expanded="false" aria-controls="floorMenu"
+                    title="Escolha o Andar" aria-label="Escolha o Andar">
+              <svg class="floor-toggle__ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <path d="M12 3.2 3.5 7.4 12 11.6l8.5-4.2L12 3.2Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                <path d="M3.5 12.2 12 16.4l8.5-4.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+                <path d="M3.5 16.8 12 21l8.5-4.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <ul class="floor-menu" id="floorMenu" role="listbox" aria-label="Andares" hidden></ul>
+          </div>
+          <button type="button" class="theme-toggle" id="themeBtn" aria-pressed="false" aria-label="Alternar tema claro/escuro" title="Alternar tema">
+            <svg class="theme-toggle__sun" viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <svg class="theme-toggle__moon" viewBox="0 0 24 24" width="18" height="18"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8Z" fill="currentColor"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Filtro de nível (áreas: ícone funil no header) -->
+      <div class="browse" id="browseBar">
+        <label class="browse__level">
+          <span class="browse__level-label">Nível</span>
+          <select class="browse__level-select" id="searchLevelSelect" aria-label="Filtrar por nível"></select>
+        </label>
+      </div>
+
+      <!-- Campos de rota estilo Uber -->
+      <div class="trip">
+        <div class="trip__rail" aria-hidden="true">
+          <span class="rail-dot rail-dot--origin"></span>
+          <span class="rail-line"></span>
+          <span class="rail-dot rail-dot--dest"></span>
+        </div>
+
+        <div class="trip__fields">
+          <div class="field" id="fieldOrigin">
+            <div class="field__head">
+              <label class="field__label" for="originInput">Onde estou</label>
+              <button type="button" class="gps-orient-btn" id="gpsOrientBtn" data-state="IDLE" title="Orientar pelo GPS">Orientar pelo GPS</button>
+            </div>
+            <input class="field__input" id="originInput" type="text" autocomplete="off"
+                   placeholder="Ponto de partida" role="combobox" aria-expanded="false" aria-controls="originList" />
+            <ul class="suggest" id="originList" role="listbox" hidden></ul>
+            <p class="gps-accuracy" id="gpsAccuracyHint" hidden></p>
+            <button type="button" class="gps-orient-cancel" id="gpsOrientCancel" hidden>Cancelar orientação</button>
+          </div>
+
+          <button class="swap" id="swapBtn" title="Inverter origem e destino" aria-label="Inverter origem e destino">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M7 4v13M7 4 4 7M7 4l3 3M17 20V7M17 20l-3-3M17 20l3-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+
+          <div class="field" id="fieldDest">
+            <label class="field__label" for="destInput">Para onde vou</label>
+            <input class="field__input" id="destInput" type="text" autocomplete="off"
+                   placeholder="Destino final" role="combobox" aria-expanded="false" aria-controls="destList" />
+            <ul class="suggest" id="destList" role="listbox" hidden></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="trip__actions">
+        <button type="button" class="btn btn--ghost" id="hereBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Estou aqui
+        </button>
+        <button type="button" class="btn btn--primary" id="routeBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 17c0-6 5-6 8-6s8 0 8-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="4" cy="18" r="2.4" fill="currentColor"/><path d="M20 3l2 4-4 0z" fill="currentColor"/></svg>
+          Traçar rota
+        </button>
+      </div>
+
+      <!-- Resumo da rota -->
+      <section class="summary" id="summary" hidden>
+        <div class="summary__top">
+          <div>
+            <span class="summary__dist" id="summaryDist">—</span>
+            <span class="summary__time" id="summaryTime">—</span>
+            <span class="summary__meta" id="summaryMeta">—</span>
+          </div>
+          <button type="button" class="btn btn--nav" id="navBtn">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 2 4.5 20l7.5-4 7.5 4z" fill="currentColor"/></svg>
+            Navegar
+          </button>
+        </div>
+        <div class="route-pick" id="routePick" hidden>
+          <div class="route-pick__head">
+            <span class="route-pick__title" id="routePickLabel">Rota mais próxima</span>
+            <span class="route-pick__count" id="routePickCount" hidden>3</span>
+          </div>
+          <div class="route-options" id="routeOptions"></div>
+        </div>
+        <ol class="steps" id="steps"></ol>
+        <button type="button" class="btn btn--ghost btn--block" id="clearBtn">Limpar rota</button>
+      </section>
+
+      <p class="hint" id="statusHint">Carregando mapa…</p>
+      <!-- Ferramentas técnicas: só com ?calib=1 -->
+      <p class="hint hint--scale" id="scaleHint" hidden></p>
+
+      <div class="calib-box" id="calibBox" hidden>
+        <button type="button" class="btn btn--ghost btn--block" id="calibBtn">Calibrar escala (Batistério 6,80 m)</button>
+        <div class="calib-panel" id="calibPanel" hidden>
+          <p class="calib-panel__title">Modo calibração</p>
+          <p class="calib-panel__help" id="calibHelp">Clique no extremo <strong>esquerdo</strong> da largura do Batistério.</p>
+          <label class="calib-panel__label" for="calibRealInput">Largura real (m)</label>
+          <input class="field__input" id="calibRealInput" type="number" step="0.01" min="0.01" value="6.80" />
+          <p class="calib-panel__result" id="calibResult" hidden></p>
+          <div class="calib-panel__actions">
+            <button type="button" class="btn btn--ghost" id="calibCancel">Cancelar</button>
+            <button type="button" class="btn btn--primary" id="calibSave" disabled>Salvar escala</button>
+          </div>
+        </div>
+      </div>
+
+      <footer class="panel__foot" id="devFoot" hidden>
+        <span>Camadas SVG: <code id="svgName">carregando…</code></span>
+      </footer>
+    </aside>
+
+    <!-- ============ MAPA ============ -->
+    <main class="stage" id="stage">
+      <div class="floor-banner" id="floorBanner" hidden>
+        <strong id="floorBannerTitle">Andar</strong>
+        <span id="floorBannerMsg">Mapa deste andar em preparação.</span>
+      </div>
+      <div class="stage__viewport" id="viewport">
+        <div class="stage__canvas" id="canvas">
+          <div class="svg-host" id="svgHost"></div>
+          <svg class="overlay" id="overlay" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="routeGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#3b82f6"/>
+                <stop offset="1" stop-color="#6d28d9"/>
+              </linearGradient>
+            </defs>
+            <polyline id="routeGlow" class="route-glow" points="" />
+            <polyline id="routeCasing" class="route-casing" points="" />
+            <polyline id="routeLine" class="route-line" points="" />
+            <polyline id="routeFlow" class="route-flow" points="" />
+            <g id="routeStart" class="route-pin route-pin--start" hidden visibility="hidden">
+              <circle class="pin-halo" r="12" />
+              <circle class="pin-dot" r="4" />
+            </g>
+            <g id="routeEnd" class="route-pin route-pin--end" hidden visibility="hidden">
+              <circle class="pin-ring" r="7.5" />
+              <circle class="pin-dot" r="4" />
+            </g>
+            <g id="hereMarker" class="here-marker" hidden visibility="hidden">
+              <circle class="here-core" r="7" />
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Controles do mapa -->
+      <div class="map-controls">
+        <button class="ctrl" id="zoomIn" aria-label="Aproximar">+</button>
+        <button class="ctrl" id="zoomOut" aria-label="Afastar">−</button>
+        <button class="ctrl" id="fitBtn" aria-label="Centralizar mapa">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <button class="ctrl ctrl--loc" id="locBtn" type="button" aria-label="Minha localização" aria-pressed="false" data-mode="free" data-gps="off" title="Minha localização">
+          <!-- Mira / alvo — ativar GPS (foto2) -->
+          <svg class="loc-icon loc-icon--free" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <circle cx="12" cy="12" r="2.2" fill="currentColor"/>
+            <path d="M12 3.5v3.2M12 17.3v3.2M3.5 12h3.2M17.3 12h3.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+          <!-- GPS ativo / seguir -->
+          <svg class="loc-icon loc-icon--follow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <circle cx="12" cy="12" r="2.2" fill="currentColor"/>
+            <path d="M12 3.5v3.2M12 17.3v3.2M3.5 12h3.2M17.3 12h3.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".45"/>
+          </svg>
+          <!-- Seguir + direção -->
+          <svg class="loc-icon loc-icon--heading" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M12 4.2 L17.2 18.2 L12 14.6 L6.8 18.2 Z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Bússola GPS — seta rotativa com heading (foto3) -->
+      <div class="gps-compass" id="gpsCompass" hidden aria-hidden="true" title="Direção do aparelho">
+        <span class="gps-compass__n">N</span>
+        <div class="gps-compass__arrow" id="gpsCompassArrow">
+          <svg viewBox="0 0 100 100" width="44" height="44" aria-hidden="true">
+            <defs>
+              <radialGradient id="gpsArrowGlow" cx="50%" cy="35%" r="55%">
+                <stop offset="0" stop-color="#93c5fd" stop-opacity=".9"/>
+                <stop offset="1" stop-color="#2563eb" stop-opacity="0"/>
+              </radialGradient>
+              <linearGradient id="gpsArrowFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#60a5fa"/>
+                <stop offset="1" stop-color="#1d4ed8"/>
+              </linearGradient>
+            </defs>
+            <ellipse cx="50" cy="42" rx="22" ry="28" fill="url(#gpsArrowGlow)"/>
+            <path d="M50 12 L72 78 L50 62 L28 78 Z" fill="url(#gpsArrowFill)"/>
+          </svg>
+        </div>
+      </div>
+
+      <button class="panel-toggle" id="panelToggle" aria-label="Abrir/fechar painel">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </main>
+
+  </div>
+
+  <!-- Fora do .app para evitar overflow/containing-block bloqueando cliques -->
+  <div class="nav-overlay" id="navOverlay" hidden aria-hidden="true">
+    <div class="compass" id="compass">
+      <div class="compass__ring">
+        <span class="compass__n">N</span>
+        <div class="compass__arrow" id="compassArrow">
+          <svg viewBox="0 0 100 100" width="90" height="90" aria-hidden="true">
+            <defs>
+              <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#3b82f6"/>
+                <stop offset="1" stop-color="#1e40af"/>
+              </linearGradient>
+            </defs>
+            <path d="M50 8 L74 78 L50 62 L26 78 Z" fill="url(#grad)"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="nav-card">
+      <p class="nav-card__step" id="navStepText">Siga em frente</p>
+      <p class="nav-card__dist" id="navDistText">—</p>
+      <div class="nav-card__row">
+        <button type="button" class="btn btn--ghost" id="navPrev">Anterior</button>
+        <button type="button" class="btn btn--primary" id="navNext">Próximo</button>
+      </div>
+      <button type="button" class="btn btn--ghost btn--block" id="navExit">Sair da navegação</button>
+      <p class="nav-card__hint" id="navHint"></p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="gps-confirm" id="gpsConfirmModal" hidden aria-hidden="true">
+    <div class="gps-confirm__card" role="dialog" aria-labelledby="gpsConfirmTitle">
+      <p class="gps-confirm__title" id="gpsConfirmTitle">Encontramos duas entradas próximas. Onde você está?</p>
+      <div class="gps-confirm__actions" id="gpsConfirmActions"></div>
+      <button type="button" class="btn btn--ghost btn--block" id="gpsConfirmDismiss">Cancelar</button>
+    </div>
+  </div>
+
+  <script src="js/calibration.js?v=76"></script>
+  <script src="js/navigation-router.js?v=76"></script>
+  <script src="js/geo-transform.js?v=76"></script>
+  <script src="js/pib-curitiba-location-config.js?v=76"></script>
+  <script src="js/geofence-service.js?v=76"></script>
+  <script src="js/gps-reading-collector.js?v=76"></script>
+  <script src="js/nearest-graph-point.js?v=76"></script>
+  <script src="js/route-snap-service.js?v=76"></script>
+  <script src="js/route-tracking-service.js?v=76"></script>
+  <script src="js/gps-orientation.js?v=76"></script>
+  <script src="js/permission-service.js?v=76"></script>
+  <script src="js/location-service.js?v=76"></script>
+  <script src="js/heading-service.js?v=76"></script>
+  <script src="js/user-location-puck.js?v=76"></script>
+  <script src="js/map-camera-controller.js?v=76"></script>
+  <script src="js/user-location.js?v=76"></script>
+  <script src="app.js?v=76"></script>
+</body>
+</html>

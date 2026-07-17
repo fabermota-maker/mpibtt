@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720">
+  <g id="pois" fill="#2f6bff">
+    <circle id="poi-entrada" data-name="Entrada Principal" data-cat="acesso" cx="500" cy="690" r="9"/>
+    <circle id="poi-recepcao" data-name="Recepção" data-cat="apoio" cx="890" cy="400" r="9"/>
+    <circle id="poi-banheiros" data-name="Banheiros" data-cat="servico" cx="180" cy="160" r="9"/>
+    <circle id="poi-reuniao" data-name="Sala de Reunião" data-cat="ambiente" cx="500" cy="145" r="9"/>
+    <circle id="poi-cafeteria" data-name="Cafeteria" data-cat="alimentacao" cx="775" cy="160" r="9"/>
+    <circle id="poi-templo" data-name="Templo" data-cat="ambiente" cx="220" cy="570" r="9"/>
+    <circle id="poi-oracao" data-name="Sala de Oração" data-cat="ambiente" cx="500" cy="545" r="9"/>
+    <circle id="poi-secretaria" data-name="Secretaria" data-cat="apoio" cx="720" cy="545" r="9"/>
+  </g>
+</svg>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_09_nodes_L00" data-name="09_nodes_L00" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1011.56 862.63">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #080630;
+      }
+    </style>
+  </defs>
+  <circle id="L00_N0093_entrada_estacionamento_av_batel" class="cls-1" cx="21.5" cy="347" r="1"/>
+  <circle id="L00_N0092" class="cls-1" cx="205.94" cy="429.51" r="1"/>
+  <circle id="L00_N0091" class="cls-1" cx="206.33" cy="457.21" r="1"/>
+  <circle id="L00_N0090" class="cls-1" cx="220.34" cy="429.32" r="1"/>
+  <circle id="L00_N0089" class="cls-1" cx="276.9" cy="457.57" r="1"/>
+  <circle id="L00_N0088" class="cls-1" cx="237.3" cy="457.6" r="1"/>
+  <circle id="L00_N0087" class="cls-1" cx="276.78" cy="429.47" r="1"/>
+  <circle id="L00_N0086" class="cls-1" cx="292.19" cy="429.06" r="1"/>
+  <circle id="L00_N0085" class="cls-1" cx="237.3" cy="476.98" r="1"/>
+  <!-- Nó oculto: Escadas mezanino templo (01) -->
+  <circle id="escada_mesanino_01" class="cls-1" cx="236.5" cy="485" r="1" visibility="hidden" data-hidden-node="true"/>
+  <!-- Nó oculto: Escadas mezanino templo (02) -->
+  <circle id="escada_mesanino_02" class="cls-1" cx="465.5" cy="485" r="1" visibility="hidden" data-hidden-node="true"/>
+  <circle id="L00_N0084" class="cls-1" cx="276.9" cy="483.8" r="1"/>
+  <circle id="L00_N0083" class="cls-1" cx="21.86" cy="429.51" r="1"/>
+  <circle id="L00_N0082" class="cls-1" cx="20.51" cy="457.4" r="1"/>
+  <circle id="L00_N0081" class="cls-1" cx="89" cy="457.6" r="1"/>
+  <circle id="L00_N0080" class="cls-1" cx="338.5" cy="429.47" r="1"/>
+  <circle id="L00_N0079" class="cls-1" cx="338.35" cy="393.47" r="1"/>
+  <circle id="L00_N0078" class="cls-1" cx="327.58" cy="412.07" r="1"/>
+  <circle id="L00_N0077" class="cls-1" cx="327.38" cy="386.42" r="1"/>
+  <circle id="L00_N0076" class="cls-1" cx="292.19" cy="418.57" r="1"/>
+  <circle id="L00_N0075" class="cls-1" cx="352.39" cy="412.07" r="1"/>
+  <circle id="L00_N0074" class="cls-1" cx="351.69" cy="393.5" r="1"/>
+  <circle id="L00_N0073" class="cls-1" cx="338.59" cy="457.21" r="1"/>
+  <circle id="L00_N0072" class="cls-1" cx="220.2" cy="418.84" r="1"/>
+  <circle id="L00_N0071" class="cls-1" cx="392.32" cy="444.39" r="1"/>
+  <circle id="L00_N0070" class="cls-1" cx="414.96" cy="444.39" r="1"/>
+  <circle id="L00_N0069" class="cls-1" cx="425.91" cy="457.13" r="1"/>
+  <circle id="L00_N0068" class="cls-1" cx="425.91" cy="480.8" r="1"/>
+  <circle id="L00_N0067" class="cls-1" cx="465.95" cy="457.36" r="1"/>
+  <circle id="L00_N0066" class="cls-1" cx="443.32" cy="444.14" r="1"/>
+  <circle id="L00_N0065" class="cls-1" cx="466.06" cy="444.14" r="1"/>
+  <circle id="L00_N0064" class="cls-1" cx="492.02" cy="444.14" r="1"/>
+  <circle id="L00_N0063" class="cls-1" cx="492.02" cy="457.6" r="1"/>
+  <circle id="L00_N0062" class="cls-1" cx="466.06" cy="475.41" r="1"/>
+  <circle id="L00_N0058" class="cls-1" cx="625.72" cy="457.08" r="1"/>
+  <circle id="L00_N0057" class="cls-1" cx="625.69" cy="472.53" r="1"/>
+  <circle id="L00_N0056" class="cls-1" cx="648.72" cy="506.51" r="1"/>
+  <circle id="L00_N0054" class="cls-1" cx="801.06" cy="488.24" r="1"/>
+  <circle id="L00_N0053" class="cls-1" cx="801.06" cy="478.86" r="1"/>
+  <circle id="L00_N0052" class="cls-1" cx="819.49" cy="478.86" r="1"/>
+  <circle id="L00_N0051" class="cls-1" cx="914.04" cy="479.13" r="1"/>
+  <circle id="L00_N0050_banheiro_feminino_ginasio" class="cls-1" cx="694.95" cy="495.34" r="1"/>
+  <circle id="L00_N0049" class="cls-1" cx="679.17" cy="502.87" r="1"/>
+  <circle id="L00_N0048" class="cls-1" cx="739.93" cy="479.13" r="1"/>
+  <circle id="L00_N0055" class="cls-1" cx="739.76" cy="502.24" r="1"/>
+  <circle id="L00_N0047" class="cls-1" cx="739.93" cy="458" r="1"/>
+  <circle id="L00_N0046" class="cls-1" cx="819.49" cy="469.98" r="1"/>
+  <circle id="L00_N0045_banheiro_masculino_ginasio" class="cls-1" cx="777.88" cy="494.97" r="1"/>
+  <circle id="L00_N0044" class="cls-1" cx="784.33" cy="502.87" r="1"/>
+  <circle id="L00_N0043" class="cls-1" cx="860.56" cy="500.87" r="1"/>
+  <circle id="L00_N0042" class="cls-1" cx="609.45" cy="361.88" r="1.56"/>
+  <circle id="L00_N0041" class="cls-1" cx="609.45" cy="251.82" r="1.5"/>
+  <circle id="L00_N0040" class="cls-1" cx="726.17" cy="252.09" r="1.5"/>
+  <circle id="L00_N0039" class="cls-1" cx="372.7" cy="252.09" r="1.5"/>
+  <circle id="L00_N0038" class="cls-1" cx="233.36" cy="229.93" r="1.5"/>
+  <circle id="L00_N0037" class="cls-1" cx="188.7" cy="230.01" r="1.5"/>
+  <circle id="L00_N0036" class="cls-1" cx="142.82" cy="194.35" r="1.5"/>
+  <circle id="L00_N0035" class="cls-1" cx="142.87" cy="180.56" r="1.5"/>
+  <circle id="L00_N0034" class="cls-1" cx="86.32" cy="179.39" r="1.5"/>
+  <circle id="L00_N0033" class="cls-1" cx="86.35" cy="194.35" r="1.5"/>
+  <circle id="L00_N0032" class="cls-1" cx="7.13" cy="269.38" r="1.5"/>
+  <circle id="L00_N0031" class="cls-1" cx="380.31" cy="305.06" r="1.5"/>
+  <circle id="L00_N0030" class="cls-1" cx="89" cy="669.67" r="1"/>
+  <circle id="L00_N0029" class="cls-1" cx="206.9" cy="669.67" r="1"/>
+  <circle id="L00_N0028" class="cls-1" cx="206.68" cy="689.63" r="1"/>
+  <circle id="L00_N0027" class="cls-1" cx="285.64" cy="773.55" r="1"/>
+  <circle id="L00_N0026" class="cls-1" cx="249.84" cy="669.6" r="1"/>
+  <circle id="L00_N0025" class="cls-1" cx="860.72" cy="478.86" r="1"/>
+  <circle id="L00_N0024" class="cls-1" cx="625.69" cy="361.93" r="1.56"/>
+  <circle id="L00_N0059" class="cls-1" cx="557.77" cy="489.69" r="1"/>
+  <circle id="L00_N0061" class="cls-1" cx="568.81" cy="457.78" r="1"/>
+  <circle id="L00_N0060" class="cls-1" cx="568.8" cy="489.69" r="1"/>
+  <circle id="L00_N0023_intersection_entrada_toldo" class="cls-1" cx="568.8" cy="500.7" r="1"/>
+  <circle id="L00_N0023_refeitorio_externo_kids" class="cls-1" cx="860.56" cy="513.26" r="1"/>
+  <circle id="L00_N0021_intersection_refeitorio_externo_kids" class="cls-1" cx="797.77" cy="513.67" r="1"/>
+  <circle id="L00_N0020_intersection_sevenpass_estaionamento" class="cls-1" cx="739.48" cy="513.26" r="1"/>
+  <circle id="L00_N0019_intersection_entrada_seven_pass_elevador" class="cls-1" cx="642.95" cy="506.51" r="1"/>
+  <circle id="L00_N0018_estacionamento" class="cls-1" cx="821.3" cy="667.98" r="1"/>
+  <circle id="L00_N0017_estacionamento" class="cls-1" cx="812.32" cy="680.94" r="1"/>
+  <circle id="L00_N0018_intersection_escacionamento_templo" class="cls-1" cx="591.32" cy="680.94" r="1"/>
+  <circle id="L00_N0017_intersection_escacionamento_templo" class="cls-1" cx="558.28" cy="680.88" r="1"/>
+  <circle id="L00_N0016_entrada_lateral_templo_02" class="cls-1" cx="501.18" cy="566.99" r="1"/>
+  <circle id="L00_N0015_intersection" class="cls-1" cx="514.38" cy="566.99" r="1"/>
+  <circle id="L00_N0014_entrada_narnia_B02" class="cls-1" cx="436.01" cy="743.64" r="1"/>
+  <circle id="L00_N0013_entrada_lateral_templo_01" class="cls-1" cx="452.14" cy="669.25" r="1"/>
+  <circle id="L00_N0012_cintersection_templo_narnia" class="cls-1" cx="470.24" cy="669.25" r="1"/>
+  <circle id="L00_N0011_connection_entrada_lateral_templo_01" class="cls-1" cx="486.03" cy="669.25" r="1"/>
+  <circle id="L00_N0010_intersection_estacionamento_entrada_principal" class="cls-1" cx="514.39" cy="680.68" r="1"/>
+  <circle id="L00_N0009_templo_entrada_principal_toldo_narnia" class="cls-1" cx="514.38" cy="720.6" r="1"/>
+  <circle id="L00_N0008_templo_estacionamento" class="cls-1" cx="514.38" cy="773.4" r="1"/>
+  <circle id="L00_N0007_estacionamento_motos" class="cls-1" cx="940.95" cy="788.06" r="1"/>
+  <circle id="L00_N0006" class="cls-1" cx="514.38" cy="787.78" r="1"/>
+  <circle id="L00_N0005" class="cls-1" cx="558.28" cy="788.06" r="1"/>
+  <circle id="L00_N0004" class="cls-1" cx="591.08" cy="788.06" r="1"/>
+  <circle id="L00_N0003_entrada_estacionamento_principal_bento" class="cls-1" cx="591.08" cy="826.85" r="1"/>
+  <circle id="L00_N0002_entrada_estacionamento_principal_bento" class="cls-1" cx="558.43" cy="827.31" r="1"/>
+  <circle id="L00_N0001_entrada_pedestre_principal_bento" class="cls-1" cx="514.38" cy="846.6" r="1"/>
+</svg>

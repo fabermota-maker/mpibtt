@@ -1,0 +1,3378 @@
+{
+  "version": "1.0.0",
+  "mapId": "pib-curitiba",
+  "level": "L00",
+  "metersPerUnit": 0.35,
+  "walkingSpeedMetersPerSecond": 1.2,
+  "config": {
+    "ALLOW_AUTOMATIC_NODE_CONNECTIONS": false,
+    "ALLOW_STRAIGHT_LINE_FALLBACK": false,
+    "ALLOW_ROUTE_OUTSIDE_GRAPH": false,
+    "MAX_ROUTE_ALTERNATIVES": 3,
+    "MAX_ROUTE_SIMILARITY": 0.85
+  },
+  "nodes": [
+    {
+      "id": "L00_N0093_entrada_estacionamento_av_batel",
+      "level": "L00",
+      "x": 21.5,
+      "y": 347,
+      "active": true
+    },
+    {
+      "id": "L00_N0092",
+      "level": "L00",
+      "x": 205.94,
+      "y": 429.51,
+      "active": true
+    },
+    {
+      "id": "L00_N0091",
+      "level": "L00",
+      "x": 206.33,
+      "y": 457.21,
+      "active": true
+    },
+    {
+      "id": "L00_N0090",
+      "level": "L00",
+      "x": 220.34,
+      "y": 429.32,
+      "active": true
+    },
+    {
+      "id": "L00_N0089",
+      "level": "L00",
+      "x": 276.9,
+      "y": 457.57,
+      "active": true
+    },
+    {
+      "id": "L00_N0088",
+      "level": "L00",
+      "x": 237.3,
+      "y": 457.6,
+      "active": true
+    },
+    {
+      "id": "L00_N0087",
+      "level": "L00",
+      "x": 276.78,
+      "y": 429.47,
+      "active": true
+    },
+    {
+      "id": "L00_N0086",
+      "level": "L00",
+      "x": 292.19,
+      "y": 429.06,
+      "active": true
+    },
+    {
+      "id": "L00_N0085",
+      "level": "L00",
+      "x": 237.3,
+      "y": 476.98,
+      "active": true
+    },
+    {
+      "id": "L00_N0084",
+      "level": "L00",
+      "x": 276.9,
+      "y": 483.8,
+      "active": true
+    },
+    {
+      "id": "L00_N0083",
+      "level": "L00",
+      "x": 21.86,
+      "y": 429.51,
+      "active": true
+    },
+    {
+      "id": "L00_N0082",
+      "level": "L00",
+      "x": 20.51,
+      "y": 457.4,
+      "active": true
+    },
+    {
+      "id": "L00_N0081",
+      "level": "L00",
+      "x": 89,
+      "y": 457.6,
+      "active": true
+    },
+    {
+      "id": "L00_N0080",
+      "level": "L00",
+      "x": 338.5,
+      "y": 429.47,
+      "active": true
+    },
+    {
+      "id": "L00_N0079",
+      "level": "L00",
+      "x": 338.35,
+      "y": 393.47,
+      "active": true
+    },
+    {
+      "id": "L00_N0078",
+      "level": "L00",
+      "x": 327.58,
+      "y": 412.07,
+      "active": true
+    },
+    {
+      "id": "L00_N0077",
+      "level": "L00",
+      "x": 327.38,
+      "y": 386.42,
+      "active": true
+    },
+    {
+      "id": "L00_N0076",
+      "level": "L00",
+      "x": 292.19,
+      "y": 418.57,
+      "active": true
+    },
+    {
+      "id": "L00_N0075",
+      "level": "L00",
+      "x": 352.39,
+      "y": 412.07,
+      "active": true
+    },
+    {
+      "id": "L00_N0074",
+      "level": "L00",
+      "x": 351.69,
+      "y": 393.5,
+      "active": true
+    },
+    {
+      "id": "L00_N0073",
+      "level": "L00",
+      "x": 338.59,
+      "y": 457.21,
+      "active": true
+    },
+    {
+      "id": "L00_N0072",
+      "level": "L00",
+      "x": 220.2,
+      "y": 418.84,
+      "active": true
+    },
+    {
+      "id": "L00_N0071",
+      "level": "L00",
+      "x": 392.32,
+      "y": 444.39,
+      "active": true
+    },
+    {
+      "id": "L00_N0070",
+      "level": "L00",
+      "x": 414.96,
+      "y": 444.39,
+      "active": true
+    },
+    {
+      "id": "L00_N0069",
+      "level": "L00",
+      "x": 425.91,
+      "y": 457.13,
+      "active": true
+    },
+    {
+      "id": "L00_N0068",
+      "level": "L00",
+      "x": 425.91,
+      "y": 480.8,
+      "active": true
+    },
+    {
+      "id": "L00_N0067",
+      "level": "L00",
+      "x": 465.95,
+      "y": 457.36,
+      "active": true
+    },
+    {
+      "id": "L00_N0066",
+      "level": "L00",
+      "x": 443.32,
+      "y": 444.14,
+      "active": true
+    },
+    {
+      "id": "L00_N0065",
+      "level": "L00",
+      "x": 466.06,
+      "y": 444.14,
+      "active": true
+    },
+    {
+      "id": "L00_N0064",
+      "level": "L00",
+      "x": 492.02,
+      "y": 444.14,
+      "active": true
+    },
+    {
+      "id": "L00_N0063",
+      "level": "L00",
+      "x": 492.02,
+      "y": 457.6,
+      "active": true
+    },
+    {
+      "id": "L00_N0062",
+      "level": "L00",
+      "x": 466.06,
+      "y": 475.41,
+      "active": true
+    },
+    {
+      "id": "L00_N0058",
+      "level": "L00",
+      "x": 625.72,
+      "y": 457.08,
+      "active": true
+    },
+    {
+      "id": "L00_N0057",
+      "level": "L00",
+      "x": 625.69,
+      "y": 472.53,
+      "active": true
+    },
+    {
+      "id": "L00_N0056",
+      "level": "L00",
+      "x": 648.72,
+      "y": 506.51,
+      "active": true
+    },
+    {
+      "id": "L00_N0054",
+      "level": "L00",
+      "x": 801.06,
+      "y": 488.24,
+      "active": true
+    },
+    {
+      "id": "L00_N0053",
+      "level": "L00",
+      "x": 801.06,
+      "y": 478.86,
+      "active": true
+    },
+    {
+      "id": "L00_N0052",
+      "level": "L00",
+      "x": 819.49,
+      "y": 478.86,
+      "active": true
+    },
+    {
+      "id": "L00_N0051",
+      "level": "L00",
+      "x": 914.04,
+      "y": 479.13,
+      "active": true
+    },
+    {
+      "id": "L00_N0050_banheiro_feminino_ginasio",
+      "level": "L00",
+      "x": 694.95,
+      "y": 495.34,
+      "active": true
+    },
+    {
+      "id": "L00_N0049",
+      "level": "L00",
+      "x": 679.17,
+      "y": 502.87,
+      "active": true
+    },
+    {
+      "id": "L00_N0048",
+      "level": "L00",
+      "x": 739.93,
+      "y": 479.13,
+      "active": true
+    },
+    {
+      "id": "L00_N0055",
+      "level": "L00",
+      "x": 739.76,
+      "y": 502.24,
+      "active": true
+    },
+    {
+      "id": "L00_N0047",
+      "level": "L00",
+      "x": 739.93,
+      "y": 458,
+      "active": true
+    },
+    {
+      "id": "L00_N0046",
+      "level": "L00",
+      "x": 819.49,
+      "y": 469.98,
+      "active": true
+    },
+    {
+      "id": "L00_N0045_banheiro_masculino_ginasio",
+      "level": "L00",
+      "x": 777.88,
+      "y": 494.97,
+      "active": true
+    },
+    {
+      "id": "L00_N0044",
+      "level": "L00",
+      "x": 784.33,
+      "y": 502.87,
+      "active": true
+    },
+    {
+      "id": "L00_N0043",
+      "level": "L00",
+      "x": 860.56,
+      "y": 500.87,
+      "active": true
+    },
+    {
+      "id": "L00_N0042",
+      "level": "L00",
+      "x": 609.45,
+      "y": 361.88,
+      "active": true
+    },
+    {
+      "id": "L00_N0041",
+      "level": "L00",
+      "x": 609.45,
+      "y": 251.82,
+      "active": true
+    },
+    {
+      "id": "L00_N0040",
+      "level": "L00",
+      "x": 726.17,
+      "y": 252.09,
+      "active": true
+    },
+    {
+      "id": "L00_N0039",
+      "level": "L00",
+      "x": 372.7,
+      "y": 252.09,
+      "active": true
+    },
+    {
+      "id": "L00_N0038",
+      "level": "L00",
+      "x": 233.36,
+      "y": 229.93,
+      "active": true
+    },
+    {
+      "id": "L00_N0037",
+      "level": "L00",
+      "x": 188.7,
+      "y": 230.01,
+      "active": true
+    },
+    {
+      "id": "L00_N0036",
+      "level": "L00",
+      "x": 142.82,
+      "y": 194.35,
+      "active": true
+    },
+    {
+      "id": "L00_N0035",
+      "level": "L00",
+      "x": 142.87,
+      "y": 180.56,
+      "active": true
+    },
+    {
+      "id": "L00_N0034",
+      "level": "L00",
+      "x": 86.32,
+      "y": 179.39,
+      "active": true
+    },
+    {
+      "id": "L00_N0033",
+      "level": "L00",
+      "x": 86.35,
+      "y": 194.35,
+      "active": true
+    },
+    {
+      "id": "L00_N0032",
+      "level": "L00",
+      "x": 7.13,
+      "y": 269.38,
+      "active": true
+    },
+    {
+      "id": "L00_N0031",
+      "level": "L00",
+      "x": 380.31,
+      "y": 305.06,
+      "active": true
+    },
+    {
+      "id": "L00_N0030",
+      "level": "L00",
+      "x": 89,
+      "y": 669.67,
+      "active": true
+    },
+    {
+      "id": "L00_N0029",
+      "level": "L00",
+      "x": 206.9,
+      "y": 669.67,
+      "active": true
+    },
+    {
+      "id": "L00_N0028",
+      "level": "L00",
+      "x": 206.68,
+      "y": 689.63,
+      "active": true
+    },
+    {
+      "id": "L00_N0027",
+      "level": "L00",
+      "x": 285.64,
+      "y": 773.55,
+      "active": true
+    },
+    {
+      "id": "L00_N0026",
+      "level": "L00",
+      "x": 249.84,
+      "y": 669.6,
+      "active": true
+    },
+    {
+      "id": "L00_N0025",
+      "level": "L00",
+      "x": 860.72,
+      "y": 478.86,
+      "active": true
+    },
+    {
+      "id": "L00_N0024",
+      "level": "L00",
+      "x": 625.69,
+      "y": 361.93,
+      "active": true
+    },
+    {
+      "id": "L00_N0059",
+      "level": "L00",
+      "x": 557.77,
+      "y": 489.69,
+      "active": true
+    },
+    {
+      "id": "L00_N0061",
+      "level": "L00",
+      "x": 568.81,
+      "y": 457.78,
+      "active": true
+    },
+    {
+      "id": "L00_N0060",
+      "level": "L00",
+      "x": 568.8,
+      "y": 489.69,
+      "active": true
+    },
+    {
+      "id": "L00_N0023_intersection_entrada_toldo",
+      "level": "L00",
+      "x": 568.8,
+      "y": 500.7,
+      "active": true
+    },
+    {
+      "id": "L00_N0023_refeitorio_externo_kids",
+      "level": "L00",
+      "x": 860.56,
+      "y": 513.26,
+      "active": true
+    },
+    {
+      "id": "L00_N0021_intersection_refeitorio_externo_kids",
+      "level": "L00",
+      "x": 797.77,
+      "y": 513.67,
+      "active": true
+    },
+    {
+      "id": "L00_N0020_intersection_sevenpass_estaionamento",
+      "level": "L00",
+      "x": 739.48,
+      "y": 513.26,
+      "active": true
+    },
+    {
+      "id": "L00_N0019_intersection_entrada_seven_pass_elevador",
+      "level": "L00",
+      "x": 642.95,
+      "y": 506.51,
+      "active": true
+    },
+    {
+      "id": "L00_N0018_estacionamento",
+      "level": "L00",
+      "x": 821.3,
+      "y": 667.98,
+      "active": true
+    },
+    {
+      "id": "L00_N0017_estacionamento",
+      "level": "L00",
+      "x": 812.32,
+      "y": 680.94,
+      "active": true
+    },
+    {
+      "id": "L00_N0018_intersection_escacionamento_templo",
+      "level": "L00",
+      "x": 591.32,
+      "y": 680.94,
+      "active": true
+    },
+    {
+      "id": "L00_N0017_intersection_escacionamento_templo",
+      "level": "L00",
+      "x": 558.28,
+      "y": 680.88,
+      "active": true
+    },
+    {
+      "id": "L00_N0016_entrada_lateral_templo_02",
+      "level": "L00",
+      "x": 501.18,
+      "y": 566.99,
+      "active": true
+    },
+    {
+      "id": "L00_N0015_intersection",
+      "level": "L00",
+      "x": 514.38,
+      "y": 566.99,
+      "active": true
+    },
+    {
+      "id": "L00_N0014_entrada_narnia_B02",
+      "level": "L00",
+      "x": 436.01,
+      "y": 743.64,
+      "active": true
+    },
+    {
+      "id": "L00_N0013_entrada_lateral_templo_01",
+      "level": "L00",
+      "x": 452.14,
+      "y": 669.25,
+      "active": true
+    },
+    {
+      "id": "L00_N0012_cintersection_templo_narnia",
+      "level": "L00",
+      "x": 470.24,
+      "y": 669.25,
+      "active": true
+    },
+    {
+      "id": "L00_N0011_connection_entrada_lateral_templo_01",
+      "level": "L00",
+      "x": 486.03,
+      "y": 669.25,
+      "active": true
+    },
+    {
+      "id": "L00_N0010_intersection_estacionamento_entrada_principal",
+      "level": "L00",
+      "x": 514.39,
+      "y": 680.68,
+      "active": true
+    },
+    {
+      "id": "L00_N0009_templo_entrada_principal_toldo_narnia",
+      "level": "L00",
+      "x": 514.38,
+      "y": 720.6,
+      "active": true
+    },
+    {
+      "id": "L00_N0008_templo_estacionamento",
+      "level": "L00",
+      "x": 514.38,
+      "y": 773.4,
+      "active": true
+    },
+    {
+      "id": "L00_N0007_estacionamento_motos",
+      "level": "L00",
+      "x": 940.95,
+      "y": 788.06,
+      "active": true
+    },
+    {
+      "id": "L00_N0006",
+      "level": "L00",
+      "x": 514.38,
+      "y": 787.78,
+      "active": true
+    },
+    {
+      "id": "L00_N0005",
+      "level": "L00",
+      "x": 558.28,
+      "y": 788.06,
+      "active": true
+    },
+    {
+      "id": "L00_N0004",
+      "level": "L00",
+      "x": 591.08,
+      "y": 788.06,
+      "active": true
+    },
+    {
+      "id": "L00_N0003_entrada_estacionamento_principal_bento",
+      "level": "L00",
+      "x": 591.08,
+      "y": 826.85,
+      "active": true
+    },
+    {
+      "id": "L00_N0002_entrada_estacionamento_principal_bento",
+      "level": "L00",
+      "x": 558.43,
+      "y": 827.31,
+      "active": true
+    },
+    {
+      "id": "L00_N0001_entrada_pedestre_principal_bento",
+      "level": "L00",
+      "x": 514.38,
+      "y": 846.6,
+      "active": true
+    }
+  ],
+  "edges": [
+    {
+      "id": "L00_E0001",
+      "from": "L00_N0087",
+      "to": "L00_N0089",
+      "path": [
+        {
+          "x": 276.9,
+          "y": 431.5
+        },
+        {
+          "x": 276.9,
+          "y": 455.66
+        }
+      ],
+      "distanceMeters": 8.456,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0002",
+      "from": "L00_N0069",
+      "to": "L00_N0068",
+      "path": [
+        {
+          "x": 425.91,
+          "y": 459.65
+        },
+        {
+          "x": 425.91,
+          "y": 478.17
+        }
+      ],
+      "distanceMeters": 6.482,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0003",
+      "from": "L00_N0073",
+      "to": "L00_N0080",
+      "path": [
+        {
+          "x": 338.56,
+          "y": 454.89
+        },
+        {
+          "x": 338.56,
+          "y": 432.7
+        }
+      ],
+      "distanceMeters": 7.766,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0004",
+      "from": "L00_N0079",
+      "to": "L00_N0077",
+      "path": [
+        {
+          "x": 336.69,
+          "y": 392.44
+        },
+        {
+          "x": 328.87,
+          "y": 387.83
+        }
+      ],
+      "distanceMeters": 3.177,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0005",
+      "from": "L00_N0088",
+      "to": "L00_N0085",
+      "path": [
+        {
+          "x": 237.3,
+          "y": 459.94
+        },
+        {
+          "x": 237.3,
+          "y": 474.27
+        }
+      ],
+      "distanceMeters": 5.015,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0006",
+      "from": "L00_N0079",
+      "to": "L00_N0080",
+      "path": [
+        {
+          "x": 338.41,
+          "y": 396.04
+        },
+        {
+          "x": 338.41,
+          "y": 426.76
+        }
+      ],
+      "distanceMeters": 10.752,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0007",
+      "from": "L00_N0086",
+      "to": "L00_N0080",
+      "path": [
+        {
+          "x": 294.35,
+          "y": 429.47
+        },
+        {
+          "x": 336.13,
+          "y": 429.47
+        }
+      ],
+      "distanceMeters": 14.623,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0008",
+      "from": "L00_N0076",
+      "to": "L00_N0086",
+      "path": [
+        {
+          "x": 292.19,
+          "y": 420.69
+        },
+        {
+          "x": 292.19,
+          "y": 427.06
+        }
+      ],
+      "distanceMeters": 2.23,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0009",
+      "from": "L00_N0073",
+      "to": "L00_N0069",
+      "path": [
+        {
+          "x": 341,
+          "y": 457.6
+        },
+        {
+          "x": 423.19,
+          "y": 457.74
+        }
+      ],
+      "distanceMeters": 28.767,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0010",
+      "from": "L00_N0069",
+      "to": "L00_N0067",
+      "path": [
+        {
+          "x": 428.41,
+          "y": 457.74
+        },
+        {
+          "x": 463.5,
+          "y": 457.6
+        }
+      ],
+      "distanceMeters": 12.282,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0011",
+      "from": "L00_N0067",
+      "to": "L00_N0063",
+      "path": [
+        {
+          "x": 468.39,
+          "y": 457.6
+        },
+        {
+          "x": 489.43,
+          "y": 457.6
+        }
+      ],
+      "distanceMeters": 7.364,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0012",
+      "from": "L00_N0063",
+      "to": "L00_N0061",
+      "path": [
+        {
+          "x": 494.61,
+          "y": 457.6
+        },
+        {
+          "x": 566.64,
+          "y": 457.6
+        }
+      ],
+      "distanceMeters": 25.21,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0013",
+      "from": "L00_N0061",
+      "to": "L00_N0058",
+      "path": [
+        {
+          "x": 571.17,
+          "y": 457.6
+        },
+        {
+          "x": 623,
+          "y": 457.6
+        }
+      ],
+      "distanceMeters": 18.141,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0014",
+      "from": "L00_N0058",
+      "to": "L00_N0047",
+      "path": [
+        {
+          "x": 628.45,
+          "y": 457.6
+        },
+        {
+          "x": 737.83,
+          "y": 457.6
+        }
+      ],
+      "distanceMeters": 38.283,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0015",
+      "from": "L00_N0066",
+      "to": "L00_N0069",
+      "path": [
+        {
+          "x": 442.05,
+          "y": 445.48
+        },
+        {
+          "x": 426.96,
+          "y": 454.86
+        }
+      ],
+      "distanceMeters": 6.219,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0016",
+      "from": "L00_N0065",
+      "to": "L00_N0069",
+      "path": [
+        {
+          "x": 464.95,
+          "y": 445.54
+        },
+        {
+          "x": 428.13,
+          "y": 456.13
+        }
+      ],
+      "distanceMeters": 13.409,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0017",
+      "from": "L00_N0070",
+      "to": "L00_N0069",
+      "path": [
+        {
+          "x": 416.52,
+          "y": 446.61
+        },
+        {
+          "x": 425.08,
+          "y": 454.86
+        }
+      ],
+      "distanceMeters": 4.161,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0018",
+      "from": "L00_N0071",
+      "to": "L00_N0069",
+      "path": [
+        {
+          "x": 394.15,
+          "y": 446.32
+        },
+        {
+          "x": 423.45,
+          "y": 456.56
+        }
+      ],
+      "distanceMeters": 10.863,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0019",
+      "from": "L00_N0080",
+      "to": "L00_N0078",
+      "path": [
+        {
+          "x": 336.95,
+          "y": 427.06
+        },
+        {
+          "x": 328.65,
+          "y": 414.57
+        }
+      ],
+      "distanceMeters": 5.249,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0020",
+      "from": "L00_N0064",
+      "to": "L00_N0063",
+      "path": [
+        {
+          "x": 492.02,
+          "y": 446.61
+        },
+        {
+          "x": 492.02,
+          "y": 455.28
+        }
+      ],
+      "distanceMeters": 3.034,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0021",
+      "from": "L00_N0060",
+      "to": "L00_N0059",
+      "path": [
+        {
+          "x": 566.76,
+          "y": 489.69
+        },
+        {
+          "x": 560.09,
+          "y": 489.69
+        }
+      ],
+      "distanceMeters": 2.334,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0022",
+      "from": "L00_N0060",
+      "to": "L00_N0061",
+      "path": [
+        {
+          "x": 568.8,
+          "y": 487.43
+        },
+        {
+          "x": 568.8,
+          "y": 459.89
+        }
+      ],
+      "distanceMeters": 9.639,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0023",
+      "from": "L00_N0058",
+      "to": "L00_N0024",
+      "path": [
+        {
+          "x": 625.69,
+          "y": 454.56
+        },
+        {
+          "x": 625.69,
+          "y": 363.81
+        }
+      ],
+      "distanceMeters": 31.762,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0024",
+      "from": "L00_N0020_intersection_sevenpass_estaionamento",
+      "to": "L00_N0055",
+      "path": [
+        {
+          "x": 739.72,
+          "y": 511.24
+        },
+        {
+          "x": 739.72,
+          "y": 505.13
+        }
+      ],
+      "distanceMeters": 2.139,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0025",
+      "from": "L00_N0055",
+      "to": "L00_N0048",
+      "path": [
+        {
+          "x": 739.93,
+          "y": 500.09
+        },
+        {
+          "x": 739.93,
+          "y": 481.94
+        }
+      ],
+      "distanceMeters": 6.352,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0026",
+      "from": "L00_N0050_banheiro_feminino_ginasio",
+      "to": "L00_N0055",
+      "path": [
+        {
+          "x": 697.32,
+          "y": 495.34
+        },
+        {
+          "x": 737.17,
+          "y": 500.73
+        }
+      ],
+      "distanceMeters": 14.075,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0027",
+      "from": "L00_N0055",
+      "to": "L00_N0045_banheiro_masculino_ginasio",
+      "path": [
+        {
+          "x": 742.52,
+          "y": 500.73
+        },
+        {
+          "x": 776.65,
+          "y": 495.34
+        }
+      ],
+      "distanceMeters": 12.094,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0028",
+      "from": "L00_N0052",
+      "to": "L00_N0025",
+      "path": [
+        {
+          "x": 820.61,
+          "y": 479.13
+        },
+        {
+          "x": 858.42,
+          "y": 479.13
+        }
+      ],
+      "distanceMeters": 13.233,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0029",
+      "from": "L00_N0048",
+      "to": "L00_N0053",
+      "path": [
+        {
+          "x": 742.45,
+          "y": 479.13
+        },
+        {
+          "x": 798.71,
+          "y": 479.13
+        }
+      ],
+      "distanceMeters": 19.691,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0030",
+      "from": "L00_N0052",
+      "to": "L00_N0046",
+      "path": [
+        {
+          "x": 819.49,
+          "y": 476.98
+        },
+        {
+          "x": 819.49,
+          "y": 472.72
+        }
+      ],
+      "distanceMeters": 1.491,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0031",
+      "from": "L00_N0048",
+      "to": "L00_N0047",
+      "path": [
+        {
+          "x": 739.93,
+          "y": 476.78
+        },
+        {
+          "x": 739.93,
+          "y": 460.56
+        }
+      ],
+      "distanceMeters": 5.677,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0032",
+      "from": "L00_N0054",
+      "to": "L00_N0053",
+      "path": [
+        {
+          "x": 801.06,
+          "y": 485.67
+        },
+        {
+          "x": 801.06,
+          "y": 481.2
+        }
+      ],
+      "distanceMeters": 1.565,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0033",
+      "from": "L00_N0053",
+      "to": "L00_N0052",
+      "path": [
+        {
+          "x": 803.41,
+          "y": 479.13
+        },
+        {
+          "x": 817.34,
+          "y": 479.13
+        }
+      ],
+      "distanceMeters": 4.876,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0034",
+      "from": "L00_N0091",
+      "to": "L00_N0088",
+      "path": [
+        {
+          "x": 208.5,
+          "y": 457.57
+        },
+        {
+          "x": 234.95,
+          "y": 457.57
+        }
+      ],
+      "distanceMeters": 9.257,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0035",
+      "from": "L00_N0090",
+      "to": "L00_N0087",
+      "path": [
+        {
+          "x": 222.62,
+          "y": 429.47
+        },
+        {
+          "x": 274.5,
+          "y": 429.47
+        }
+      ],
+      "distanceMeters": 18.158,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0036",
+      "from": "L00_N0049",
+      "to": "L00_N0055",
+      "path": [
+        {
+          "x": 681.29,
+          "y": 502.87
+        },
+        {
+          "x": 736.35,
+          "y": 502.87
+        }
+      ],
+      "distanceMeters": 19.271,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0037",
+      "from": "L00_N0055",
+      "to": "L00_N0044",
+      "path": [
+        {
+          "x": 742.52,
+          "y": 502.87
+        },
+        {
+          "x": 783.17,
+          "y": 502.87
+        }
+      ],
+      "distanceMeters": 14.227,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0038",
+      "from": "L00_N0067",
+      "to": "L00_N0062",
+      "path": [
+        {
+          "x": 466.06,
+          "y": 459.67
+        },
+        {
+          "x": 466.06,
+          "y": 473.31
+        }
+      ],
+      "distanceMeters": 4.774,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0039",
+      "from": "L00_N0072",
+      "to": "L00_N0090",
+      "path": [
+        {
+          "x": 220.2,
+          "y": 420.89
+        },
+        {
+          "x": 220.2,
+          "y": 427.06
+        }
+      ],
+      "distanceMeters": 2.16,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0040",
+      "from": "L00_N0092",
+      "to": "L00_N0090",
+      "path": [
+        {
+          "x": 208.06,
+          "y": 429.47
+        },
+        {
+          "x": 218.06,
+          "y": 429.47
+        }
+      ],
+      "distanceMeters": 3.5,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0041",
+      "from": "L00_N0057",
+      "to": "L00_N0058",
+      "path": [
+        {
+          "x": 625.69,
+          "y": 470.06
+        },
+        {
+          "x": 625.69,
+          "y": 459.61
+        }
+      ],
+      "distanceMeters": 3.657,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0042",
+      "from": "L00_N0089",
+      "to": "L00_N0084",
+      "path": [
+        {
+          "x": 276.9,
+          "y": 459.48
+        },
+        {
+          "x": 276.9,
+          "y": 481.53
+        }
+      ],
+      "distanceMeters": 7.717,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0043",
+      "from": "L00_N0087",
+      "to": "L00_N0086",
+      "path": [
+        {
+          "x": 279.24,
+          "y": 429.32
+        },
+        {
+          "x": 289.61,
+          "y": 429.32
+        }
+      ],
+      "distanceMeters": 3.63,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0044",
+      "from": "L00_N0088",
+      "to": "L00_N0089",
+      "path": [
+        {
+          "x": 239.43,
+          "y": 457.6
+        },
+        {
+          "x": 274.5,
+          "y": 457.6
+        }
+      ],
+      "distanceMeters": 12.274,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0045",
+      "from": "L00_N0075",
+      "to": "L00_N0080",
+      "path": [
+        {
+          "x": 350.5,
+          "y": 413.77
+        },
+        {
+          "x": 340.06,
+          "y": 427.5
+        }
+      ],
+      "distanceMeters": 6.037,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0046",
+      "from": "L00_N0074",
+      "to": "L00_N0079",
+      "path": [
+        {
+          "x": 349.48,
+          "y": 393.77
+        },
+        {
+          "x": 340.57,
+          "y": 393.77
+        }
+      ],
+      "distanceMeters": 3.119,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0047",
+      "from": "L00_N0025",
+      "to": "L00_N0051",
+      "path": [
+        {
+          "x": 863.02,
+          "y": 479.13
+        },
+        {
+          "x": 911.34,
+          "y": 479.13
+        }
+      ],
+      "distanceMeters": 16.912,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0048",
+      "from": "L00_N0089",
+      "to": "L00_N0073",
+      "path": [
+        {
+          "x": 279.24,
+          "y": 457.6
+        },
+        {
+          "x": 290.27,
+          "y": 457.6
+        },
+        {
+          "x": 335.91,
+          "y": 457.6
+        }
+      ],
+      "distanceMeters": 19.835,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0049",
+      "from": "L00_N0010_intersection_estacionamento_entrada_principal",
+      "to": "L00_N0015_intersection",
+      "path": [
+        {
+          "x": 514.38,
+          "y": 678.84
+        },
+        {
+          "x": 514.38,
+          "y": 569.29
+        }
+      ],
+      "distanceMeters": 38.343,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0050",
+      "from": "L00_N0012_cintersection_templo_narnia",
+      "to": "L00_N0013_entrada_lateral_templo_01",
+      "path": [
+        {
+          "x": 468.13,
+          "y": 669.25
+        },
+        {
+          "x": 453.76,
+          "y": 669.25
+        }
+      ],
+      "distanceMeters": 5.03,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0051",
+      "from": "L00_N0082",
+      "to": "L00_N0081",
+      "path": [
+        {
+          "x": 22.87,
+          "y": 457.6
+        },
+        {
+          "x": 86.24,
+          "y": 457.6
+        }
+      ],
+      "distanceMeters": 22.179,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0052",
+      "from": "L00_N0081",
+      "to": "L00_N0030",
+      "path": [
+        {
+          "x": 89,
+          "y": 460.24
+        },
+        {
+          "x": 89,
+          "y": 667.86
+        }
+      ],
+      "distanceMeters": 72.667,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0053",
+      "from": "L00_N0081",
+      "to": "L00_N0091",
+      "path": [
+        {
+          "x": 91.54,
+          "y": 457.6
+        },
+        {
+          "x": 204.11,
+          "y": 457.6
+        }
+      ],
+      "distanceMeters": 39.4,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0054",
+      "from": "L00_N0083",
+      "to": "L00_N0092",
+      "path": [
+        {
+          "x": 23.8,
+          "y": 429.51
+        },
+        {
+          "x": 203.39,
+          "y": 429.51
+        }
+      ],
+      "distanceMeters": 62.856,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0055",
+      "from": "L00_N0093_entrada_estacionamento_av_batel",
+      "to": "L00_N0083",
+      "path": [
+        {
+          "x": 21.5,
+          "y": 347
+        },
+        {
+          "x": 21.86,
+          "y": 429.51
+        }
+      ],
+      "distanceMeters": 28.879,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0056",
+      "from": "L00_N0024",
+      "to": "L00_N0042",
+      "path": [
+        {
+          "x": 623.92,
+          "y": 361.93
+        },
+        {
+          "x": 611.86,
+          "y": 361.93
+        }
+      ],
+      "distanceMeters": 4.221,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0057",
+      "from": "L00_N0042",
+      "to": "L00_N0041",
+      "path": [
+        {
+          "x": 609.45,
+          "y": 358.92
+        },
+        {
+          "x": 609.45,
+          "y": 254
+        }
+      ],
+      "distanceMeters": 36.722,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0058",
+      "from": "L00_N0039",
+      "to": "L00_N0037",
+      "path": [
+        {
+          "x": 370.06,
+          "y": 252.15
+        },
+        {
+          "x": 188.13,
+          "y": 252.15
+        }
+      ],
+      "distanceMeters": 63.675,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0059",
+      "from": "L00_N0037",
+      "to": "L00_N0038",
+      "path": [
+        {
+          "x": 190.43,
+          "y": 229.93
+        },
+        {
+          "x": 231.29,
+          "y": 229.93
+        }
+      ],
+      "distanceMeters": 14.301,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0060",
+      "from": "L00_N0016_entrada_lateral_templo_02",
+      "to": "L00_N0015_intersection",
+      "path": [
+        {
+          "x": 502.87,
+          "y": 566.99
+        },
+        {
+          "x": 512.72,
+          "y": 566.99
+        }
+      ],
+      "distanceMeters": 3.448,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0061",
+      "from": "L00_N0029",
+      "to": "L00_N0030",
+      "path": [
+        {
+          "x": 204.69,
+          "y": 669.67
+        },
+        {
+          "x": 91.36,
+          "y": 669.67
+        }
+      ],
+      "distanceMeters": 39.665,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0062",
+      "from": "L00_N0029",
+      "to": "L00_N0028",
+      "path": [
+        {
+          "x": 206.72,
+          "y": 671.51
+        },
+        {
+          "x": 206.72,
+          "y": 688.04
+        }
+      ],
+      "distanceMeters": 5.785,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0063",
+      "from": "L00_N0029",
+      "to": "L00_N0026",
+      "path": [
+        {
+          "x": 209.11,
+          "y": 669.67
+        },
+        {
+          "x": 248.54,
+          "y": 669.67
+        }
+      ],
+      "distanceMeters": 13.8,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0064",
+      "from": "L00_N0009_templo_entrada_principal_toldo_narnia",
+      "to": "L00_N0008_templo_estacionamento",
+      "path": [
+        {
+          "x": 514.38,
+          "y": 722.32
+        },
+        {
+          "x": 514.38,
+          "y": 772
+        }
+      ],
+      "distanceMeters": 17.388,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0065",
+      "from": "L00_N0008_templo_estacionamento",
+      "to": "L00_N0027",
+      "path": [
+        {
+          "x": 512.78,
+          "y": 773.55
+        },
+        {
+          "x": 286.93,
+          "y": 773.55
+        }
+      ],
+      "distanceMeters": 79.047,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0066",
+      "from": "L00_N0006",
+      "to": "L00_N0001_entrada_pedestre_principal_bento",
+      "path": [
+        {
+          "x": 514.38,
+          "y": 789.39
+        },
+        {
+          "x": 514.38,
+          "y": 845.19
+        }
+      ],
+      "distanceMeters": 19.53,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0067",
+      "from": "L00_N0036",
+      "to": "L00_N0033",
+      "path": [
+        {
+          "x": 139.54,
+          "y": 194.71
+        },
+        {
+          "x": 89.91,
+          "y": 194.71
+        }
+      ],
+      "distanceMeters": 17.37,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0068",
+      "from": "L00_N0036",
+      "to": "L00_N0035",
+      "path": [
+        {
+          "x": 142.87,
+          "y": 192.15
+        },
+        {
+          "x": 142.87,
+          "y": 182.75
+        }
+      ],
+      "distanceMeters": 3.29,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0069",
+      "from": "L00_N0033",
+      "to": "L00_N0034",
+      "path": [
+        {
+          "x": 86.32,
+          "y": 192.15
+        },
+        {
+          "x": 86.32,
+          "y": 181.97
+        }
+      ],
+      "distanceMeters": 3.563,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0070",
+      "from": "L00_N0023_refeitorio_externo_kids",
+      "to": "L00_N0043",
+      "path": [
+        {
+          "x": 860.56,
+          "y": 511.87
+        },
+        {
+          "x": 860.56,
+          "y": 502.4
+        }
+      ],
+      "distanceMeters": 3.315,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0071",
+      "from": "L00_N0010_intersection_estacionamento_entrada_principal",
+      "to": "L00_N0017_intersection_escacionamento_templo",
+      "path": [
+        {
+          "x": 515.95,
+          "y": 680.88
+        },
+        {
+          "x": 556.43,
+          "y": 680.88
+        }
+      ],
+      "distanceMeters": 14.168,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0072",
+      "from": "L00_N0010_intersection_estacionamento_entrada_principal",
+      "to": "L00_N0009_templo_entrada_principal_toldo_narnia",
+      "path": [
+        {
+          "x": 514.38,
+          "y": 682.23
+        },
+        {
+          "x": 514.38,
+          "y": 718.84
+        }
+      ],
+      "distanceMeters": 12.814,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0073",
+      "from": "L00_N0018_estacionamento",
+      "to": "L00_N0021_intersection_refeitorio_externo_kids",
+      "path": [
+        {
+          "x": 820.99,
+          "y": 666.47
+        },
+        {
+          "x": 797.86,
+          "y": 515.6
+        }
+      ],
+      "distanceMeters": 53.421,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0074",
+      "from": "L00_N0021_intersection_refeitorio_externo_kids",
+      "to": "L00_N0020_intersection_sevenpass_estaionamento",
+      "path": [
+        {
+          "x": 796.04,
+          "y": 513.26
+        },
+        {
+          "x": 741.81,
+          "y": 513.26
+        }
+      ],
+      "distanceMeters": 18.981,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0075",
+      "from": "L00_N0039",
+      "to": "L00_N0031",
+      "path": [
+        {
+          "x": 372.87,
+          "y": 254.11
+        },
+        {
+          "x": 379.76,
+          "y": 302.76
+        }
+      ],
+      "distanceMeters": 17.197,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0076",
+      "from": "L00_N0041",
+      "to": "L00_N0039",
+      "path": [
+        {
+          "x": 607.03,
+          "y": 252.09
+        },
+        {
+          "x": 375.33,
+          "y": 252.09
+        }
+      ],
+      "distanceMeters": 81.095,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0077",
+      "from": "L00_N0018_intersection_escacionamento_templo",
+      "to": "L00_N0004",
+      "path": [
+        {
+          "x": 591.32,
+          "y": 683.61
+        },
+        {
+          "x": 591.32,
+          "y": 786.43
+        }
+      ],
+      "distanceMeters": 35.987,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0078",
+      "from": "L00_N0005",
+      "to": "L00_N0002_entrada_estacionamento_principal_bento",
+      "path": [
+        {
+          "x": 558.28,
+          "y": 789.69
+        },
+        {
+          "x": 558.28,
+          "y": 825.13
+        }
+      ],
+      "distanceMeters": 12.404,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0079",
+      "from": "L00_N0017_intersection_escacionamento_templo",
+      "to": "L00_N0018_intersection_escacionamento_templo",
+      "path": [
+        {
+          "x": 560.06,
+          "y": 680.88
+        },
+        {
+          "x": 589.17,
+          "y": 680.88
+        }
+      ],
+      "distanceMeters": 10.189,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0080",
+      "from": "L00_N0018_intersection_escacionamento_templo",
+      "to": "L00_N0017_estacionamento",
+      "path": [
+        {
+          "x": 593.26,
+          "y": 680.94
+        },
+        {
+          "x": 810.78,
+          "y": 680.94
+        }
+      ],
+      "distanceMeters": 76.132,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0081",
+      "from": "L00_N0004",
+      "to": "L00_N0003_entrada_estacionamento_principal_bento",
+      "path": [
+        {
+          "x": 591.21,
+          "y": 789.69
+        },
+        {
+          "x": 591.21,
+          "y": 825.13
+        }
+      ],
+      "distanceMeters": 12.404,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0082",
+      "from": "L00_N0004",
+      "to": "L00_N0007_estacionamento_motos",
+      "path": [
+        {
+          "x": 593.06,
+          "y": 788.06
+        },
+        {
+          "x": 939.17,
+          "y": 788.06
+        }
+      ],
+      "distanceMeters": 121.138,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0083",
+      "from": "L00_N0040",
+      "to": "L00_N0041",
+      "path": [
+        {
+          "x": 724.02,
+          "y": 252.17
+        },
+        {
+          "x": 612.2,
+          "y": 252.17
+        }
+      ],
+      "distanceMeters": 39.137,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0084",
+      "from": "L00_N0017_intersection_escacionamento_templo",
+      "to": "L00_N0005",
+      "path": [
+        {
+          "x": 558.28,
+          "y": 683.61
+        },
+        {
+          "x": 558.28,
+          "y": 786.2
+        }
+      ],
+      "distanceMeters": 35.907,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0085",
+      "from": "L00_N0019_intersection_entrada_seven_pass_elevador",
+      "to": "L00_N0056",
+      "path": [
+        {
+          "x": 644.75,
+          "y": 506.51
+        },
+        {
+          "x": 646.75,
+          "y": 506.51
+        }
+      ],
+      "distanceMeters": 0.7,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "elevator",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0086",
+      "from": "L00_N0021_intersection_refeitorio_externo_kids",
+      "to": "L00_N0023_refeitorio_externo_kids",
+      "path": [
+        {
+          "x": 799.5,
+          "y": 513.26
+        },
+        {
+          "x": 857.72,
+          "y": 513.26
+        }
+      ],
+      "distanceMeters": 20.377,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0087",
+      "from": "L00_N0023_intersection_entrada_toldo",
+      "to": "L00_N0060",
+      "path": [
+        {
+          "x": 568.84,
+          "y": 498.22
+        },
+        {
+          "x": 568.84,
+          "y": 491.76
+        }
+      ],
+      "distanceMeters": 2.261,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0088",
+      "from": "L00_N0004",
+      "to": "L00_N0005",
+      "path": [
+        {
+          "x": 589.11,
+          "y": 788.06
+        },
+        {
+          "x": 560.67,
+          "y": 788.06
+        }
+      ],
+      "distanceMeters": 9.954,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0089",
+      "from": "L00_N0005",
+      "to": "L00_N0006",
+      "path": [
+        {
+          "x": 555.95,
+          "y": 788.06
+        },
+        {
+          "x": 516.28,
+          "y": 788.06
+        }
+      ],
+      "distanceMeters": 13.885,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0090",
+      "from": "L00_N0008_templo_estacionamento",
+      "to": "L00_N0006",
+      "path": [
+        {
+          "x": 514.38,
+          "y": 774.91
+        },
+        {
+          "x": 514.38,
+          "y": 785.87
+        }
+      ],
+      "distanceMeters": 3.836,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0091",
+      "from": "L00_N0011_connection_entrada_lateral_templo_01",
+      "to": "L00_N0012_cintersection_templo_narnia",
+      "path": [
+        {
+          "x": 483.87,
+          "y": 669.25
+        },
+        {
+          "x": 472.35,
+          "y": 669.25
+        }
+      ],
+      "distanceMeters": 4.032,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0092",
+      "from": "L00_N0043",
+      "to": "L00_N0025",
+      "path": [
+        {
+          "x": 860.56,
+          "y": 498.61
+        },
+        {
+          "x": 860.56,
+          "y": 480.93
+        }
+      ],
+      "distanceMeters": 6.188,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0093",
+      "from": "L00_N0015_intersection",
+      "to": "L00_N0023_intersection_entrada_toldo",
+      "path": [
+        {
+          "x": 514.38,
+          "y": 565.23
+        },
+        {
+          "x": 514.38,
+          "y": 500.88
+        },
+        {
+          "x": 566.13,
+          "y": 500.88
+        }
+      ],
+      "distanceMeters": 40.635,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0094",
+      "from": "L00_N0037",
+      "to": "L00_N0036",
+      "path": [
+        {
+          "x": 188.7,
+          "y": 227.82
+        },
+        {
+          "x": 188.7,
+          "y": 194.71
+        },
+        {
+          "x": 146.65,
+          "y": 194.71
+        }
+      ],
+      "distanceMeters": 26.306,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0095",
+      "from": "L00_N0023_intersection_entrada_toldo",
+      "to": "L00_N0019_intersection_entrada_seven_pass_elevador",
+      "path": [
+        {
+          "x": 571.11,
+          "y": 500.88
+        },
+        {
+          "x": 643.11,
+          "y": 500.88
+        },
+        {
+          "x": 643.11,
+          "y": 503.94
+        },
+        {
+          "x": 643.11,
+          "y": 504.29
+        }
+      ],
+      "distanceMeters": 26.394,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "elevator",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0096",
+      "from": "L00_N0019_intersection_entrada_seven_pass_elevador",
+      "to": "L00_N0020_intersection_sevenpass_estaionamento",
+      "path": [
+        {
+          "x": 643.11,
+          "y": 509.65
+        },
+        {
+          "x": 643.11,
+          "y": 513.26
+        },
+        {
+          "x": 737.17,
+          "y": 513.26
+        }
+      ],
+      "distanceMeters": 34.184,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "elevator",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0097",
+      "from": "L00_N0011_connection_entrada_lateral_templo_01",
+      "to": "L00_N0009_templo_entrada_principal_toldo_narnia",
+      "path": [
+        {
+          "x": 486.03,
+          "y": 670.78
+        },
+        {
+          "x": 486.03,
+          "y": 720.6
+        },
+        {
+          "x": 512.83,
+          "y": 720.6
+        }
+      ],
+      "distanceMeters": 26.817,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": true
+    },
+    {
+      "id": "L00_E0098",
+      "from": "L00_N0033",
+      "to": "L00_N0032",
+      "path": [
+        {
+          "x": 82.8,
+          "y": 194.71
+        },
+        {
+          "x": 21.41,
+          "y": 194.71
+        },
+        {
+          "x": 21.39,
+          "y": 269.38
+        },
+        {
+          "x": 10.69,
+          "y": 269.38
+        }
+      ],
+      "distanceMeters": 51.366,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0099",
+      "from": "L00_N0030",
+      "to": "L00_N0027",
+      "path": [
+        {
+          "x": 89,
+          "y": 671.51
+        },
+        {
+          "x": 89,
+          "y": 736.41
+        },
+        {
+          "x": 258.65,
+          "y": 736.41
+        },
+        {
+          "x": 258.65,
+          "y": 773.55
+        },
+        {
+          "x": 284.33,
+          "y": 773.55
+        }
+      ],
+      "distanceMeters": 104.079,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E0100",
+      "from": "L00_N0014_entrada_narnia_B02",
+      "to": "L00_N0012_cintersection_templo_narnia",
+      "path": [
+        {
+          "x": 437.65,
+          "y": 742.99
+        },
+        {
+          "x": 470.28,
+          "y": 721.6
+        },
+        {
+          "x": 470.28,
+          "y": 670.78
+        }
+      ],
+      "distanceMeters": 31.443,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    }
+  ],
+  "pois": [
+    {
+      "id": "L00_P_P000_templo",
+      "rawId": "P000_templo",
+      "name": "Templo",
+      "nodeIds": [
+        "L00_N0084",
+        "L00_N0068",
+        "L00_N0016_entrada_lateral_templo_02",
+        "L00_N0029",
+        "L00_N0013_entrada_lateral_templo_01"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P001_entrada_principal_toldo",
+      "rawId": "P001_entrada_principal_toldo",
+      "name": "Entrada Principal Toldo",
+      "nodeIds": [
+        "L00_N0023_intersection_entrada_toldo"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P002_capela",
+      "rawId": "P002_capela",
+      "name": "Capela",
+      "nodeIds": [
+        "L00_N0064"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P003_estacionamento_01",
+      "rawId": "P003_estacionamento_01",
+      "name": "Estacionamento 01",
+      "nodeIds": [
+        "L00_N0017_estacionamento"
+      ],
+      "active": true,
+      "cat": "estacionamento"
+    },
+    {
+      "id": "L00_P_P004_sala_de_oracao_RGO",
+      "rawId": "P004_sala_de_oracao_RGO",
+      "name": "Sala DE Oracao RGO",
+      "nodeIds": [
+        "L00_N0038"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P005_centro_de_formacao",
+      "rawId": "P005_centro_de_formacao",
+      "name": "Centro DE Formacao",
+      "nodeIds": [
+        "L00_N0034"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P006_estacionamento_02",
+      "rawId": "P006_estacionamento_02",
+      "name": "Estacionamento 02",
+      "nodeIds": [
+        "L00_N0031"
+      ],
+      "active": true,
+      "cat": "estacionamento"
+    },
+    {
+      "id": "L00_P_P007_area_kids",
+      "rawId": "P007_area_kids",
+      "name": "Area Kids",
+      "nodeIds": [
+        "L00_N0051"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P008_refeitorio_externo",
+      "rawId": "P008_refeitorio_externo",
+      "name": "Refeitorio Externo",
+      "nodeIds": [
+        "L00_N0025"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P009_livraria_evangelica",
+      "rawId": "P009_livraria_evangelica",
+      "name": "Livraria Evangelica",
+      "nodeIds": [
+        "L00_N0076"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P010_espaco_conexao",
+      "rawId": "P010_espaco_conexao",
+      "name": "Espaco Conexao",
+      "nodeIds": [
+        "L00_N0078"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P011_bercario",
+      "rawId": "P011_bercario",
+      "name": "Bercario",
+      "nodeIds": [
+        "L00_N0071"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P012_sala_de_oracao_cleusa",
+      "rawId": "P012_sala_de_oracao_cleusa",
+      "name": "Sala DE Oracao Cleusa",
+      "nodeIds": [
+        "L00_N0059"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P013_recepcao",
+      "rawId": "P013_recepcao",
+      "name": "Recepcao",
+      "nodeIds": [
+        "L00_N0061"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P014_seven_pass",
+      "rawId": "P014_seven_pass",
+      "name": "Seven Pass",
+      "nodeIds": [
+        "L00_N0047"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P015_bazar_abasc",
+      "rawId": "P015_bazar_abasc",
+      "name": "Bazar Abasc",
+      "nodeIds": [
+        "L00_N0046"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P016_jardim",
+      "rawId": "P016_jardim",
+      "name": "Jardim",
+      "nodeIds": [
+        "L00_N0030"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P017_espaco_acolher_ceara",
+      "rawId": "P017_espaco_acolher_ceara",
+      "name": "Espaco Acolher Ceara",
+      "nodeIds": [
+        "L00_N0072"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P018_abasc",
+      "rawId": "P018_abasc",
+      "name": "Abasc",
+      "nodeIds": [
+        "L00_N0057"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P019_banheiro_familia",
+      "rawId": "P019_banheiro_familia",
+      "name": "Banheiro Familia",
+      "nodeIds": [
+        "L00_N0070"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P020_espaco_servir",
+      "rawId": "P020_espaco_servir",
+      "name": "Espaco Servir",
+      "nodeIds": [
+        "L00_N0028"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P021_banheiro_feminino_ginasio",
+      "rawId": "P021_banheiro_feminino_ginasio",
+      "name": "Banheiro Feminino Ginasio",
+      "nodeIds": [
+        "L00_N0050_banheiro_feminino_ginasio"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P022_banheiro_masculino_ginasio",
+      "rawId": "P022_banheiro_masculino_ginasio",
+      "name": "Banheiro Masculino Ginasio",
+      "nodeIds": [
+        "L00_N0045_banheiro_masculino_ginasio"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P023_banheiro_feminino",
+      "rawId": "P023_banheiro_feminino",
+      "name": "Banheiro Feminino",
+      "nodeIds": [
+        "L00_N0066"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P024_banheiro_masculino",
+      "rawId": "P024_banheiro_masculino",
+      "name": "Banheiro Masculino",
+      "nodeIds": [
+        "L00_N0065"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P025_banheiro_masculino_feminino",
+      "rawId": "P025_banheiro_masculino_feminino",
+      "name": "Banheiro Masculino Feminino",
+      "nodeIds": [
+        "L00_N0054"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P026_elevador_ginasio",
+      "rawId": "P026_elevador_ginasio",
+      "name": "Elevador Ginasio",
+      "nodeIds": [
+        "L00_N0019_intersection_entrada_seven_pass_elevador"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P027_elevador_templo",
+      "rawId": "P027_elevador_templo",
+      "name": "Elevador Templo",
+      "nodeIds": [
+        "L00_N0077"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P028_estacionamento_moto",
+      "rawId": "P028_estacionamento_moto",
+      "name": "Estacionamento Moto",
+      "nodeIds": [
+        "L00_N0007_estacionamento_motos"
+      ],
+      "active": true,
+      "cat": "estacionamento"
+    },
+    {
+      "id": "L00_P_B02_entrada_narnia",
+      "rawId": "B02_entrada_narnia",
+      "name": "Entrada de Narnia",
+      "nodeIds": [
+        "L00_N0014_entrada_narnia_B02"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P029_entrada_pedestre_02_batel",
+      "rawId": "P029_entrada_pedestre_02_batel",
+      "name": "Entrada 02. Pedestre Av. Batel",
+      "nodeIds": [
+        "L00_N0082"
+      ],
+      "active": true,
+      "cat": "geral"
+    },
+    {
+      "id": "L00_P_P030_entrada_estacionamento_av_batel",
+      "rawId": "P030_entrada_estacionamento_av_batel",
+      "name": "Entrada estacionamento Av. Batel",
+      "nodeIds": [
+        "L00_N0093_entrada_estacionamento_av_batel"
+      ],
+      "active": true,
+      "cat": "estacionamento"
+    },
+    {
+      "id": "L00_P_P031_entrada_estacionamento_bento_viana",
+      "rawId": "P031_entrada_estacionamento_bento_viana",
+      "name": "Entrada estacionamento Bento Viana",
+      "nodeIds": [
+        "L00_N0002_entrada_estacionamento_principal_bento"
+      ],
+      "active": true,
+      "cat": "estacionamento"
+    }
+  ],
+  "generatedAt": "2026-07-16T14:40:24.900Z",
+  "source": {
+    "nodes": "assets/mapa-nodes.svg",
+    "edgesIndoor": "assets/mapa-edge-indoor.svg",
+    "edgesOutdoor": "assets/mapa-edge-outdoor.svg",
+    "pois": "assets/mapa-pois.svg"
+  }
+}

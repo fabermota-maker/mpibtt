@@ -1,0 +1,16 @@
+{
+  "map": {
+    "id": "pib-curitiba",
+    "version": "1.0.0",
+    "viewBox": {
+      "x": 0,
+      "y": 0,
+      "width": 1011.56,
+      "height": 862.63
+    }
+  },
+  "calibration": null,
+  "references": [],
+  "walkingSpeedMetersPerSecond": 1.2,
+  "notes": "Calibração inicial: largura real do Batistério = 6,80 m (face externa das paredes laterais). Medidas classificadas como estimadas por escala gráfica até confirmação com múltiplas referências."
+}

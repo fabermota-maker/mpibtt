@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  MAPA DEMO - contrato de camadas para o mapa interativo.
+  Substitua este arquivo pelo seu SVG mantendo os mesmos 3 grupos (layers):
+
+  <g id="nodes"> ... </g>   -> pontos do grafo (circle com id, cx, cy)
+  <g id="edges"> ... </g>   -> trechos caminhaveis (line/polyline ligando os nodes)
+  <g id="pois">  ... </g>   -> locais selecionaveis (elemento com id + data-name)
+
+  Regras:
+  - viewBox obrigatorio (define o sistema de coordenadas).
+  - ids unicos, sem espacos/acentos.
+  - cada POI usa data-name (nome exibido) e data-cat (categoria, opcional).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" id="mapaSVG">
+  <!-- ============ CAMADA VISUAL (fundo / paredes) ============ -->
+  <g id="fundo">
+    <rect x="0" y="0" width="1000" height="720" fill="#f4f6f8"/>
+    <g id="rooms" fill="#e9edf2" stroke="#d3dae2" stroke-width="2">
+      <rect x="70"  y="70"  width="220" height="180" rx="10"/>
+      <rect x="410" y="70"  width="180" height="150" rx="10"/>
+      <rect x="620" y="70"  width="310" height="180" rx="10"/>
+      <rect x="70"  y="470" width="300" height="200" rx="10"/>
+      <rect x="410" y="470" width="180" height="150" rx="10"/>
+      <rect x="620" y="470" width="200" height="150" rx="10"/>
+      <rect x="850" y="330" width="80"  height="120" rx="10"/>
+    </g>
+    <g id="labels-fixos" fill="#93a1b0" font-family="Arial, sans-serif" font-size="15" font-weight="600">
+      <text x="180" y="165" text-anchor="middle">Banheiros</text>
+      <text x="500" y="150" text-anchor="middle">Sala de Reunião</text>
+      <text x="775" y="165" text-anchor="middle">Cafeteria</text>
+      <text x="220" y="575" text-anchor="middle">Templo</text>
+      <text x="500" y="550" text-anchor="middle">Sala de Oração</text>
+      <text x="720" y="550" text-anchor="middle">Secretaria</text>
+      <text x="890" y="395" text-anchor="middle" transform="rotate(90 890 395)">Recepção</text>
+    </g>
+  </g>
+
+  <!-- ============ CAMADA EDGES (trechos caminhaveis) ============ -->
+  <g id="edges" fill="none" stroke="#ff2d78" stroke-width="3" stroke-opacity="0.28" stroke-linecap="round">
+    <line x1="150" y1="360" x2="300" y2="360"/>
+    <line x1="300" y1="360" x2="500" y2="360"/>
+    <line x1="500" y1="360" x2="700" y2="360"/>
+    <line x1="700" y1="360" x2="860" y2="360"/>
+    <line x1="300" y1="360" x2="300" y2="180"/>
+    <line x1="500" y1="360" x2="500" y2="180"/>
+    <line x1="700" y1="360" x2="700" y2="180"/>
+    <line x1="300" y1="360" x2="300" y2="560"/>
+    <line x1="500" y1="360" x2="500" y2="560"/>
+    <line x1="700" y1="360" x2="700" y2="560"/>
+    <line x1="500" y1="560" x2="500" y2="680"/>
+    <line x1="860" y1="360" x2="860" y2="400"/>
+  </g>
+
+  <!-- ============ CAMADA NODES (pontos do grafo) ============ -->
+  <g id="nodes" fill="#2f6bff">
+    <circle id="n-corredor-oeste"  cx="150" cy="360" r="6"/>
+    <circle id="n-cruz-oeste"      cx="300" cy="360" r="6"/>
+    <circle id="n-cruz-centro"     cx="500" cy="360" r="6"/>
+    <circle id="n-cruz-leste"      cx="700" cy="360" r="6"/>
+    <circle id="n-corredor-leste"  cx="860" cy="360" r="6"/>
+    <circle id="n-banheiros"       cx="300" cy="180" r="6"/>
+    <circle id="n-reuniao"         cx="500" cy="180" r="6"/>
+    <circle id="n-cafeteria"       cx="700" cy="180" r="6"/>
+    <circle id="n-templo"          cx="300" cy="560" r="6"/>
+    <circle id="n-oracao"          cx="500" cy="560" r="6"/>
+    <circle id="n-secretaria"      cx="700" cy="560" r="6"/>
+    <circle id="n-entrada"         cx="500" cy="680" r="6"/>
+    <circle id="n-recepcao"        cx="860" cy="400" r="6"/>
+  </g>
+
+  <!-- ============ CAMADA POIS (locais selecionaveis) ============ -->
+  <g id="pois">
+    <circle id="poi-entrada"    data-name="Entrada Principal" data-cat="acesso"     cx="500" cy="690" r="9"/>
+    <circle id="poi-recepcao"   data-name="Recepção"          data-cat="apoio"      cx="890" cy="400" r="9"/>
+    <circle id="poi-banheiros"  data-name="Banheiros"         data-cat="servico"    cx="180" cy="160" r="9"/>
+    <circle id="poi-reuniao"    data-name="Sala de Reunião"   data-cat="ambiente"   cx="500" cy="145" r="9"/>
+    <circle id="poi-cafeteria"  data-name="Cafeteria"         data-cat="alimentacao" cx="775" cy="160" r="9"/>
+    <circle id="poi-templo"     data-name="Templo"            data-cat="ambiente"   cx="220" cy="570" r="9"/>
+    <circle id="poi-oracao"     data-name="Sala de Oração"    data-cat="ambiente"   cx="500" cy="545" r="9"/>
+    <circle id="poi-secretaria" data-name="Secretaria"        data-cat="apoio"      cx="720" cy="545" r="9"/>
+  </g>
+</svg>

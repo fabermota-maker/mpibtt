@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720">
+  <g id="info_textos" fill="#93a1b0" font-family="Arial, sans-serif" font-size="15" font-weight="600">
+    <text x="180" y="165" text-anchor="middle">Banheiros</text>
+    <text x="500" y="150" text-anchor="middle">Sala de Reunião</text>
+    <text x="775" y="165" text-anchor="middle">Cafeteria</text>
+    <text x="220" y="575" text-anchor="middle">Templo</text>
+    <text x="500" y="550" text-anchor="middle">Sala de Oração</text>
+    <text x="720" y="550" text-anchor="middle">Secretaria</text>
+    <text x="890" y="395" text-anchor="middle" transform="rotate(90 890 395)">Recepção</text>
+  </g>
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720">
+  <g id="nodes" fill="#2f6bff">
+    <circle id="n-corredor-oeste" cx="150" cy="360" r="6"/>
+    <circle id="n-cruz-oeste" cx="300" cy="360" r="6"/>
+    <circle id="n-cruz-centro" cx="500" cy="360" r="6"/>
+    <circle id="n-cruz-leste" cx="700" cy="360" r="6"/>
+    <circle id="n-corredor-leste" cx="860" cy="360" r="6"/>
+    <circle id="n-banheiros" cx="300" cy="180" r="6"/>
+    <circle id="n-reuniao" cx="500" cy="180" r="6"/>
+    <circle id="n-cafeteria" cx="700" cy="180" r="6"/>
+    <circle id="n-templo" cx="300" cy="560" r="6"/>
+    <circle id="n-oracao" cx="500" cy="560" r="6"/>
+    <circle id="n-secretaria" cx="700" cy="560" r="6"/>
+    <circle id="n-entrada" cx="500" cy="680" r="6"/>
+    <circle id="n-recepcao" cx="860" cy="400" r="6"/>
+  </g>
+</svg>

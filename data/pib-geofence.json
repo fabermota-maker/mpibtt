@@ -1,0 +1,164 @@
+{
+  "id": "pib-curitiba-geofence",
+  "version": "1.0.0",
+  "mapCenter": {
+    "latitude": -25.442099,
+    "longitude": -49.284715
+  },
+  "rules": {
+    "maximumAccuracyMeters": 30,
+    "outsideReadingsRequired": 3,
+    "keepLastValidPosition": true,
+    "requireInsideGeofence": true,
+    "snapToNearestEntrance": true,
+    "allowIndoorGpsPositioning": false
+  },
+  "perimeter": [
+    {
+      "id": "A",
+      "nome": "Esquina Av. Batel com Bento Viana — posto",
+      "latitude": -25.441694,
+      "longitude": -49.285528,
+      "svgX": 40,
+      "svgY": 780,
+      "role": "corner"
+    },
+    {
+      "id": "B",
+      "nome": "Jardim CF",
+      "latitude": -25.441607,
+      "longitude": -49.285305,
+      "svgX": 80,
+      "svgY": 620,
+      "role": "landmark"
+    },
+    {
+      "id": "C",
+      "nome": "Entrada Av. Batel — posto",
+      "latitude": -25.441556,
+      "longitude": -49.284917,
+      "svgX": 21.5,
+      "svgY": 347,
+      "role": "entrance",
+      "navNodeId": "L00_N0093_entrada_estacionamento_av_batel"
+    },
+    {
+      "id": "D",
+      "nome": "Esquina entrada CF",
+      "latitude": -25.44125,
+      "longitude": -49.284222,
+      "svgX": 100,
+      "svgY": 140,
+      "role": "landmark",
+      "navNodeId": "L00_N0034"
+    },
+    {
+      "id": "E",
+      "nome": "Lateral fundo CF",
+      "latitude": -25.441662,
+      "longitude": -49.284074,
+      "svgX": 180,
+      "svgY": 200,
+      "role": "edge"
+    },
+    {
+      "id": "F",
+      "nome": "Lateral fundo direito estacionamento",
+      "latitude": -25.442087,
+      "longitude": -49.283864,
+      "svgX": 980,
+      "svgY": 380,
+      "role": "edge"
+    },
+    {
+      "id": "H",
+      "nome": "Lateral direita estacionamento",
+      "latitude": -25.442193,
+      "longitude": -49.2842,
+      "svgX": 920,
+      "svgY": 480,
+      "role": "edge"
+    },
+    {
+      "id": "I",
+      "nome": "Lateral entrada estacionamento Capela",
+      "latitude": -25.44225,
+      "longitude": -49.284425,
+      "svgX": 780,
+      "svgY": 520,
+      "role": "landmark"
+    },
+    {
+      "id": "J",
+      "nome": "Fundo Seven Pass",
+      "latitude": -25.442488,
+      "longitude": -49.284353,
+      "svgX": 739.48,
+      "svgY": 513.26,
+      "role": "landmark",
+      "navNodeId": "L00_N0020_intersection_sevenpass_estaionamento"
+    },
+    {
+      "id": "K",
+      "nome": "Fundo Espaço Kids",
+      "latitude": -25.442753,
+      "longitude": -49.284258,
+      "svgX": 860.56,
+      "svgY": 513.26,
+      "role": "landmark",
+      "navNodeId": "L00_N0023_refeitorio_externo_kids"
+    },
+    {
+      "id": "L",
+      "nome": "Lateral direita estacionamento Av. Visconde",
+      "latitude": -25.442903,
+      "longitude": -49.284619,
+      "svgX": 920,
+      "svgY": 720,
+      "role": "edge"
+    },
+    {
+      "id": "M",
+      "nome": "Esquina Av. Visconde com Bento Viana",
+      "latitude": -25.443038,
+      "longitude": -49.284959,
+      "svgX": 940.95,
+      "svgY": 830,
+      "role": "corner",
+      "navNodeId": "L00_N0007_estacionamento_motos"
+    },
+    {
+      "id": "N",
+      "nome": "Entrada estacionamento Av. Bento Viana",
+      "latitude": -25.442469,
+      "longitude": -49.285246,
+      "svgX": 591.08,
+      "svgY": 826.85,
+      "role": "entrance",
+      "navNodeId": "L00_N0003_entrada_estacionamento_principal_bento"
+    },
+    {
+      "id": "O",
+      "nome": "Lateral jardim Av. Bento Viana",
+      "latitude": -25.442106,
+      "longitude": -49.285379,
+      "svgX": 514.38,
+      "svgY": 846.6,
+      "role": "entrance",
+      "navNodeId": "L00_N0001_entrada_pedestre_principal_bento"
+    }
+  ],
+  "gpsReferencePoints": [
+    {
+      "id": "GPS_REF_001",
+      "nome": "Ponto de sincronização GPS",
+      "latitude": -25.44216291355138,
+      "longitude": -49.28512513703895,
+      "floorId": "L00",
+      "navNodeId": "L00_N0001_entrada_pedestre_principal_bento",
+      "type": "GPS_ANCHOR",
+      "maximumActivationDistanceMeters": 15
+    }
+  ],
+  "notes": "LEGADO / fallback. Fonte canônica: js/pib-curitiba-location-config.js (PIB_CURITIBA_GEOFENCE A–O + PIB_CURITIBA_GPS_REFERENCE_POINTS). svgX/svgY só para calibração SVG; não entram no polígono GPS."
+}
