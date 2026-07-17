@@ -143,6 +143,9 @@
         setGpsButtonState("LOCATING");
         setAccuracyHint(null);
 
+        // Liga o sync contínuo imediatamente (puck + follow), como o botão de mira.
+        ensureUserLocationStarted?.();
+
         const ok = await prepareServices();
         if (!ok) {
           toast("Georreferência do mapa indisponível.");
@@ -159,17 +162,26 @@
           if (locationResult.reason === "PERMISSION_DENIED") {
             toast(locationResult.message || MESSAGES.PERMISSION_DENIED);
             setGpsButtonState("IDLE");
-          } else {
-            toast(locationResult.message || MESSAGES.LOW_ACCURACY);
-            setGpsButtonState("LOW_ACCURACY");
-            setTimeout(() => setGpsButtonState("IDLE"), 3500);
+            return;
           }
+          // Mesmo sem fix ideal, mantém GPS ativo para sincronizar no mapa.
+          toast(
+            "GPS ativo com precisão limitada.\nContinue se aproximando de uma entrada ao ar livre.",
+          );
+          setGpsButtonState("ACTIVE");
+          setAccuracyHint(null, "Aguardando precisão GPS…");
           return;
         }
 
         const { latitude, longitude, accuracy } = locationResult.position;
         setAccuracyHint(accuracy);
         setGpsButtonState("FOUND");
+
+        if (locationResult.approximate) {
+          toast(
+            `Localização aproximada (±${Math.round(accuracy)} m).\nConectando à entrada mais próxima.`,
+          );
+        }
 
         const isInside = global.NearestGraphPoint.checkUserInsideGeofence(
           latitude,
@@ -180,6 +192,7 @@
         if (!isInside) {
           setGpsButtonState("OUTSIDE");
           toast(MESSAGES.OUTSIDE);
+          // Mantém sync GPS ligado para quando entrar na área
           setTimeout(() => setGpsButtonState("IDLE"), 4000);
           return;
         }
@@ -201,7 +214,7 @@
           setGpsButtonState("FOUND");
           const choice = await requestAmbiguousChoice(initial.options);
           if (!choice) {
-            setGpsButtonState("IDLE");
+            setGpsButtonState("ACTIVE");
             return;
           }
           await finishWithReference(choice, locationResult.position, destinationOverride);
@@ -211,11 +224,10 @@
         if (!initial.reference || initial.needsManual) {
           toast(MESSAGES.NO_ANCHOR);
           onNeedManualEntrance?.(locationResult.position);
-          setGpsButtonState("IDLE");
+          setGpsButtonState("ACTIVE");
           return;
         }
 
-        // Destinos internos sem vínculo: pede seleção manual se for DESTINATION
         const ref = initial.reference;
         if (
           (ref.category === "DESTINATION" ||
@@ -225,7 +237,7 @@
         ) {
           toast(MESSAGES.NO_ANCHOR);
           onNeedManualEntrance?.(locationResult.position, ref);
-          setGpsButtonState("IDLE");
+          setGpsButtonState("ACTIVE");
           return;
         }
 
@@ -233,6 +245,7 @@
       } catch (err) {
         console.warn("startGpsOrientation:", err);
         toast("Falha ao orientar pelo GPS.");
+        ensureUserLocationStarted?.();
         setGpsButtonState("IDLE");
       } finally {
         running = false;

@@ -1545,7 +1545,8 @@
       ensureGeoTransform,
       ensureGeofence,
       ensureUserLocationStarted: () => {
-        state.userLocation?.start?.({ silent: true });
+        return state.userLocation?.startFollowing?.()
+          || state.userLocation?.start?.({ silent: true });
       },
       onTrackingSnap: (valid) => {
         if (!valid?.svg) return;
@@ -4097,6 +4098,11 @@
     el.navOverlay.setAttribute("aria-hidden", "false");
     requestOrientation();
     updateNav();
+
+    // Sincroniza GPS contínuo + seguir localização (como antes)
+    state.userLocation?.startFollowing?.().catch(() => {
+      state.userLocation?.start?.({ silent: true });
+    });
   }
 
   function exitNav(msg) {

@@ -524,6 +524,18 @@
       getNavigationState,
       updateLocBtn,
       onLocBtnClick,
+      setFollowMode: (mode) => {
+        camera?.setFollowMode(mode);
+        updateLocBtn();
+      },
+      startFollowing: async () => {
+        const ok = await start({ silent: true });
+        if (ok) {
+          camera?.setFollowMode("follow");
+          updateLocBtn();
+        }
+        return ok;
+      },
     };
   }
 
