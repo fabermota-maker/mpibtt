@@ -1544,9 +1544,12 @@
       getMetersPerUnit,
       ensureGeoTransform,
       ensureGeofence,
-      ensureUserLocationStarted: () => {
-        return state.userLocation?.startFollowing?.()
-          || state.userLocation?.start?.({ silent: true });
+      ensureUserLocationStarted: async () => {
+        if (!state.userLocation) return false;
+        if (state.userLocation.startFollowing) {
+          return !!(await state.userLocation.startFollowing());
+        }
+        return !!(await state.userLocation.start?.({ silent: true }));
       },
       onTrackingSnap: (valid) => {
         if (!valid?.svg) return;

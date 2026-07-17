@@ -143,8 +143,12 @@
         setGpsButtonState("LOCATING");
         setAccuracyHint(null);
 
-        // Liga o sync contínuo imediatamente (puck + follow), como o botão de mira.
-        ensureUserLocationStarted?.();
+        // Liga o sync contínuo e AGUARDA (puck + follow). Sem isso o botão mentia "GPS ativo".
+        const gpsOk = await ensureUserLocationStarted?.();
+        if (!gpsOk) {
+          setGpsButtonState("IDLE");
+          return;
+        }
 
         const ok = await prepareServices();
         if (!ok) {
@@ -164,9 +168,9 @@
             setGpsButtonState("IDLE");
             return;
           }
-          // Mesmo sem fix ideal, mantém GPS ativo para sincronizar no mapa.
+          // GPS do aparelho já está ligado via UserLocation — mantém ACTIVE e puck
           toast(
-            "GPS ativo com precisão limitada.\nContinue se aproximando de uma entrada ao ar livre.",
+            "GPS ativo. Aguardando melhor precisão…\nAproxime-se de uma área aberta se o ponto não se mover.",
           );
           setGpsButtonState("ACTIVE");
           setAccuracyHint(null, "Aguardando precisão GPS…");
@@ -176,6 +180,9 @@
         const { latitude, longitude, accuracy } = locationResult.position;
         setAccuracyHint(accuracy);
         setGpsButtonState("FOUND");
+
+        // Garante puck na posição coletada (mesmo se a geofence estiver oscilando)
+        getState()?.userLocation?.showAtLatLng?.(latitude, longitude, accuracy);
 
         if (locationResult.approximate) {
           toast(

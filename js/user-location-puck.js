@@ -94,15 +94,13 @@
     }
 
     function setHeading(mapHeading, cameraBearing) {
-      if (mapHeading == null || !isFinite(mapHeading)) {
-        coneVisible = false;
-        cone.setAttribute("hidden", "");
-        return;
-      }
+      const cam = cameraBearing || 0;
+      const heading =
+        mapHeading == null || !isFinite(mapHeading) ? 0 : mapHeading;
       coneVisible = true;
       cone.removeAttribute("hidden");
-      const cam = cameraBearing || 0;
-      displayHeading = GT()?.normalizeAngle(mapHeading - cam) ?? ((mapHeading - cam) % 360 + 360) % 360;
+      cone.style.display = "";
+      displayHeading = GT()?.normalizeAngle(heading - cam) ?? ((heading - cam) % 360 + 360) % 360;
       body.setAttribute("transform", `translate(${x} ${y}) rotate(${displayHeading})`);
     }
 

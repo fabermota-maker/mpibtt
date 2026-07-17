@@ -50,6 +50,7 @@
     let animId = null;
     let started = false;
     let starting = false;
+    let startPromise = null;
     let targetSvg = { x: null, y: null };
     let displaySvg = { x: null, y: null };
     let lastGeofenceToast = "";
@@ -145,12 +146,18 @@
       }
 
       const nav = getState().userNav || {};
-      if (nav.deviceHeading != null && puck) {
-        let mapHeading = geo?.gpsBearingToMapHeading
-          ? geo.gpsBearingToMapHeading(nav.deviceHeading)
-          : nav.deviceHeading;
-        if (nav.locationBearing != null && (nav.speed || 0) > 1.5) {
-          mapHeading = GT()?.interpolateAngle(mapHeading, nav.locationBearing, 0.25) ?? mapHeading;
+      if (puck && (targetSvg.x != null || puck.isVisible())) {
+        // Cone sempre visível com GPS ativo: heading do aparelho ou norte do mapa
+        let mapHeading = 0;
+        if (nav.deviceHeading != null && isFinite(nav.deviceHeading)) {
+          mapHeading = geo?.gpsBearingToMapHeading
+            ? geo.gpsBearingToMapHeading(nav.deviceHeading)
+            : nav.deviceHeading;
+          if (nav.locationBearing != null && (nav.speed || 0) > 1.5) {
+            mapHeading = GT()?.interpolateAngle(mapHeading, nav.locationBearing, 0.25) ?? mapHeading;
+          }
+        } else if (nav.locationBearing != null && isFinite(nav.locationBearing)) {
+          mapHeading = nav.locationBearing;
         }
         puck.setHeading(mapHeading, nav.cameraBearing || 0);
       }
@@ -208,10 +215,12 @@
       if (!rawSvg) return;
 
       if (getState().activeLevel && getState().activeLevel !== "L00") {
+        // ainda mostra no L00; em outros andares esconde
         puck?.hide();
         return;
       }
 
+      ensureServices();
       const svgPt = snapToWalkableSvg(rawSvg, pos);
 
       targetSvg = { x: svgPt.x, y: svgPt.y };
@@ -232,9 +241,8 @@
         gpsAvailable: true,
       });
 
-      if (puck && !puck.isVisible()) {
-        puck.setPosition(displaySvg.x, displaySvg.y, pos.accuracy, metersToSvgUnits);
-      }
+      puck?.setPosition(displaySvg.x, displaySvg.y, pos.accuracy, metersToSvgUnits);
+      puck?.show?.();
     }
 
     function onLocationUpdate(pos, err) {
@@ -244,33 +252,32 @@
         return;
       }
 
-      // Filtra por geofence + precisão (estados INSIDE/OUTSIDE/CHECKING/LOW_ACCURACY)
+      // Sempre tenta visualizar o puck; a geofence só restringe navegação interna.
       if (geofence) {
         const verdict = geofence.evaluate(pos);
         patchNav({ geofenceStatus: verdict.status });
 
         if (verdict.status === "LOW_ACCURACY") {
-          toastGeofence(verdict.message);
-          if (verdict.position) applyAcceptedPosition(verdict.position);
+          // Mostra posição aproximada mesmo com precisão ruim (até ~120 m)
+          if (isFinite(pos.accuracy) && pos.accuracy <= 120) {
+            applyAcceptedPosition(pos);
+          } else if (verdict.position) {
+            applyAcceptedPosition(verdict.position);
+          }
           return;
         }
 
         if (verdict.status === "CHECKING") {
-          if (verdict.position) applyAcceptedPosition(verdict.position);
+          applyAcceptedPosition(verdict.position || pos);
           return;
         }
 
         if (verdict.status === "OUTSIDE") {
           toastGeofence(verdict.message);
-          if (verdict.position && geofence.rules.keepLastValidPosition) {
-            applyAcceptedPosition(verdict.position);
-          } else if (verdict.nearest?.point && geofence.rules.snapToNearestEntrance) {
+          // Visualiza no mapa (snap à entrada/nó) mesmo fora — não some o puck
+          if (verdict.nearest?.point) {
             const p = verdict.nearest.point;
-            if (isFinite(p.svgX) && isFinite(p.svgY)) {
-              targetSvg = { x: p.svgX, y: p.svgY };
-              if (displaySvg.x == null) displaySvg = { ...targetSvg };
-              puck?.setPosition(displaySvg.x, displaySvg.y, pos.accuracy, metersToSvgUnits);
-            } else if (isFinite(p.latitude) && isFinite(p.longitude) && geo?.transform) {
+            if (isFinite(p.latitude) && isFinite(p.longitude)) {
               applyAcceptedPosition({
                 latitude: p.latitude,
                 longitude: p.longitude,
@@ -279,25 +286,32 @@
                 locationBearing: null,
                 timestamp: pos.timestamp,
               });
+            } else if (isFinite(p.svgX) && isFinite(p.svgY)) {
+              ensureServices();
+              targetSvg = { x: p.svgX, y: p.svgY };
+              if (displaySvg.x == null) displaySvg = { ...targetSvg };
+              puck?.setPosition(displaySvg.x, displaySvg.y, pos.accuracy, metersToSvgUnits);
+              patchNav({ gpsAvailable: true, accuracy: pos.accuracy });
+            } else {
+              applyAcceptedPosition(pos);
             }
+          } else {
+            applyAcceptedPosition(pos);
           }
           return;
         }
 
         // INSIDE
-        if (!verdict.accepted || !verdict.position) return;
-        applyAcceptedPosition(verdict.position);
+        applyAcceptedPosition(verdict.position || pos);
         return;
       }
 
-      // sem geofence carregada: comportamento anterior
       applyAcceptedPosition(pos);
     }
 
     function onHeadingUpdate(h) {
       if (h == null) {
         patchNav({ headingAvailable: false });
-        puck?.setHeading(null, 0);
         return;
       }
       patchNav({ deviceHeading: h, headingAvailable: true, orientationStatus: "granted" });
@@ -315,16 +329,18 @@
       patchNav({ permissionStatus: loc.status });
 
       if (!loc.ok) {
-        toast(loc.status === "denied"
-          ? "Permissão de localização negada. Ative nas configurações do navegador."
-          : "Localização indisponível. Use HTTPS e ative o GPS.");
+        toast(loc.error || (
+          loc.status === "denied"
+            ? "Permissão de localização negada. Ative nas configurações do navegador."
+            : "Localização indisponível. Ative o GPS do aparelho e tente de novo."
+        ));
         return false;
       }
 
       const ori = await permissions.requestOrientationPermission();
       patchNav({ orientationStatus: ori.status });
       if (!ori.ok) {
-        toast("Bússola indisponível — exibindo apenas o ponto azul.");
+        toast("Bússola indisponível — exibindo o ponto azul com cone fixo.");
       }
       return true;
     }
@@ -406,38 +422,73 @@
     }
 
     async function start({ silent = false } = {}) {
-      if (started || starting) return started;
-      starting = true;
-      initState();
+      if (started) return true;
+      if (startPromise) return startPromise;
+
+      startPromise = (async () => {
+        starting = true;
+        initState();
+
+        try {
+          if (typeof navigator === "undefined" || !navigator.geolocation) {
+            if (!silent) toast("Geolocalização não suportada neste navegador.");
+            return false;
+          }
+
+          const geoOk = await loadGeo();
+          if (!geoOk) {
+            if (!silent) toast("Georreferência do mapa indisponível.");
+            return false;
+          }
+
+          const ok = await ensurePermissions();
+          if (!ok) return false;
+
+          ensureServices();
+          // Mostra puck no centro do campus imediatamente enquanto o GPS estabiliza
+          if (geo?.mapCenter) {
+            const c = geo.latLngToSvg(geo.mapCenter.latitude, geo.mapCenter.longitude);
+            if (c) {
+              targetSvg = { x: c.x, y: c.y };
+              displaySvg = { ...targetSvg };
+              puck?.setPosition(c.x, c.y, 40, metersToSvgUnits);
+            }
+          }
+
+          location?.start();
+          heading?.start();
+
+          document.addEventListener("visibilitychange", onVisibility);
+          started = true;
+          updateLocBtn();
+          showGpsCompass(true);
+          if (!silent) toast("Buscando sua localização…");
+          return true;
+        } finally {
+          starting = false;
+        }
+      })();
 
       try {
-        if (typeof navigator === "undefined" || !navigator.geolocation) {
-          if (!silent) toast("Geolocalização não suportada neste navegador.");
-          return false;
-        }
-
-        const geoOk = await loadGeo();
-        if (!geoOk) {
-          if (!silent) toast("Georreferência do mapa indisponível.");
-          return false;
-        }
-
-        const ok = await ensurePermissions();
-        if (!ok) return false;
-
-        ensureServices();
-        location?.start();
-        heading?.start();
-
-        document.addEventListener("visibilitychange", onVisibility);
-        started = true;
-        updateLocBtn();
-        showGpsCompass(true);
-        if (!silent) toast("Buscando sua localização…");
-        return true;
+        return await startPromise;
       } finally {
-        starting = false;
+        startPromise = null;
       }
+    }
+
+    /** Força exibir o puck numa lat/lng (após coleta / orientação). */
+    function showAtLatLng(latitude, longitude, accuracy) {
+      if (!isFinite(latitude) || !isFinite(longitude)) return false;
+      ensureServices();
+      applyAcceptedPosition({
+        latitude,
+        longitude,
+        accuracy: accuracy ?? 30,
+        speed: 0,
+        locationBearing: null,
+        timestamp: Date.now(),
+      });
+      return puck?.isVisible?.() || targetSvg.x != null;
     }
 
     async function onLocBtnClick() {
@@ -524,6 +575,8 @@
       getNavigationState,
       updateLocBtn,
       onLocBtnClick,
+      showAtLatLng,
+      isStarted: () => started,
       setFollowMode: (mode) => {
         camera?.setFollowMode(mode);
         updateLocBtn();
