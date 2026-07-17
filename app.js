@@ -1523,16 +1523,13 @@
       getState: () => state,
       setField: (which, poi) => {
         setField(which, poi);
-        if (which === "origin" && poi?.id === "__here__" && poi.snap && el.hereMarker) {
+        // LP: não exibe o pin “Estou aqui” (ponto azul) — o puck GPS cuida da posição
+        if (which === "origin" && poi?.id === "__here__" && el.hereMarker) {
           state.here = poi;
-          el.hereMarker.hidden = false;
-          el.hereMarker.removeAttribute("hidden");
-          el.hereMarker.setAttribute("visibility", "visible");
-          el.hereMarker.style.display = "";
-          el.hereMarker.setAttribute(
-            "transform",
-            `translate(${poi.snap.x} ${poi.snap.y})`,
-          );
+          el.hereMarker.hidden = true;
+          el.hereMarker.setAttribute("hidden", "");
+          el.hereMarker.setAttribute("visibility", "hidden");
+          el.hereMarker.style.display = "none";
         }
       },
       drawRoute,
@@ -1552,19 +1549,14 @@
         return !!(await state.userLocation.start?.({ silent: true }));
       },
       onTrackingSnap: (valid) => {
-        if (!valid?.svg) return;
-        // puck via UserLocation continua; marca "Estou aqui" no nó da rota
+        // LP: não desenha o ponto azul “hereMarker”; só atualiza o hint
         if (el.hereMarker) {
-          el.hereMarker.hidden = false;
-          el.hereMarker.removeAttribute("hidden");
-          el.hereMarker.setAttribute("visibility", "visible");
-          el.hereMarker.setAttribute(
-            "transform",
-            `translate(${valid.svg.x} ${valid.svg.y})`,
-          );
+          el.hereMarker.hidden = true;
+          el.hereMarker.setAttribute("hidden", "");
+          el.hereMarker.setAttribute("visibility", "hidden");
+          el.hereMarker.style.display = "none";
         }
-        // atualiza hint de navegação com progresso
-        if (el.navHint && isFinite(valid.routeProgress)) {
+        if (el.navHint && isFinite(valid?.routeProgress)) {
           const pct = Math.round(valid.routeProgress * 100);
           el.navHint.textContent = `Progresso na rota: ~${pct}% · precisão ±${Math.round(valid.accuracy || 0)} m`;
         }
@@ -3660,7 +3652,8 @@
     state.routePickOpen = true;
     selectRoute(0, true);
     el.summary.hidden = false;
-    if (innerWidth <= 860) el.panel.classList.add("open");
+    // No celular: fecha o painel para a rota ficar visível e centralizada no mapa
+    if (innerWidth <= 860) el.panel.classList.remove("open");
     const n = state.routeOptions.length;
     toast(n > 1
       ? `${n} rotas — Rota 1 (mais curta) selecionada.`
@@ -3697,9 +3690,10 @@
 
       renderRouteOptions();
       state.navIdx = 0;
-      const leg = (route.legs || []).find((l) => l.level === state.activeLevel) || route.legs?.[0];
-      const fitPts = leg?.points?.length >= 2 ? leg.points : route.points;
-      if (doFit && fitPts?.length) fitToPoints(fitPts);
+      if (doFit) {
+        // sempre enquadra a rota inteira no campo de visão
+        requestAnimationFrame(() => fitRouteInView(route, { navMode: false }));
+      }
       if (multi) {
         const arrive = elevatorHub(dLvl);
         toast(`Via elevador: desça em ${arrive?.label || floorTitle(dLvl)} e siga até ${state.dest.name}. Troque o andar para ver cada trecho.`);
@@ -4003,11 +3997,13 @@
       level: lvl, navNodeIds: [snap.id],
     };
     setField("origin", state.here);
-    el.hereMarker.hidden = false;
-    el.hereMarker.removeAttribute("hidden");
-    el.hereMarker.setAttribute("visibility", "visible");
-    el.hereMarker.style.display = "";
-    el.hereMarker.setAttribute("transform", `translate(${p.x} ${p.y})`);
+    // LP: ponto azul “hereMarker” permanece oculto
+    if (el.hereMarker) {
+      el.hereMarker.hidden = true;
+      el.hereMarker.setAttribute("hidden", "");
+      el.hereMarker.setAttribute("visibility", "hidden");
+      el.hereMarker.style.display = "none";
+    }
     state.placingHere = false;
     el.viewport.style.cursor = "";
     toast("Posição definida. Agora escolha o destino.");
@@ -4057,16 +4053,63 @@
     state.panY = (r.height - G.vbH * sc) / 2;
     apply();
   }
-  function fitToPoints(pts) {
+  function fitToPoints(pts, opts = {}) {
+    if (!pts?.length) return;
     const r = el.viewport.getBoundingClientRect();
-    const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
-    const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
-    const w = Math.max(120, maxX - minX), h = Math.max(120, maxY - minY);
-    const pad = innerWidth <= 860 ? 90 : 130;
-    state.scale = Math.min(state.maxScale, Math.max(state.minScale, Math.min((r.width - pad * 2) / w, (r.height - pad * 2) / h)));
-    state.panX = r.width / 2 - ((minX + maxX) / 2) * state.scale;
-    state.panY = r.height / 2 - ((minY + maxY) / 2) * state.scale;
-    clamp(); apply();
+    if (!r.width || !r.height) return;
+
+    const xs = pts.map((p) => p.x).filter(isFinite);
+    const ys = pts.map((p) => p.y).filter(isFinite);
+    if (!xs.length || !ys.length) return;
+
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const w = Math.max(80, maxX - minX);
+    const h = Math.max(80, maxY - minY);
+
+    const mobile = innerWidth <= 860;
+    const padX = opts.padX ?? (mobile ? 36 : 110);
+    const padTop = opts.padTop ?? (mobile ? 64 : 110);
+    // reserva espaço inferior (painel / card de navegação) para a rota ficar no campo de visão
+    const padBottom = opts.padBottom ?? (mobile
+      ? (opts.navMode ? 300 : 170)
+      : (opts.navMode ? 220 : 110));
+
+    const availW = Math.max(60, r.width - padX * 2);
+    const availH = Math.max(60, r.height - padTop - padBottom);
+    const nextScale = Math.min(
+      state.maxScale,
+      Math.max(state.minScale * 0.5, Math.min(availW / w, availH / h) * 0.92),
+    );
+    state.scale = nextScale;
+
+    const midX = (minX + maxX) / 2;
+    const midY = (minY + maxY) / 2;
+    const focusCX = r.width / 2;
+    const focusCY = padTop + availH / 2;
+    state.panX = focusCX - midX * state.scale;
+    state.panY = focusCY - midY * state.scale;
+    clamp();
+    apply();
+  }
+
+  /** Enquadra a rota completa no viewport (origem → destino). */
+  function fitRouteInView(route, opts = {}) {
+    const pts = route?.points?.filter((p) => p && isFinite(p.x) && isFinite(p.y));
+    if (pts?.length >= 1) {
+      // inclui pins de origem/destino se existirem
+      const extras = [];
+      if (state.origin?.snap) extras.push(state.origin.snap);
+      else if (state.origin && isFinite(state.origin.x)) extras.push(state.origin);
+      if (state.dest?.snap) extras.push(state.dest.snap);
+      else if (state.dest && isFinite(state.dest.x)) extras.push(state.dest);
+      fitToPoints(pts.concat(extras), opts);
+      return;
+    }
+    const leg = (route?.legs || []).find((l) => l.level === state.activeLevel) || route?.legs?.[0];
+    if (leg?.points?.length) fitToPoints(leg.points, opts);
   }
   function zoomAt(factor, cx, cy) {
     const r = el.viewport.getBoundingClientRect();
@@ -4096,13 +4139,16 @@
     if (!state.route?.points?.length) { toast("Trace uma rota primeiro."); return; }
     if (navSegments() < 1) { toast("Rota inválida para navegação."); return; }
     state.navIdx = 0;
+    if (innerWidth <= 860) el.panel.classList.remove("open");
     el.navOverlay.hidden = false;
     el.navOverlay.classList.add("is-open");
     el.navOverlay.setAttribute("aria-hidden", "false");
+    document.body.classList.add("is-navigating");
+    // recentraliza a rota deixando espaço para o card inferior no celular
+    requestAnimationFrame(() => fitRouteInView(state.route, { navMode: true }));
     requestOrientation();
     updateNav();
 
-    // Sincroniza GPS contínuo + seguir localização (como antes)
     state.userLocation?.startFollowing?.().catch(() => {
       state.userLocation?.start?.({ silent: true });
     });
@@ -4114,6 +4160,7 @@
     el.navOverlay.hidden = true;
     el.navOverlay.classList.remove("is-open");
     el.navOverlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("is-navigating");
     state.navIdx = 0;
     if (msg) toast(msg);
   }

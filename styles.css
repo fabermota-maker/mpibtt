@@ -549,6 +549,13 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
 
 .here-marker .here-core { fill: var(--brand); stroke: #fff; stroke-width: 3; }
 
+/* LP: pin “Estou aqui” (ponto azul) oculto — posição do usuário só via puck GPS quando houver fix */
+.here-marker,
+.overlay .here-marker {
+  display: none !important;
+  visibility: hidden !important;
+}
+
 /* Puck GPS — ponto azul + cone direcional (estilo Maps) */
 .user-location-puck { pointer-events: none; }
 .user-location-puck .ulp-accuracy {
@@ -814,6 +821,61 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
   }
   .map-controls { bottom: 150px; }
   .compass__ring { width: 126px; height: 126px; }
+
+  /* Navegação no celular: card na parte inferior, mapa continua visível */
+  .nav-overlay.is-open,
+  .nav-overlay:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    pointer-events: none;
+  }
+  .nav-overlay .compass {
+    pointer-events: none;
+    align-self: flex-start;
+    margin: 0 0 4px 4px;
+  }
+  .nav-overlay .compass__ring {
+    width: 88px;
+    height: 88px;
+    background: rgba(20, 24, 32, .82);
+    border: 1px solid rgba(255,255,255,.14);
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  }
+  .nav-overlay .nav-card {
+    pointer-events: auto;
+    width: 100%;
+    max-width: none;
+    border-radius: 18px;
+    padding: 16px 14px;
+    text-align: left;
+    box-shadow: 0 12px 40px rgba(0,0,0,.45);
+  }
+  .nav-overlay .nav-card__step {
+    font-size: 18px;
+    font-weight: 750;
+  }
+  .nav-overlay .nav-card__dist {
+    font-size: 13px;
+    margin: 4px 0 12px;
+  }
+  .nav-overlay .nav-card__hint {
+    font-size: 11px;
+  }
+  body.is-navigating .panel,
+  body.is-navigating .panel-toggle {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  body.is-navigating .map-controls {
+    bottom: calc(220px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @media (max-width: 400px) {

@@ -411,12 +411,13 @@
       }
       if (!animId) animId = requestAnimationFrame(animateFrame);
 
-      // centraliza mapa no centro do perímetro na 1ª ativação
+      // centraliza tracking interno no centro, sem exibir o puck ainda
       if (geo?.mapCenter && displaySvg.x == null) {
         const c = geo.latLngToSvg(geo.mapCenter.latitude, geo.mapCenter.longitude);
         if (c) {
-          targetSvg = { x: c.x, y: c.y };
-          displaySvg = { ...targetSvg };
+          // guarda alvo interno, mas NÃO chama setPosition (puck permanece oculto)
+          targetSvg = { x: null, y: null };
+          displaySvg = { x: null, y: null };
         }
       }
     }
@@ -445,16 +446,7 @@
           if (!ok) return false;
 
           ensureServices();
-          // Mostra puck no centro do campus imediatamente enquanto o GPS estabiliza
-          if (geo?.mapCenter) {
-            const c = geo.latLngToSvg(geo.mapCenter.latitude, geo.mapCenter.longitude);
-            if (c) {
-              targetSvg = { x: c.x, y: c.y };
-              displaySvg = { ...targetSvg };
-              puck?.setPosition(c.x, c.y, 40, metersToSvgUnits);
-            }
-          }
-
+          // Não posiciona puck no centro do campus — só aparece com fix GPS real
           location?.start();
           heading?.start();
 
