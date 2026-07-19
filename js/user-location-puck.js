@@ -24,8 +24,9 @@
     const root = document.createElementNS("http://www.w3.org/2000/svg", "g");
     root.setAttribute("id", "userLocationPuck");
     root.setAttribute("class", "user-location-puck");
-    root.setAttribute("hidden", "");
+    root.setAttribute("data-visible", "false");
     root.setAttribute("visibility", "hidden");
+    root.style.display = "none";
 
     const accuracy = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     accuracy.setAttribute("class", "ulp-accuracy");
@@ -39,7 +40,7 @@
     const cone = document.createElementNS("http://www.w3.org/2000/svg", "path");
     cone.setAttribute("class", "ulp-cone");
     cone.setAttribute("d", buildConePath(openingDeg, coneRadius));
-    cone.setAttribute("hidden", "");
+    // Cone sempre no DOM (sem atributo HTML hidden — CSS do overlay escondia o cone)
 
     const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     ring.setAttribute("class", "ulp-ring");
@@ -54,24 +55,35 @@
     body.appendChild(dot);
     root.appendChild(accuracy);
     root.appendChild(body);
-    overlayEl.appendChild(root);
+    if (overlayEl) overlayEl.appendChild(root);
 
     let visible = false;
     let x = 0;
     let y = 0;
     let displayHeading = 0;
-    let coneVisible = false;
+    let coneVisible = true;
+
+    function ensureInOverlay(host) {
+      const parent = host || overlayEl;
+      if (!parent) return;
+      if (root.parentNode !== parent) parent.appendChild(root);
+    }
 
     function show() {
       visible = true;
-      root.removeAttribute("hidden");
+      coneVisible = true;
+      root.setAttribute("data-visible", "true");
       root.setAttribute("visibility", "visible");
-      root.style.display = "";
+      root.style.removeProperty("display");
+      root.removeAttribute("hidden");
+      cone.style.removeProperty("display");
+      cone.removeAttribute("hidden");
+      ensureInOverlay();
     }
 
     function hide() {
       visible = false;
-      root.setAttribute("hidden", "");
+      root.setAttribute("data-visible", "false");
       root.setAttribute("visibility", "hidden");
       root.style.display = "none";
     }
@@ -86,11 +98,10 @@
       if (isFinite(accuracyMeters) && accuracyMeters > 0 && typeof metersToSvgUnits === "function") {
         const r = Math.max(6, metersToSvgUnits(accuracyMeters));
         accuracy.setAttribute("r", String(r));
-        accuracy.removeAttribute("hidden");
       } else {
         accuracy.setAttribute("r", "0");
       }
-      if (!visible) show();
+      show();
     }
 
     function setHeading(mapHeading, cameraBearing) {
@@ -98,10 +109,15 @@
       const heading =
         mapHeading == null || !isFinite(mapHeading) ? 0 : mapHeading;
       coneVisible = true;
+      cone.style.removeProperty("display");
       cone.removeAttribute("hidden");
-      cone.style.display = "";
       displayHeading = GT()?.normalizeAngle(heading - cam) ?? ((heading - cam) % 360 + 360) % 360;
       body.setAttribute("transform", `translate(${x} ${y}) rotate(${displayHeading})`);
+      if (visible) {
+        root.setAttribute("data-visible", "true");
+        root.setAttribute("visibility", "visible");
+        root.style.removeProperty("display");
+      }
     }
 
     return {
@@ -110,6 +126,7 @@
       hide,
       setPosition,
       setHeading,
+      ensureInOverlay,
       getPosition: () => ({ x, y }),
       isVisible: () => visible,
       hasCone: () => coneVisible,

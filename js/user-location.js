@@ -38,6 +38,8 @@
       getViewBox,
       getMetersPerUnit,
       toast,
+      ensureCampusView,
+      getOverlay,
     } = ctx;
 
     let geo = null;
@@ -209,18 +211,28 @@
       return { x: node.x, y: node.y };
     }
 
-    function applyAcceptedPosition(pos) {
-      if (!geo?.transform) return;
-      const rawSvg = geo.latLngToSvg(pos.latitude, pos.longitude);
-      if (!rawSvg) return;
+    function resolveOverlay() {
+      return (typeof getOverlay === "function" ? getOverlay() : null) || overlay;
+    }
 
-      if (getState().activeLevel && getState().activeLevel !== "L00") {
-        // ainda mostra no L00; em outros andares esconde
-        puck?.hide();
-        return;
+    function applyAcceptedPosition(pos) {
+      if (!geo?.transform && !geo?.latLngToSvg) return;
+      const rawSvg = geo.latLngToSvg(pos.latitude, pos.longitude);
+      if (!rawSvg || !isFinite(rawSvg.x) || !isFinite(rawSvg.y)) return;
+
+      // GPS vive no campus (L00). Se o usuário estiver em outro andar, volta ao térreo.
+      const level = getState()?.activeLevel || "L00";
+      if (level !== "L00") {
+        try {
+          ensureCampusView?.();
+        } catch (err) {
+          console.warn("ensureCampusView:", err);
+        }
       }
 
       ensureServices();
+      puck?.ensureInOverlay?.(resolveOverlay());
+
       const svgPt = snapToWalkableSvg(rawSvg, pos);
 
       targetSvg = { x: svgPt.x, y: svgPt.y };
@@ -242,6 +254,17 @@
       });
 
       puck?.setPosition(displaySvg.x, displaySvg.y, pos.accuracy, metersToSvgUnits);
+      // Cone imediato (norte do mapa até a bússola responder)
+      let mapHeading = 0;
+      const nav = getState().userNav || {};
+      if (nav.deviceHeading != null && isFinite(nav.deviceHeading)) {
+        mapHeading = geo?.gpsBearingToMapHeading
+          ? geo.gpsBearingToMapHeading(nav.deviceHeading)
+          : nav.deviceHeading;
+      } else if (locationBearing != null && isFinite(locationBearing)) {
+        mapHeading = locationBearing;
+      }
+      puck?.setHeading(mapHeading, nav.cameraBearing || 0);
       puck?.show?.();
     }
 
@@ -385,7 +408,9 @@
     }
 
     function ensureServices() {
-      if (!puck) puck = global.UserLocationPuck?.create?.(overlay);
+      const host = resolveOverlay();
+      if (!puck) puck = global.UserLocationPuck?.create?.(host);
+      else puck.ensureInOverlay?.(host);
       if (!camera) {
         camera = global.MapCameraController?.create?.({
           viewport,
@@ -436,6 +461,12 @@
             return false;
           }
 
+          try {
+            await Promise.resolve(ensureCampusView?.());
+          } catch (err) {
+            console.warn("ensureCampusView:", err);
+          }
+
           const geoOk = await loadGeo();
           if (!geoOk) {
             if (!silent) toast("Georreferência do mapa indisponível.");
@@ -471,6 +502,11 @@
     /** Força exibir o puck numa lat/lng (após coleta / orientação). */
     function showAtLatLng(latitude, longitude, accuracy) {
       if (!isFinite(latitude) || !isFinite(longitude)) return false;
+      try {
+        ensureCampusView?.();
+      } catch (err) {
+        console.warn("ensureCampusView:", err);
+      }
       ensureServices();
       applyAcceptedPosition({
         latitude,
@@ -480,6 +516,9 @@
         locationBearing: null,
         timestamp: Date.now(),
       });
+      if (displaySvg.x != null) {
+        camera?.centerOnPoint(displaySvg.x, displaySvg.y);
+      }
       return puck?.isVisible?.() || targetSvg.x != null;
     }
 

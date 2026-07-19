@@ -119,16 +119,29 @@
     ],
     // rotas opcionais nomeadas (par de POIs → via nó(s) externo(s))
     namedExternalRoutes: [
+      // Jardim / Espaço Servir ↔ Entrada do toldo (e kids/refeitório): por fora, sul do templo
       {
-        a: ["P007_area_kids", "P008_refeitorio_externo"],
-        b: ["P016_jardim", "P020_espaco_servir"],
-        via: "L00_N0027", // sul do templo / Batistério
-        label: "Por fora (externa)",
+        a: ["P016_jardim", "P020_espaco_servir"],
+        b: [
+          "P001_entrada_principal_toldo",
+          "P007_area_kids",
+          "P008_refeitorio_externo",
+        ],
+        via: [
+          "L00_N0027",
+          "L00_N0008_templo_estacionamento",
+          "L00_N0009_templo_entrada_principal_toldo_narnia",
+        ],
+        label: "Por fora da igreja",
+        // trecho leste do templo toca a zona de estacionamento no grafo
         avoidParking: false,
+        allowParking: true,
       },
-      // Lado leste / ginásio / hall → Elevador / Templo / mezanino: estacionamento → sul → jardim
+      // Nárnia / lado leste → Templo: sul do templo → Jardim → entrada lateral oeste
       {
         a: [
+          "B02_entrada_narnia",
+          "P028_B02_entrada_narnia",
           "P014_seven_pass",
           "P026_elevador_ginasio",
           "P021_banheiro_feminino_ginasio",
@@ -155,27 +168,49 @@
           "escada_mesanino_01",
           "escada_mesanino_02",
           "L01_elevador",
+          "L02_node_0001_elevador",
         ],
-        via: ["L00_N0004", "L00_N0027"],
-        label: "Por fora do templo",
+        via: ["L00_N0027", "L00_N0030"],
+        endNodes: ["L00_N0029"],
+        label: "Pelo jardim",
         avoidParking: false,
       },
     ],
-    // Andares disponíveis no seletor (L00 = campus atual; L01–L07 = prédios internos)
+    // Nível lógico (exibição/filtro) × mapa de rota (ícone/grafo)
+    // Espaço Servir fica no B01, mas o acesso caminhável está no L00 (Jardim / lateral templo).
+    poiLevels: {
+      P016_jardim: {
+        level: "L00",
+        mapLevel: "L00",
+        building: "Jardim",
+      },
+      P020_espaco_servir: {
+        level: "B01",
+        mapLevel: "L00",
+        building: "Subsolo 01",
+        accessNote:
+          "Acesso descendo pelo Jardim (L00) ou pela lateral do templo, próximo à entrada de pedestres da Av. Bento Viana",
+      },
+    },
+    // Andares: L00 = térreo/campus; L01–L07 = andares; B01/B02 = subsolos
     floors: [
       { id: "L00", label: "L00", title: "Térreo · Campus", ready: true },
-      { id: "L01", label: "L01", title: "1º andar", ready: true, mapUrl: "assets/mapa-L01.svg" },
-      { id: "L02", label: "L02", title: "2º andar", ready: false },
-      { id: "L03", label: "L03", title: "3º andar", ready: false },
+      { id: "L01", label: "L01", title: "1º andar · ADM", ready: true, mapUrl: "assets/mapa-L01.svg" },
+      { id: "L02", label: "L02", title: "2º andar · ADM", ready: true, mapUrl: "assets/mapa-L02.svg" },
+      { id: "L03", label: "L03", title: "3º andar · ADM", ready: true, mapUrl: "assets/mapa-L03.svg" },
       { id: "L04", label: "L04", title: "4º andar", ready: false },
       { id: "L05", label: "L05", title: "5º andar", ready: false },
       { id: "L06", label: "L06", title: "6º andar", ready: false },
       { id: "L07", label: "L07", title: "7º andar", ready: false },
+      { id: "B01", label: "B01", title: "Subsolo 01", ready: false },
+      { id: "B02", label: "B02", title: "Subsolo 02 · Nárnia", ready: false },
     ],
     // hubs de elevador por andar (conexão vertical)
     elevatorHubs: {
       L00: { nodeId: "L00_N0077", label: "Elevador Templo" },
       L01: { nodeId: "L01_elevador", label: "Elevador (1º andar)" },
+      L02: { nodeId: "L02_node_0001_elevador", label: "Elevador (2º andar)" },
+      L03: { nodeId: "L03_node_0001", label: "Elevador (3º andar)" },
     },
     // filtros da lista de destinos
     searchGroups: [
@@ -430,13 +465,18 @@
           || p.id === poi.rawId
           || (p.id && poi.rawId && p.id.endsWith(poi.rawId))
         );
-        if (!match?.nodeIds?.length) continue;
-        poi.navNodeIds = match.nodeIds.slice();
-        poi.navId = match.id;
-        const nid = match.nodeIds[0];
-        if (nid && G.nodes[nid]) {
-          poi.anchor = nid;
-          poi.snap = { x: G.nodes[nid].x, y: G.nodes[nid].y };
+        if (match?.nodeIds?.length) {
+          poi.navNodeIds = match.nodeIds.slice();
+          poi.navId = match.id;
+          if (match.level) poi.level = match.level;
+          if (match.mapLevel) poi.mapLevel = match.mapLevel;
+          if (match.building) poi.building = match.building;
+          if (match.accessNote) poi.accessNote = match.accessNote;
+          const nid = match.nodeIds[0];
+          if (nid && G.nodes[nid]) {
+            poi.anchor = nid;
+            poi.snap = { x: G.nodes[nid].x, y: G.nodes[nid].y };
+          }
         }
         enrichPoiMeta(poi);
       }
@@ -483,15 +523,32 @@
 
   function poiLevel(poi) {
     if (!poi) return "L00";
-    if (poi.level) return poi.level;
+    // Nível do mapa/grafo (rota) — não o subsolo lógico do destino
+    if (poi.mapLevel) return poi.mapLevel;
     if (poi.anchor && state.navGraph?.nodesById.has(poi.anchor)) {
       return state.navGraph.nodesById.get(poi.anchor).level || "L00";
     }
+    if (poi.level && !/^B0/i.test(poi.level)) return poi.level;
     return levelFromId(poi.rawId || poi.id) || "L00";
   }
 
+  /** Nível exibido ao usuário (ex.: B01 Subsolo), independente do mapa L00. */
+  function poiDisplayLevel(poi) {
+    if (!poi) return "L00";
+    return poi.level || poi.mapLevel || poiLevel(poi);
+  }
+
+  function poiLevelOverride(rawId) {
+    if (!rawId) return null;
+    const key = String(rawId).replace(/^L00_P_/i, "").replace(/^B0\d_P_/i, "");
+    return (CONFIG.poiLevels || {})[key] || (CONFIG.poiLevels || {})[rawId] || null;
+  }
+
   function floorTitle(levelId) {
-    return floorById(levelId)?.title || levelId || "andar";
+    const f = floorById(levelId);
+    if (!f) return levelId || "andar";
+    // Ex.: "B01 — Subsolo 01", "L00 — Térreo · Campus"
+    return `${f.id} — ${f.title}`;
   }
 
   function elevatorHub(levelId) {
@@ -574,7 +631,7 @@
   function isTempleHubPoi(poi) {
     if (!poi) return false;
     const k = poiRawKey(poi);
-    return /P027_elevador_templo|P000_templo|escada_mesanino|L01_elevador/i.test(k);
+    return /P027_elevador_templo|P000_templo|escada_mesanino|L01_elevador|L02_node_0001_elevador|L03_node_0001/i.test(k);
   }
 
   function namedExternalSpecsForPair(origin, dest) {
@@ -594,12 +651,13 @@
       (matchSide(r.a, a) && matchSide(r.b, b)) ||
       (matchSide(r.a, b) && matchSide(r.b, a))
     );
-    // Se envolve elevador/templo/mezanino e ainda não há "por fora do templo", força a opção
+    // Se envolve elevador/templo/mezanino e ainda não há "pelo jardim", força a opção
     if ((isTempleHubPoi(origin) || isTempleHubPoi(dest))
-      && !matched.some((r) => /fora do templo/i.test(r.label || ""))) {
+      && !matched.some((r) => /pelo jardim|fora do templo/i.test(r.label || ""))) {
       matched.push({
-        via: ["L00_N0004", "L00_N0027"],
-        label: "Por fora do templo",
+        via: ["L00_N0027", "L00_N0030"],
+        endNodes: ["L00_N0029"],
+        label: "Pelo jardim",
         avoidParking: false,
       });
     }
@@ -610,39 +668,48 @@
     return namedExternalSpecsForPair(origin, dest)[0] || null;
   }
 
-  /** Garante a rota nomeada (mesmo mais longa) entre as opções exibidas. */
+  /** Garante a rota nomeada como alternativa 2 (substitui a 2ª opção genérica). */
   function finalizePackedRoutes(packed, NR) {
     const list = (packed || []).filter((r) => r && r.points && r.points.length >= 2);
     list.sort((a, b) => a.length - b.length);
     const named = list.filter((r) => r.namedExternal);
     const rest = list.filter((r) => !r.namedExternal);
-    const out = rest.slice(0, Math.max(1, 3 - Math.min(1, named.length)));
+    const sigOf = (r) => (r.edgeIds || []).join(">");
+
+    const out = [];
+    // 1) rota mais curta
+    if (rest[0]) out.push(rest[0]);
+
+    // 2) rota nomeada (ex.: Por fora da igreja / Pelo jardim) — ocupa o slot da alternativa 2
     for (const n of named) {
-      if (out.length >= 4) break;
-      if (!out.some((r) => (r.edgeIds || []).join(">") === (n.edgeIds || []).join(">"))) {
-        out.push(n);
-      }
+      if (out.some((r) => sigOf(r) === sigOf(n))) continue;
+      out.push(n);
+      break;
     }
-    // se a nomeada ficou de fora por empate de assinatura, ainda assim inclui
-    if (named[0] && !out.some((r) => r.namedExternal) && out.length < 4) {
+
+    // 3) demais alternativas distintas
+    for (const r of rest.slice(1)) {
+      if (out.length >= 3) break;
+      if (out.some((x) => sigOf(x) === sigOf(r))) continue;
+      out.push(r);
+    }
+
+    // se a nomeada não entrou (ex.: empate de assinatura com a #1), ainda tenta incluir
+    if (named[0] && !out.some((r) => r.namedExternal) && out.length < 3) {
       out.push(named[0]);
     }
-    out.sort((a, b) => {
-      // nomeadas por fora ficam depois da mais curta, mas sempre presentes
-      if (a.namedExternal !== b.namedExternal) return a.namedExternal ? 1 : -1;
-      return a.length - b.length;
-    });
+
     out.forEach((r, i) => {
       r.rank = i + 1;
       if (r.namedExternal) {
         r.kind = "fora";
-        r.label = r.label || "Por fora do templo";
+        r.label = r.label || "Por fora da igreja";
       } else if (!r.entranceId) {
         r.label = (NR && NR.rankLabel) ? NR.rankLabel(i + 1, out.length) : `Rota ${i + 1}`;
         r.kind = i === 0 ? "best" : "alt";
       }
     });
-    return out.slice(0, 4);
+    return out.slice(0, 3);
   }
 
   /** Concatena pernas A* (via um ou mais nós) numa única rota. */
@@ -671,36 +738,52 @@
     const vias = (Array.isArray(spec.via) ? spec.via : [spec.via])
       .filter((id) => state.navGraph.nodesById.has(id));
     if (!vias.length) return null;
-    const opts = {
-      preference: "shortest",
-      avoidParking: spec.avoidParking === true,
-      walkingSpeedMps: state.walkingSpeedMps || 1.2,
-    };
-    let best = null;
-    for (const s of startIds) {
-      if (!s || !state.navGraph.nodesById.has(s)) continue;
-      for (const e of endIds) {
-        if (!e || !state.navGraph.nodesById.has(e)) continue;
-        const waypoints = [s, ...vias, e];
-        const legs = [];
-        let ok = true;
-        for (let i = 0; i < waypoints.length - 1; i++) {
-          const leg = NR.astar(waypoints[i], [waypoints[i + 1]], state.navGraph, opts);
-          if (!leg) { ok = false; break; }
-          legs.push(leg);
+    const preferredEnds = (Array.isArray(spec.endNodes) ? spec.endNodes : [])
+      .filter((id) => state.navGraph.nodesById.has(id));
+    const ends = preferredEnds.length ? preferredEnds : endIds;
+    const allowPark = spec.allowParking === true || spec.avoidParking === false;
+
+    const tryBuild = (avoidParking) => {
+      const opts = {
+        preference: "shortest",
+        avoidParking: !!avoidParking,
+        walkingSpeedMps: state.walkingSpeedMps || 1.2,
+      };
+      let best = null;
+      for (const s of startIds) {
+        if (!s || !state.navGraph.nodesById.has(s)) continue;
+        for (const e of ends) {
+          if (!e || !state.navGraph.nodesById.has(e)) continue;
+          const waypoints = [s, ...vias, e];
+          const legs = [];
+          let ok = true;
+          for (let i = 0; i < waypoints.length - 1; i++) {
+            const leg = NR.astar(waypoints[i], [waypoints[i + 1]], state.navGraph, opts);
+            if (!leg) { ok = false; break; }
+            legs.push(leg);
+          }
+          if (!ok) continue;
+          const merged = concatNavLegs(...legs);
+          if (!merged || !(merged.points || []).length) continue;
+          if (!best || merged.distanceMeters < best.distanceMeters) {
+            best = merged;
+            best._endNode = e;
+          }
         }
-        if (!ok) continue;
-        const merged = concatNavLegs(...legs);
-        if (!merged || merged.points.length < 2) continue;
-        if (!best || merged.distanceMeters < best.distanceMeters) best = merged;
       }
-    }
+      return best;
+    };
+
+    let best = allowPark ? tryBuild(false) : tryBuild(spec.avoidParking === true);
+    if (!best) best = tryBuild(false);
     if (!best) return null;
+
     const points = appendPoiEndpoints(best.points, origin, dest);
     if (points.length < 2) return null;
     let length = 0;
     for (let i = 1; i < points.length; i++) length += dist(points[i - 1], points[i]);
     const mpu = getMetersPerUnit();
+    const endGate = (CONFIG.templeEntrances || []).find((g) => g.id === best._endNode);
     return {
       points,
       length: mpu > 0 ? best.distanceMeters / mpu : length,
@@ -711,6 +794,8 @@
       kind: "fora",
       fromJson: true,
       namedExternal: true,
+      viaEndNode: best._endNode || null,
+      entranceLabel: endGate?.label || null,
     };
   }
 
@@ -1423,6 +1508,7 @@
     }
     state.userLocation = UserLocationSystem.create({
       overlay: el.overlay,
+      getOverlay: () => el.overlay,
       viewport: el.viewport,
       canvas: el.canvas,
       locBtn: el.locBtn,
@@ -1435,6 +1521,11 @@
       getViewBox: () => ({ w: G.vbW, h: G.vbH }),
       getMetersPerUnit,
       toast,
+      ensureCampusView: () => {
+        if (state.activeLevel === "L00") return;
+        // GPS / puck usam coordenadas do campus — força L00 sem limpar a viagem
+        return setActiveLevel("L00", { keepTrip: true, silent: true });
+      },
     });
     // Não auto-inicia: permissão de GPS/bússola precisa de gesto do usuário (clique no botão).
     initGpsOrientation();
@@ -1543,6 +1634,9 @@
       ensureGeofence,
       ensureUserLocationStarted: async () => {
         if (!state.userLocation) return false;
+        if (state.activeLevel !== "L00") {
+          await setActiveLevel("L00", { keepTrip: true, silent: true });
+        }
         if (state.userLocation.startFollowing) {
           return !!(await state.userLocation.startFollowing());
         }
@@ -2160,8 +2254,11 @@
     if (/area_kids|refeitorio_externo|^p007_|^p008_/.test(id) || /area kids|refeitorio externo/.test(n)) {
       return "Área Kids";
     }
-    if (/espaco_servir|jardim|^p016_|^p020_/.test(id) || /espaco servir|jardim/.test(n)) {
-      return "Área Sul";
+    if (/espaco_servir|^p020_/.test(id) || /espaco servir|espaço servir/.test(n)) {
+      return "Subsolo 01";
+    }
+    if (/jardim|^p016_/.test(id) || /jardim/.test(n)) {
+      return "Jardim";
     }
     if (/estacionamento|pedestre|batel|bento|^p003_|^p006_|^p028_|^p029_|^p030_|^p031_/.test(id)
       || /estacionamento|pedestre|batel|bento/.test(n)) {
@@ -2189,15 +2286,25 @@
   }
 
   function enrichPoiMeta(poi) {
-    const level = poi.level || levelFromId(poi.rawId) || "L00";
-    const building = poi.building || buildingFromPoi(poi.rawId, poi.name);
+    const ov = poiLevelOverride(poi.rawId || poi.id);
+    const level = ov?.level || poi.level || levelFromId(poi.rawId) || "L00";
+    const mapLevel = ov?.mapLevel || poi.mapLevel || (level.startsWith("B") ? "L00" : level);
+    const building = ov?.building || poi.building || buildingFromPoi(poi.rawId, poi.name);
     const group = poi.group || searchGroupFromPoi(poi.rawId, poi.name, poi.cat);
     const code = poi.code || `${level}_${poi.rawId || poi.id}`;
-    const searchLabel = poi.searchLabel || `${poi.name} — ${level} — ${building}`;
+    const accessNote = ov?.accessNote || poi.accessNote || null;
+    const floorLabel = floorById(level);
+    const levelTitle = floorLabel ? `${level} — ${floorLabel.title}` : level;
+    const searchLabel = poi.searchLabel
+      || (accessNote
+        ? `${poi.name} — ${levelTitle} — ${building}`
+        : `${poi.name} — ${levelTitle} — ${building}`);
     poi.level = level;
+    poi.mapLevel = mapLevel;
     poi.building = building;
     poi.group = group;
     poi.code = code;
+    poi.accessNote = accessNote;
     poi.searchLabel = searchLabel;
     return poi;
   }
@@ -2268,7 +2375,9 @@
         const rawId = c.id || `${layerId}-p${i}`;
         const name = decodePoiName(rawId, c.getAttribute("data-name"));
         const cat = c.getAttribute("data-cat") || guessCat(name);
-        const level = levelFromId(rawId) || levelFromId(c.id) || "L00";
+        const ov = poiLevelOverride(rawId);
+        const level = ov?.level || levelFromId(rawId) || levelFromId(c.id) || "L00";
+        const mapLevel = ov?.mapLevel || "L00";
         const poiId = `${level}_${rawId}`;
         c.setAttribute("data-poi", poiId);
         c.style.cursor = "pointer";
@@ -2279,6 +2388,7 @@
           iconX: p.x, iconY: p.y,
           rawId, anchor: null, snap: null,
           level,
+          mapLevel,
         });
         G.pois.push(poi);
       });
@@ -2732,6 +2842,91 @@
         toast(`${poi.name} selecionado.`);
       });
     });
+  }
+
+  /** Associa ícones/áreas do SVG de andar (L02/L03) aos POIs do grafo. */
+  function bindFloorPois(svg, levelId) {
+    if (!svg || !levelId) return;
+    const levelPois = (G.pois || []).filter((p) => (p.level || p.mapLevel) === levelId);
+    if (!levelPois.length) return;
+
+    const iconMaps = {
+      L02: {
+        L02_sala_001: "L02_POI0010_sala_01",
+        L02_sala_002: "L02_POI0011_sala_02",
+        L02_sala_003: "L02_POI0001_sala_03",
+        L02_sala_004: "L02_POI0004_sala_04",
+        L02_sala_005: "L02_POI0005_sala_05",
+        L02_auditorio_01: "L02_POI0003_auditorio",
+        P023_L02_banheiro_feminino: "L02_POI0008_banheiro_feminino",
+        "P023_L02_banheiro_feminino-2": "L02_POI0008_banheiro_feminino",
+        P024_L02_banheiro_masculino: "L02_POI0009_banheiro_masculino",
+        P024__L02_banheiro_masculino: "L02_POI0009_banheiro_masculino",
+        P027_L01_elevador_templo: "L02_POI0002_elevador",
+        P007_L01_area_kids: "L02_POI0002_area_kids",
+      },
+      L03: {
+        L03_sala_001: "L03_POI0010_sala_01",
+        L03_sala_002: "L03_POI0011_sala_02",
+        L03_sala_003: "L03_POI0001_sala_03",
+        L03_sala_004: "L03_POI0004_sala_04",
+        L03_sala_005: "L03_POI0005_sala_05",
+        L03_sala_006: "L03_POI0006_sala_06",
+        L03_sala_007: "L03_POI0007_sala_07",
+        L03_sala_008: "L03_POI0008_sala_08",
+        L03_sala_009: "L03_POI0009_sala_09",
+        L03_sala_010: "L03_POI0010_sala_10",
+        L03_sala_011: "L03_POI0011_sala_11",
+        L03_sala_012: "L03_POI0012_sala_12",
+        "L03_sala_012-2": "L03_POI0013_sala_13",
+        L03_sala_014: "L03_POI0014_sala_14",
+        L03_sala_015: "L03_POI0015_sala_15",
+        L03_sala_016: "L03_POI0016_sala_16",
+        L03_auditorio_02: "L03_POI0003_auditorio",
+        L03_cozinha: "L03_POI0027_copa",
+        P023_L02_banheiro_feminino: "L03_POI0028_banheiro_feminino",
+        "P023_L02_banheiro_feminino-2": "L03_POI0028_banheiro_feminino",
+        P024_L02_banheiro_masculino: "L03_POI0009_banheiro_masculino",
+        P024__L02_banheiro_masculino: "L03_POI0009_banheiro_masculino",
+        P027_L01_elevador_templo: "L03_POI0002_elevador",
+        P007_L01_area_kids: "L03_POI0002_area_kids",
+      },
+    };
+    const iconMap = iconMaps[levelId] || {};
+
+    const byRaw = Object.fromEntries(levelPois.map((p) => [p.rawId, p]));
+    const poiLayerId = `${levelId}_POI`;
+
+    // áreas técnicas (retângulos) — clicáveis, invisíveis
+    svg.querySelectorAll(`#${poiLayerId} [id^='${levelId}_POI'], #${poiLayerId} rect[id]`).forEach((el) => {
+      const raw = el.id;
+      const poi = byRaw[raw];
+      if (!poi) return;
+      el.setAttribute("data-poi", poi.id);
+      el.style.cursor = "pointer";
+      el.style.pointerEvents = "all";
+    });
+
+    // ícones visíveis
+    Object.entries(iconMap).forEach(([elId, rawId]) => {
+      const el = svg.getElementById(elId);
+      const poi = byRaw[rawId];
+      if (!el || !poi) return;
+      el.setAttribute("data-poi", poi.id);
+      el.style.cursor = "pointer";
+      el.style.pointerEvents = "all";
+    });
+
+    // fallback: qualquer id que bata com rawId
+    levelPois.forEach((poi) => {
+      const el = svg.getElementById(poi.rawId);
+      if (!el || el.hasAttribute("data-poi")) return;
+      el.setAttribute("data-poi", poi.id);
+      el.style.cursor = "pointer";
+      el.style.pointerEvents = "all";
+    });
+
+    bindPOIs(svg);
   }
 
   /* ============================================================ DIJKSTRA */
@@ -3202,33 +3397,44 @@
     const outdoorIds = shortest(startNode, endNode, null, null, { ...baseOpts, preferZone: "outdoor" });
     pushPath(outdoorIds, "fora");
 
-    // 4b) rotas externas nomeadas (ex.: por fora do templo via estacionamento/sul)
+    // 4b) rotas externas nomeadas (ex.: pelo jardim → entrada lateral oeste)
     for (const extSpec of namedExternalSpecsForPair(origin, dest)) {
       if (out.length >= 4) break;
       const vias = (Array.isArray(extSpec.via) ? extSpec.via : [extSpec.via])
         .filter((id) => G.nodes[id]);
       if (!vias.length) continue;
+      const preferredEnds = (Array.isArray(extSpec.endNodes) ? extSpec.endNodes : [])
+        .filter((id) => G.nodes[id]);
+      const targetEnd = preferredEnds[0] || endNode;
       const extOpts = {
-        avoidParking: extSpec.avoidParking === true,
+        avoidParking: !(extSpec.allowParking === true || extSpec.avoidParking === false),
         officialOnly: true,
       };
-      const chain = [startNode, ...vias, endNode];
+      const chain = [startNode, ...vias, targetEnd];
       let ids = [chain[0]];
       let ok = true;
       for (let i = 0; i < chain.length - 1; i++) {
-        const leg = shortest(chain[i], chain[i + 1], null, null, extOpts);
+        let leg = shortest(chain[i], chain[i + 1], null, null, extOpts);
+        // lateral do templo toca zona de estacionamento — tenta liberar se falhar
+        if ((!leg || leg.length < 2) && extOpts.avoidParking) {
+          leg = shortest(chain[i], chain[i + 1], null, null, { ...extOpts, avoidParking: false });
+        }
         if (!leg || leg.length < 2) { ok = false; break; }
         ids = ids.concat(leg.slice(1));
       }
       if (!ok) continue;
       const sig = ids.join(">");
       if (seen.has(sig)) continue;
-      const r = assembleRoute(ids, origin, dest);
+      const destGate = preferredEnds[0]
+        ? { id: preferredEnds[0], x: G.nodes[preferredEnds[0]].x, y: G.nodes[preferredEnds[0]].y }
+        : dest;
+      const r = assembleRoute(ids, origin, destGate);
       if (r && r.points.length >= 2) {
         r.sig = sig;
         r.kind = "fora";
         r.label = extSpec.label || "Por fora (externa)";
         r.namedExternal = true;
+        r.viaEndNode = preferredEnds[0] || null;
         out.push(r);
         seen.add(sig);
       }
@@ -3280,9 +3486,15 @@
       const doors = [];
       const seenDoor = new Set();
       for (const r of out) {
-        if (!r.entranceId || !r.label) continue;
+        if (!r.entranceId || !r.label || r.namedExternal) continue;
         if (seenDoor.has(r.entranceId)) continue;
         seenDoor.add(r.entranceId);
+        doors.push(r);
+        if (doors.length >= 3) break;
+      }
+      for (const r of out) {
+        if (!r.namedExternal) continue;
+        if (doors.some((d) => (d.edgeIds || []).join(">") === (r.edgeIds || []).join(">"))) continue;
         doors.push(r);
         if (doors.length >= 4) break;
       }
@@ -3339,11 +3551,18 @@
       }
     }
 
-    // garante a externa nomeada entre as opções
+    // garante a externa nomeada como alternativa 2
     const namedExt = out.find((r) => r.namedExternal);
-    if (namedExt && !picked.includes(namedExt)) {
-      if (picked.length < 3) picked.push(namedExt);
-      else picked[picked.length - 1] = namedExt;
+    if (namedExt) {
+      const without = picked.filter((r) => r !== namedExt && !r.namedExternal);
+      const next = [];
+      if (without[0]) next.push(without[0]);
+      next.push(namedExt);
+      for (const r of without.slice(1)) {
+        if (next.length >= 3) break;
+        next.push(r);
+      }
+      return next.slice(0, 3);
     }
 
     return picked.slice(0, 3);
@@ -3634,6 +3853,16 @@
     }
 
     let options = routeOptions(state.origin, state.dest);
+    // garantia: se o par tem rota nomeada, ela precisa aparecer (alt. 2)
+    if (state.navGraph && globalThis.NavigationRouter) {
+      const NR = globalThis.NavigationRouter;
+      const startIds = resolveNavNodeIds(state.origin, state.origin.id === "__here__" ? "here" : "origin");
+      const endIds = resolveNavNodeIds(state.dest, "dest");
+      if (startIds.length && endIds.length) {
+        options = appendNamedExternalOptions(NR, startIds, endIds, state.origin, state.dest, options || []);
+        options = finalizePackedRoutes(options, NR);
+      }
+    }
     // garantia: só malha (nodes/edges) — nunca linha reta
     if (!options.length) {
       const er = emergencyRoute(state.origin, state.dest);
@@ -3787,7 +4016,13 @@
     const input = which === "origin" ? el.originInput : el.destInput;
     input.value = poi.searchLabel || poi.name;
     closeSuggest();
+    exitMobileSearchMode();
+    input.blur();
     highlightSelected();
+
+    if (which === "dest" && poi?.accessNote) {
+      toast(poi.accessNote);
+    }
 
     if (state.origin && state.dest) {
       drawRoute();
@@ -3853,8 +4088,10 @@
       return;
     }
     html += items.map((p) => {
-      const label = p.searchLabel || `${p.name} — ${p.level || "L00"} — ${p.building || "Campus"}`;
-      const meta = `${p.level || "L00"} · ${p.building || "Campus"}`;
+      const label = p.searchLabel || `${p.name} — ${poiDisplayLevel(p)} — ${p.building || "Campus"}`;
+      const meta = p.accessNote
+        ? `${poiDisplayLevel(p)} · ${p.building || "Campus"} · acesso pelo L00`
+        : `${poiDisplayLevel(p)} · ${p.building || "Campus"}`;
       return `
       <li data-id="${p.id}" aria-selected="false">
         <span class="s-ico">${iconFor()}</span>
@@ -3876,6 +4113,72 @@
   }
 
   function closeSuggest() { el.originList.hidden = true; el.destList.hidden = true; }
+
+  /* ---- Mobile: painel no topo quando o teclado abre ---- */
+  let mobileSearchExitTimer = null;
+
+  function isMobileLayout() {
+    return window.innerWidth <= 860;
+  }
+
+  function syncVisualViewportVars() {
+    const vv = window.visualViewport;
+    const top = vv ? vv.offsetTop : 0;
+    const height = vv ? vv.height : window.innerHeight;
+    document.documentElement.style.setProperty("--vv-top", `${Math.max(0, top)}px`);
+    document.documentElement.style.setProperty("--vv-height", `${Math.max(180, height)}px`);
+  }
+
+  function enterMobileSearchMode() {
+    if (!isMobileLayout() || !el.panel) return;
+    clearTimeout(mobileSearchExitTimer);
+    el.panel.classList.add("open", "is-searching");
+    document.body.classList.add("is-searching-mobile");
+    syncVisualViewportVars();
+    // garante que o campo focado fique visível no painel
+    requestAnimationFrame(() => {
+      const active = document.activeElement;
+      if (active && el.panel.contains(active) && typeof active.scrollIntoView === "function") {
+        active.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
+    });
+  }
+
+  function exitMobileSearchMode() {
+    if (!el.panel) return;
+    clearTimeout(mobileSearchExitTimer);
+    el.panel.classList.remove("is-searching");
+    document.body.classList.remove("is-searching-mobile");
+  }
+
+  function scheduleExitMobileSearchMode() {
+    clearTimeout(mobileSearchExitTimer);
+    mobileSearchExitTimer = setTimeout(() => {
+      const active = document.activeElement;
+      if (active === el.originInput || active === el.destInput) return;
+      if (active && el.panel?.contains(active) && active.closest?.(".suggest")) return;
+      exitMobileSearchMode();
+    }, 180);
+  }
+
+  function initMobileViewport() {
+    syncVisualViewportVars();
+    const onVV = () => {
+      syncVisualViewportVars();
+      if (isMobileLayout() && el.panel?.classList.contains("is-searching")) {
+        // se o teclado fechou e nenhum campo tem foco, sai do modo busca
+        const active = document.activeElement;
+        const focused = active === el.originInput || active === el.destInput;
+        if (!focused) exitMobileSearchMode();
+      }
+    };
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", onVV);
+      window.visualViewport.addEventListener("scroll", onVV);
+    }
+    window.addEventListener("resize", onVV);
+  }
+
 
   function refreshOpenSuggest() {
     if (state.activeField === "origin" && el.originList && !el.originList.hidden) {
@@ -3949,7 +4252,7 @@
       el.searchLevelSelect.innerHTML = [
         `<option value="all">Todos os níveis</option>`,
         ...floors.map((f) => {
-          const title = f.id === "L00" ? "L00 — Térreo" : f.label;
+          const title = `${f.id} — ${f.title}`;
           return `<option value="${f.id}">${title}</option>`;
         }),
       ].join("");
@@ -4243,9 +4546,12 @@
     }
   }
 
-  /* ============================================================ ANDARES (L00–L07) */
+  /* ============================================================ ANDARES (B01–B02, L00–L07) */
   function levelFromId(id) {
-    const m = String(id || "").match(/(?:^|_)(L0[0-7])(?=_|$)/i) || String(id || "").match(/\b(L0[0-7])\b/i);
+    const s = String(id || "");
+    const m =
+      s.match(/(?:^|_)(B0[12]|L0[0-7])(?=_|$)/i) ||
+      s.match(/\b(B0[12]|L0[0-7])\b/i);
     return m ? m[1].toUpperCase() : null;
   }
 
@@ -4276,11 +4582,14 @@
     const floors = CONFIG.floors || [];
     el.floorMenu.innerHTML = floors.map((f) => {
       const selected = f.id === state.activeLevel;
-      const meta = f.mapUrl ? `${f.title} · base` : (f.ready ? f.title : "Em breve");
+      const available = !!(f.mapUrl || f.ready);
+      const meta = f.mapUrl
+        ? `${f.title} · disponível`
+        : (f.ready ? f.title : `${f.title} · em breve`);
       return `<li role="option">
-        <button type="button" class="floor-menu__item" data-floor="${f.id}"
+        <button type="button" class="floor-menu__item${available ? "" : " floor-menu__item--soon"}" data-floor="${f.id}"
           aria-selected="${selected ? "true" : "false"}">
-          <span>${f.label}</span>
+          <span>${f.id} — ${f.title}</span>
           <span class="floor-menu__meta">${meta}</span>
         </button>
       </li>`;
@@ -4323,15 +4632,15 @@
     }
   }
 
-  /** Mostra só POIs L00 no campus; andares com SVG próprio usam showFloorMap. */
+  /** Ícones no SVG do campus: usa mapLevel (Espaço Servir B01 continua visível no L00). */
   function applyFloorVisibility() {
     const host = state.floorViews.L00 || el.svgHost?.querySelector("#mapaSVG");
     if (!host) return;
     const active = state.activeLevel || "L00";
     host.querySelectorAll("[data-poi]").forEach((node) => {
       const poi = G.pois.find((p) => p.id === node.getAttribute("data-poi"));
-      const lvl = poi?.level || "L00";
-      const on = active === "L00" && lvl === "L00";
+      const mapLvl = poi?.mapLevel || "L00";
+      const on = active === "L00" && mapLvl === "L00";
       node.style.display = on ? "" : "none";
       node.style.pointerEvents = on ? "all" : "none";
       if (!on) {
@@ -4379,7 +4688,9 @@
     const vbW = vb[2] || 1000;
     const vbH = vb[3] || 600;
     // Só injeta fundo se o SVG não trouxer um (ex.: L01 já tem #fffef5)
-    const hasOwnBg = !!svg.querySelector("[data-floor-bg], #L01_adm_map_bacground > rect, rect.cls-4");
+    const hasOwnBg = !!svg.querySelector(
+      "[data-floor-bg], #L01_adm_map_bacground > rect, #L02_adm_map_background > rect, #L03_adm_map_background > rect, rect.cls-4, rect.l02-bg, rect.l03-bg",
+    );
     if (!hasOwnBg) {
       const bg = document.createElementNS(NS, "rect");
       bg.setAttribute("data-floor-bg", "true");
@@ -4400,6 +4711,19 @@
 
     state.floorViews[floor.id] = svg;
     state.floorMeta[floor.id] = { vbX, vbY, vbW, vbH };
+
+    // Andares internos: esconder camadas técnicas (poi/node/edge) se existirem
+    ["L02_POI", "L02_NODES", "L02_EDGES", "L03_POI", "L03_NODES", "L03_EDGES", "NODES", "EDGES"].forEach((id) => {
+      const g = svg.getElementById(id);
+      if (!g) return;
+      g.style.display = "none";
+      g.style.visibility = "hidden";
+      g.style.pointerEvents = "none";
+      g.setAttribute("aria-hidden", "true");
+    });
+
+    bindFloorPois(svg, floor.id);
+
     return svg;
   }
 
@@ -4480,6 +4804,15 @@
     updateFloorChrome();
     closeSuggest();
 
+    // Ao abrir um andar com mapa, filtra a lista de destinos para esse nível
+    if (floor.mapUrl && el.searchLevelSelect) {
+      state.searchLevel = floor.id;
+      el.searchLevelSelect.value = floor.id;
+    } else if (floor.id === "L00" && el.searchLevelSelect) {
+      state.searchLevel = "all";
+      el.searchLevelSelect.value = "all";
+    }
+
     const n = poisForActiveLevel().length;
     if (!opts.silent) {
       if (state.route && multiTrip) {
@@ -4489,7 +4822,7 @@
       } else if (floor.ready) {
         toast(`${floor.title} · ${n} local${n === 1 ? "" : "is"}`);
       } else {
-        toast(`${floor.label} selecionado — mapa em preparação`);
+        toast(`${floor.label} · em breve (mapa ainda não publicado)`);
       }
     }
     if (el.statusHint) {
@@ -4550,15 +4883,26 @@
       if (state.floorMenuOpen && el.floorPicker && !e.target.closest("#floorPicker")) closeFloorMenu();
     });
     // inputs autocomplete
-    el.originInput.addEventListener("focus", () => renderSuggest("origin", el.originInput.value));
+    el.originInput.addEventListener("focus", () => {
+      enterMobileSearchMode();
+      renderSuggest("origin", el.originInput.value);
+    });
     el.originInput.addEventListener("input", () => { state.origin = null; renderSuggest("origin", el.originInput.value); });
-    el.destInput.addEventListener("focus", () => renderSuggest("dest", el.destInput.value));
+    el.destInput.addEventListener("focus", () => {
+      enterMobileSearchMode();
+      renderSuggest("dest", el.destInput.value);
+    });
     el.destInput.addEventListener("input", () => { state.dest = null; renderSuggest("dest", el.destInput.value); });
+    el.originInput.addEventListener("blur", () => scheduleExitMobileSearchMode());
+    el.destInput.addEventListener("blur", () => scheduleExitMobileSearchMode());
     document.addEventListener("pointerdown", (e) => {
       if (!e.target.closest(".field") && !e.target.closest(".suggest") && !e.target.closest("#browseBar")) {
         closeSuggest();
+        exitMobileSearchMode();
       }
     });
+
+    initMobileViewport();
 
     el.swapBtn.addEventListener("click", (e) => {
       e.preventDefault();

@@ -253,7 +253,7 @@
       lng: -49.285336,
       type: "GPS_REFERENCE",
       category: "DESTINATION",
-      floorId: "L00",
+      floorId: "B01",
       navNodeId: null,
       useForGpsSync: true,
     },

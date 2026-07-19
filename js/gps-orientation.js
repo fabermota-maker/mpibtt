@@ -182,7 +182,13 @@
         setGpsButtonState("FOUND");
 
         // Garante puck na posição coletada (mesmo se a geofence estiver oscilando)
-        getState()?.userLocation?.showAtLatLng?.(latitude, longitude, accuracy);
+        const shown = getState()?.userLocation?.showAtLatLng?.(latitude, longitude, accuracy);
+        if (!shown) {
+          // Retry curto: geo/overlay pode ainda estar montando
+          setTimeout(() => {
+            getState()?.userLocation?.showAtLatLng?.(latitude, longitude, accuracy);
+          }, 120);
+        }
 
         if (locationResult.approximate) {
           toast(
