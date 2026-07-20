@@ -1683,7 +1683,7 @@
       if (CONFIG.isDev && state.calibration) {
         drawCalibrationMarks(state.calibration.startPoint, state.calibration.endPoint);
       }
-      fit();
+      fitSoon();
       initUserLocation();
     } catch (err) {
       el.statusHint.textContent = `Não foi possível montar o mapa: ${err.message}`;
@@ -4149,10 +4149,10 @@
 
     state.routeOptions = options;
     state.routePickOpen = true;
+    // No celular: fecha o painel antes do zoom para a rota caber no viewport
+    if (innerWidth <= 860) el.panel.classList.remove("open");
     selectRoute(0, true);
     el.summary.hidden = false;
-    // No celular: fecha o painel para a rota ficar visível e centralizada no mapa
-    if (innerWidth <= 860) el.panel.classList.remove("open");
     const n = state.routeOptions.length;
     toast(n > 1
       ? `${n} rotas — Rota 1 (mais curta) selecionada.`
@@ -4190,8 +4190,7 @@
       renderRouteOptions();
       state.navIdx = 0;
       if (doFit) {
-        // sempre enquadra a rota inteira no campo de visão
-        requestAnimationFrame(() => fitRouteInView(route, { navMode: false }));
+        fitSoon(() => fitRouteInView(route, { navMode: false, preferActiveLeg: true }));
       }
       if (multi) {
         if (routeUsesLateralStairs(route)) {
@@ -4673,15 +4672,29 @@
   }
   function fit() {
     const r = el.viewport.getBoundingClientRect();
-    if (!r.width) return;
-    const pad = innerWidth <= 860 ? 24 : 48;
-    const sc = Math.min((r.width - pad * 2) / G.vbW, (r.height - pad * 2) / G.vbH);
-    state.minScale = Math.max(0.1, sc * 0.7);
+    if (!r.width || !r.height || !G.vbW || !G.vbH) return;
+    const mobile = innerWidth <= 860;
+    // maior escala possível no campo visível (reserva a faixa do card inferior no celular)
+    const padX = mobile ? 10 : 36;
+    const padTop = mobile ? 10 : 36;
+    const padBottom = mobile ? 138 : 36;
+    const availW = Math.max(40, r.width - padX * 2);
+    const availH = Math.max(40, r.height - padTop - padBottom);
+    const sc = Math.min(availW / G.vbW, availH / G.vbH);
+    state.minScale = Math.max(0.08, sc * 0.55);
+    state.maxScale = Math.max(state.maxScale || 8, sc * 12, 10);
     state.scale = sc;
-    state.panX = (r.width - G.vbW * sc) / 2;
-    state.panY = (r.height - G.vbH * sc) / 2;
+    state.panX = padX + (availW - G.vbW * sc) / 2;
+    state.panY = padTop + (availH - G.vbH * sc) / 2;
     apply();
   }
+
+  /** Agenda fit após o layout (viewport estável). */
+  function fitSoon(fn) {
+    const run = typeof fn === "function" ? fn : fit;
+    requestAnimationFrame(() => requestAnimationFrame(run));
+  }
+
   function fitToPoints(pts, opts = {}) {
     if (!pts?.length) return;
     const r = el.viewport.getBoundingClientRect();
@@ -4695,27 +4708,31 @@
     const maxX = Math.max(...xs);
     const minY = Math.min(...ys);
     const maxY = Math.max(...ys);
-    const w = Math.max(80, maxX - minX);
-    const h = Math.max(80, maxY - minY);
+    const minSpan = opts.minSpan ?? 64;
+    const w = Math.max(minSpan, maxX - minX);
+    const h = Math.max(minSpan, maxY - minY);
 
     const mobile = innerWidth <= 860;
-    const padX = opts.padX ?? (mobile ? 36 : 110);
-    const padTop = opts.padTop ?? (mobile ? 64 : 110);
+    const padX = opts.padX ?? (mobile ? 36 : 100);
+    const padTop = opts.padTop ?? (mobile ? 72 : 100);
     // reserva espaço inferior (painel / card de navegação) para a rota ficar no campo de visão
     const padBottom = opts.padBottom ?? (mobile
-      ? (opts.navMode ? 300 : 170)
-      : (opts.navMode ? 220 : 110));
+      ? (opts.navMode ? 280 : 160)
+      : (opts.navMode ? 200 : 100));
 
     const availW = Math.max(60, r.width - padX * 2);
     const availH = Math.max(60, r.height - padTop - padBottom);
     const nextScale = Math.min(
       state.maxScale,
-      Math.max(state.minScale * 0.5, Math.min(availW / w, availH / h) * 0.92),
+      Math.max(state.minScale * 0.35, Math.min(availW / w, availH / h) * 0.9),
     );
     state.scale = nextScale;
 
-    const midX = (minX + maxX) / 2;
-    const midY = (minY + maxY) / 2;
+    // viewBox dos andares começa em (vbX, vbY) — o pan opera no espaço local do SVG
+    const vbX = G.vbX || 0;
+    const vbY = G.vbY || 0;
+    const midX = (minX + maxX) / 2 - vbX;
+    const midY = (minY + maxY) / 2 - vbY;
     const focusCX = r.width / 2;
     const focusCY = padTop + availH / 2;
     state.panX = focusCX - midX * state.scale;
@@ -4724,22 +4741,62 @@
     apply();
   }
 
-  /** Enquadra a rota completa no viewport (origem → destino). */
+  /** Pontos da rota no andar atual (o que está pintado). */
+  function activeLegPoints(route = state.route) {
+    const legs = route?.legs;
+    if (legs?.length) {
+      const leg = legs.find((l) => l.level === state.activeLevel) || legs[0];
+      if (leg?.points?.length) return leg.points.filter((p) => p && isFinite(p.x) && isFinite(p.y));
+    }
+    return (route?.points || []).filter((p) => p && isFinite(p.x) && isFinite(p.y));
+  }
+
+  /** Enquadra a rota (preferência: trecho do andar ativo). */
   function fitRouteInView(route, opts = {}) {
-    const pts = route?.points?.filter((p) => p && isFinite(p.x) && isFinite(p.y));
-    if (pts?.length >= 1) {
-      // inclui pins de origem/destino se existirem
+    let pts = [];
+    if (opts.preferActiveLeg !== false) {
+      pts = activeLegPoints(route);
+    }
+    if (pts.length < 2) {
+      pts = (route?.points || []).filter((p) => p && isFinite(p.x) && isFinite(p.y));
+    }
+    if (pts.length >= 1) {
       const extras = [];
-      if (state.origin?.snap) extras.push(state.origin.snap);
-      else if (state.origin && isFinite(state.origin.x)) extras.push(state.origin);
-      if (state.dest?.snap) extras.push(state.dest.snap);
-      else if (state.dest && isFinite(state.dest.x)) extras.push(state.dest);
+      if (state.origin?.snap && (!state.origin.level || poiLevel(state.origin) === state.activeLevel)) {
+        extras.push(state.origin.snap);
+      } else if (state.origin && isFinite(state.origin.x) && poiLevel(state.origin) === state.activeLevel) {
+        extras.push(state.origin);
+      }
+      if (state.dest?.snap && (!state.dest.level || poiLevel(state.dest) === state.activeLevel)) {
+        extras.push(state.dest.snap);
+      } else if (state.dest && isFinite(state.dest.x) && poiLevel(state.dest) === state.activeLevel) {
+        extras.push(state.dest);
+      }
       fitToPoints(pts.concat(extras), opts);
       return;
     }
     const leg = (route?.legs || []).find((l) => l.level === state.activeLevel) || route?.legs?.[0];
     if (leg?.points?.length) fitToPoints(leg.points, opts);
   }
+
+  /** Zoom no trecho atual da navegação (com olhar um pouco à frente). */
+  function fitNavSegment() {
+    const p = state.route?.points;
+    if (!p || p.length < 2) return;
+    const total = p.length - 1;
+    const i = Math.max(0, Math.min(state.navIdx, total - 1));
+    const ahead = Math.min(p.length - 1, i + 3);
+    const pts = p.slice(i, ahead + 1);
+    if (pts.length < 2 && p[i + 1]) pts.push(p[i + 1]);
+    fitToPoints(pts, {
+      navMode: true,
+      minSpan: 48,
+      padX: innerWidth <= 860 ? 44 : 120,
+      padTop: innerWidth <= 860 ? 80 : 120,
+      padBottom: innerWidth <= 860 ? 300 : 220,
+    });
+  }
+
   function zoomAt(factor, cx, cy) {
     const r = el.viewport.getBoundingClientRect();
     cx = cx ?? r.width / 2; cy = cy ?? r.height / 2;
@@ -4776,10 +4833,8 @@
     el.navOverlay.classList.add("is-open");
     el.navOverlay.setAttribute("aria-hidden", "false");
     document.body.classList.add("is-navigating");
-    // recentraliza a rota deixando espaço para o card inferior no celular
-    requestAnimationFrame(() => fitRouteInView(state.route, { navMode: true }));
     requestOrientation();
-    updateNav();
+    updateNav({ fitCamera: true });
 
     state.userLocation?.startFollowing?.().catch(() => {
       state.userLocation?.start?.({ silent: true });
@@ -4800,7 +4855,7 @@
   function navPrev() {
     if (!state.route) return;
     state.navIdx = Math.max(0, state.navIdx - 1);
-    updateNav();
+    updateNav({ fitCamera: true });
   }
 
   function navNext() {
@@ -4812,10 +4867,10 @@
       return;
     }
     state.navIdx += 1;
-    updateNav();
+    updateNav({ fitCamera: true });
   }
 
-  function updateNav() {
+  function updateNav(opts = {}) {
     const p = state.route?.points;
     if (!p || p.length < 2) {
       el.navStepText.textContent = "Sem trechos na rota";
@@ -4849,6 +4904,8 @@
 
     el.navPrev.disabled = i <= 0;
     el.navNext.textContent = isLast ? "Chegar" : "Próximo";
+
+    if (opts.fitCamera) fitSoon(() => fitNavSegment());
   }
 
   function requestOrientation() {
@@ -5072,8 +5129,15 @@
       const meta = state.floorMeta.L00 || { vbX: 0, vbY: 0, vbW: G.vbW, vbH: G.vbH };
       setMapViewBox(meta.vbW, meta.vbH, meta.vbX || 0, meta.vbY || 0);
       applyFloorVisibility();
-      if (state.route) paintActiveRouteLeg();
-      fit();
+      if (state.route) {
+        paintActiveRouteLeg();
+        fitSoon(() => {
+          if (document.body.classList.contains("is-navigating")) fitNavSegment();
+          else fitRouteInView(state.route, { navMode: false, preferActiveLeg: true });
+        });
+      } else {
+        fitSoon();
+      }
       return;
     }
 
@@ -5088,9 +5152,16 @@
       el.svgHost.classList.add("svg-host--floor");
       const meta = state.floorMeta[floor.id];
       setMapViewBox(meta.vbW, meta.vbH, meta.vbX || 0, meta.vbY || 0);
-      if (state.route) paintActiveRouteLeg();
-      else clearRoutePaint();
-      fit();
+      if (state.route) {
+        paintActiveRouteLeg();
+        fitSoon(() => fitRouteInView(state.route, {
+          navMode: !!document.body.classList.contains("is-navigating"),
+          preferActiveLeg: true,
+        }));
+      } else {
+        clearRoutePaint();
+        fitSoon();
+      }
     } catch (err) {
       console.error(err);
       toast(`Não foi possível abrir o mapa ${floor.id}`);
