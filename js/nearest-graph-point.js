@@ -32,6 +32,31 @@
     return false;
   }
 
+  function findContainingGpsArea(latitude, longitude) {
+    const areas = global.PIB_CURITIBA_GPS_AREAS || [];
+    for (const area of areas) {
+      if (area.useForGpsSync === false) continue;
+      const ring = (area.polygon || []).map((p) => ({
+        latitude: p.lat ?? p.latitude,
+        longitude: p.lng ?? p.longitude,
+      }));
+      if (ring.length < 3) continue;
+      const inside = global.GeofenceService?.containsLocation?.(
+        latitude,
+        longitude,
+        ring,
+      );
+      if (inside) {
+        return {
+          ...area,
+          distance: 0,
+          inArea: true,
+        };
+      }
+    }
+    return null;
+  }
+
   function rankReferences(userPosition, accuracy) {
     const refs = global.PIB_CURITIBA_GPS_REFERENCE_POINTS || [];
     const scored = refs.map((reference) => {
@@ -83,6 +108,12 @@
     latLngToSvg,
     metersPerUnit = 0.35,
   }) {
+    // Polígono do Templo (e outras áreas) — detecção imediata
+    const areaHit = findContainingGpsArea(latitude, longitude);
+    if (areaHit) {
+      return { ambiguous: false, reference: areaHit, inArea: true };
+    }
+
     const ranked = rankReferences({ latitude, longitude }, accuracy);
     const entrances = ranked.filter((r) => r.category === "ENTRANCE");
     const withNode = ranked.filter((r) => r.navNodeId);
@@ -290,17 +321,30 @@
   }
 
   function resolveStartNodeId(reference, navGraph, svgHint) {
-    if (!reference) return null;
-    if (reference.navNodeId && navGraph?.nodesById?.has(reference.navNodeId)) {
-      return reference.navNodeId;
-    }
+    if (!reference || !navGraph?.nodesById) return null;
     const floorId = reference.floorId || "L00";
-    if (svgHint) {
+
+    // Sempre prioriza o nó amarelo (NAV) mais perto da posição real no SVG
+    if (svgHint && isFinite(svgHint.x) && isFinite(svgHint.y)) {
       const hit = findNearestValidNavNode(svgHint, navGraph, {
         level: floorId,
-        preferOutdoor: true,
+        preferOutdoor: false,
+        maxDistanceSvg: 220,
       });
-      return hit?.id || null;
+      if (hit?.id) return hit.id;
+
+      // fallback outdoor se nada perto na malha interna
+      const outdoor = findNearestValidNavNode(svgHint, navGraph, {
+        level: floorId,
+        preferOutdoor: true,
+        maxDistanceSvg: 320,
+      });
+      if (outdoor?.id) return outdoor.id;
+    }
+
+    // só então usa âncora fixa da referência (entrada/POI)
+    if (reference.navNodeId && navGraph.nodesById.has(reference.navNodeId)) {
+      return reference.navNodeId;
     }
     return null;
   }
@@ -312,6 +356,7 @@
     findNearestWalkableEdge,
     resolveStartNodeId,
     rankReferences,
+    findContainingGpsArea,
     isAcceptableDistance,
     projectOnSeg,
   };

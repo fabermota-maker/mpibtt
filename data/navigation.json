@@ -8,7 +8,7 @@
     "ALLOW_AUTOMATIC_NODE_CONNECTIONS": false,
     "ALLOW_STRAIGHT_LINE_FALLBACK": false,
     "ALLOW_ROUTE_OUTSIDE_GRAPH": false,
-    "MAX_ROUTE_ALTERNATIVES": 3,
+    "MAX_ROUTE_ALTERNATIVES": 4,
     "MAX_ROUTE_SIMILARITY": 0.85
   },
   "nodes": [
@@ -678,14 +678,6 @@
       "active": true
     },
     {
-      "id": "L01_elevador",
-      "level": "L01",
-      "x": 498,
-      "y": 482,
-      "active": true,
-      "hidden": true
-    },
-    {
       "id": "escada_mesanino_01",
       "level": "L00",
       "x": 236.5,
@@ -698,6 +690,334 @@
       "level": "L00",
       "x": 465.5,
       "y": 485,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0026_entrada_corredor_e",
+      "level": "L01",
+      "x": 421.489,
+      "y": 575.554,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0027_hall_corredor_c",
+      "level": "L01",
+      "x": 556.917,
+      "y": 574.848,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0028_entrada_corredor_d",
+      "level": "L01",
+      "x": 654.273,
+      "y": 575.554,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0029_entrada_corredor_d",
+      "level": "L01",
+      "x": 830.302,
+      "y": 575.554,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0030_entrada_corredor_d",
+      "level": "L01",
+      "x": 854.165,
+      "y": 575.554,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0033_entrada_corredor_d",
+      "level": "L01",
+      "x": 1032.345,
+      "y": 575.554,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0017_entrada_corredor_d",
+      "level": "L01",
+      "x": 1033.915,
+      "y": 553.826,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0034_entrada_corredor_d",
+      "level": "L01",
+      "x": 1060.668,
+      "y": 575.554,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0018_entrada_corredor_d",
+      "level": "L01",
+      "x": 1060.668,
+      "y": 553.826,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0016_entrada_corredor_d",
+      "level": "L01",
+      "x": 855.06,
+      "y": 553.826,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0015_entrada_corredor_d",
+      "level": "L01",
+      "x": 832.5,
+      "y": 553.245,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0005_escada_emergen",
+      "level": "L01",
+      "x": 617.755,
+      "y": 519.003,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0040_escada_lateral",
+      "level": "L01",
+      "x": 654.273,
+      "y": 621.116,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0002_hall_principal",
+      "level": "L01",
+      "x": 557.938,
+      "y": 481.401,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0001_elevador",
+      "level": "L01",
+      "x": 496.739,
+      "y": 481.386,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0014",
+      "level": "L01",
+      "x": 413.215,
+      "y": 553.81,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0025",
+      "level": "L01",
+      "x": 393.999,
+      "y": 575.554,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0038",
+      "level": "L01",
+      "x": 393.999,
+      "y": 606.342,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0013",
+      "level": "L01",
+      "x": 376.148,
+      "y": 552.774,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0024",
+      "level": "L01",
+      "x": 326.504,
+      "y": 575.554,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0012",
+      "level": "L01",
+      "x": 327.305,
+      "y": 553.81,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0037",
+      "level": "L01",
+      "x": 324.934,
+      "y": 602.998,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0023",
+      "level": "L01",
+      "x": 296.863,
+      "y": 575.554,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0011",
+      "level": "L01",
+      "x": 296.863,
+      "y": 554.045,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0036",
+      "level": "L01",
+      "x": 247.015,
+      "y": 604.568,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0022",
+      "level": "L01",
+      "x": 247.015,
+      "y": 574.707,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0021",
+      "level": "L01",
+      "x": 216.887,
+      "y": 574.707,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0035",
+      "level": "L01",
+      "x": 192.034,
+      "y": 606.138,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0010",
+      "level": "L01",
+      "x": 187.591,
+      "y": 557.013,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0008",
+      "level": "L01",
+      "x": 125.874,
+      "y": 547.985,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0006",
+      "level": "L01",
+      "x": 106.877,
+      "y": 547.985,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0003",
+      "level": "L01",
+      "x": 66.183,
+      "y": 497.525,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0020",
+      "level": "L01",
+      "x": 126.439,
+      "y": 576.433,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0019",
+      "level": "L01",
+      "x": 113.926,
+      "y": 590.438,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0031",
+      "level": "L01",
+      "x": 138.104,
+      "y": 592.008,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0039",
+      "level": "L01",
+      "x": 126.439,
+      "y": 625.951,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0009",
+      "level": "L01",
+      "x": 218.064,
+      "y": 537.529,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0032_auditorio_l01",
+      "level": "L01",
+      "x": 944.645,
+      "y": 586.858,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0004",
+      "level": "L01",
+      "x": 107.662,
+      "y": 506.176,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0007",
+      "level": "L01",
+      "x": 107.222,
+      "y": 535.08,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L01_node_0028_espaco_kids",
+      "level": "L01",
+      "x": 479.548,
+      "y": 624.381,
       "active": true,
       "hidden": true
     },
@@ -1250,6 +1570,222 @@
       "level": "L03",
       "x": 986.155,
       "y": 580.044,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0013_entrada_corredor_e",
+      "level": "L04",
+      "x": 421.379,
+      "y": 575.57,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0014_hall_corredor_c",
+      "level": "L04",
+      "x": 556.808,
+      "y": 574.879,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0015_entrada_corredor_d",
+      "level": "L04",
+      "x": 654.163,
+      "y": 575.57,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0016_entrada_corredor_d",
+      "level": "L04",
+      "x": 875.313,
+      "y": 575.57,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0017_entrada_corredor_d",
+      "level": "L04",
+      "x": 904.013,
+      "y": 575.633,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0018_entrada_corredor_d",
+      "level": "L04",
+      "x": 928.474,
+      "y": 575.633,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0019_entrada_corredor_d",
+      "level": "L04",
+      "x": 1123.326,
+      "y": 574.785,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0020_entrada_espaco_brincar",
+      "level": "L04",
+      "x": 1123.326,
+      "y": 600.25,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0010_entrada_corredor_d",
+      "level": "L04",
+      "x": 1123.326,
+      "y": 553.056,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0009_entrada_corredor_d",
+      "level": "L04",
+      "x": 928.474,
+      "y": 553.26,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0008_entrada_corredor_d",
+      "level": "L04",
+      "x": 875.313,
+      "y": 552.303,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0004_escada_emergen",
+      "level": "L04",
+      "x": 617.629,
+      "y": 519.019,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0024_escada_lateral",
+      "level": "L04",
+      "x": 654.163,
+      "y": 621.131,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0002_hall_principal",
+      "level": "L04",
+      "x": 557.812,
+      "y": 481.417,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0001_elevador",
+      "level": "L04",
+      "x": 496.614,
+      "y": 481.401,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0005",
+      "level": "L04",
+      "x": 413.105,
+      "y": 553.841,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0012",
+      "level": "L04",
+      "x": 393.873,
+      "y": 575.57,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0011",
+      "level": "L04",
+      "x": 282.748,
+      "y": 577.14,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0021",
+      "level": "L04",
+      "x": 388.504,
+      "y": 605.51,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0020",
+      "level": "L04",
+      "x": 357.684,
+      "y": 606.201,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0003",
+      "level": "L04",
+      "x": 364.153,
+      "y": 498.719,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0023_auditorio_l01",
+      "level": "L04",
+      "x": 928.474,
+      "y": 597.848,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0006_entrada_corredor_d",
+      "level": "L04",
+      "x": 769.731,
+      "y": 553.402,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0007_entrada_corredor_d",
+      "level": "L04",
+      "x": 822.53,
+      "y": 553.26,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L04_node_0022_entrada_corredor_d",
+      "level": "L04",
+      "x": 817.537,
+      "y": 597.33,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L05_node_escada_lateral",
+      "level": "L05",
+      "x": 660.49,
+      "y": 622.513,
+      "active": true,
+      "hidden": true
+    },
+    {
+      "id": "L06_node_escada_lateral",
+      "level": "L06",
+      "x": 660.49,
+      "y": 622.513,
       "active": true,
       "hidden": true
     }
@@ -3608,29 +4144,6 @@
       "parkingLot": false
     },
     {
-      "id": "L00_L01_E_elevador_templo",
-      "from": "L00_N0077",
-      "to": "L01_elevador",
-      "path": [
-        {
-          "x": 327.38,
-          "y": 386.42
-        },
-        {
-          "x": 498,
-          "y": 482
-        }
-      ],
-      "distanceMeters": 5.5,
-      "bidirectional": true,
-      "accessible": true,
-      "active": true,
-      "level": "L00-L01",
-      "zone": "vertical",
-      "type": "elevator",
-      "parkingLot": false
-    },
-    {
       "id": "L00_E_escada_mesanino_01",
       "from": "L00_N0085",
       "to": "escada_mesanino_01",
@@ -3674,6 +4187,1061 @@
       "level": "L00",
       "zone": "indoor",
       "type": "stairs",
+      "parkingLot": false
+    },
+    {
+      "id": "L01_E0001",
+      "from": "L01_node_0026_entrada_corredor_e",
+      "to": "L01_node_0027_hall_corredor_c",
+      "path": [
+        {
+          "x": 421.489,
+          "y": 575.554
+        },
+        {
+          "x": 556.917,
+          "y": 574.848
+        }
+      ],
+      "distanceMeters": 47.4,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0040_node_0026_node_0027"
+    },
+    {
+      "id": "L01_E0002",
+      "from": "L01_node_0027_hall_corredor_c",
+      "to": "L01_node_0002_hall_principal",
+      "path": [
+        {
+          "x": 556.917,
+          "y": 574.848
+        },
+        {
+          "x": 557.938,
+          "y": 481.401
+        }
+      ],
+      "distanceMeters": 32.708,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0039_node_0027_node_0002"
+    },
+    {
+      "id": "L01_E0003",
+      "from": "L01_node_0002_hall_principal",
+      "to": "L01_node_0001_elevador",
+      "path": [
+        {
+          "x": 557.938,
+          "y": 481.401
+        },
+        {
+          "x": 496.739,
+          "y": 481.386
+        }
+      ],
+      "distanceMeters": 21.42,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "elevator",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0038_node_0002_node_0001"
+    },
+    {
+      "id": "L01_E0004",
+      "from": "L01_node_0028_entrada_corredor_d",
+      "to": "L01_node_0027_hall_corredor_c",
+      "path": [
+        {
+          "x": 654.273,
+          "y": 575.554
+        },
+        {
+          "x": 556.917,
+          "y": 574.848
+        }
+      ],
+      "distanceMeters": 34.075,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0036_node_0028_node_0027"
+    },
+    {
+      "id": "L01_E0005",
+      "from": "L01_node_0028_entrada_corredor_d",
+      "to": "L01_node_0040_escada_lateral",
+      "path": [
+        {
+          "x": 654.273,
+          "y": 575.554
+        },
+        {
+          "x": 654.273,
+          "y": 621.116
+        }
+      ],
+      "distanceMeters": 15.947,
+      "bidirectional": true,
+      "accessible": false,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "stairs",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0035_node_0028_node_0040"
+    },
+    {
+      "id": "L01_E0006",
+      "from": "L01_node_0028_entrada_corredor_d",
+      "to": "L01_node_0029_entrada_corredor_d",
+      "path": [
+        {
+          "x": 654.273,
+          "y": 575.554
+        },
+        {
+          "x": 830.302,
+          "y": 575.554
+        }
+      ],
+      "distanceMeters": 61.61,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0034_node_0028_node_0029"
+    },
+    {
+      "id": "L01_E0007",
+      "from": "L01_node_0026_entrada_corredor_e",
+      "to": "L01_node_0025",
+      "path": [
+        {
+          "x": 421.489,
+          "y": 575.554
+        },
+        {
+          "x": 393.999,
+          "y": 575.554
+        }
+      ],
+      "distanceMeters": 9.621,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0031_node_0026_node_0025"
+    },
+    {
+      "id": "L01_E0008",
+      "from": "L01_node_0025",
+      "to": "L01_node_0024",
+      "path": [
+        {
+          "x": 393.999,
+          "y": 575.554
+        },
+        {
+          "x": 326.504,
+          "y": 575.554
+        }
+      ],
+      "distanceMeters": 23.623,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0028_node_0025_node_0024"
+    },
+    {
+      "id": "L01_E0009",
+      "from": "L01_node_0037",
+      "to": "L01_node_0024",
+      "path": [
+        {
+          "x": 324.934,
+          "y": 602.998
+        },
+        {
+          "x": 326.504,
+          "y": 575.554
+        }
+      ],
+      "distanceMeters": 9.621,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0027_node_0037_node_0024"
+    },
+    {
+      "id": "L01_E0010",
+      "from": "L01_node_0024",
+      "to": "L01_node_0012",
+      "path": [
+        {
+          "x": 326.504,
+          "y": 575.554
+        },
+        {
+          "x": 327.305,
+          "y": 553.81
+        }
+      ],
+      "distanceMeters": 7.616,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0026_node_0024_node_0012"
+    },
+    {
+      "id": "L01_E0011",
+      "from": "L01_node_0024",
+      "to": "L01_node_0023",
+      "path": [
+        {
+          "x": 326.504,
+          "y": 575.554
+        },
+        {
+          "x": 296.863,
+          "y": 575.554
+        }
+      ],
+      "distanceMeters": 10.374,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0025_node_0024_node_0023"
+    },
+    {
+      "id": "L01_E0012",
+      "from": "L01_node_0023",
+      "to": "L01_node_0011",
+      "path": [
+        {
+          "x": 296.863,
+          "y": 575.554
+        },
+        {
+          "x": 296.863,
+          "y": 554.045
+        }
+      ],
+      "distanceMeters": 7.528,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0024_node_0023_node_0011"
+    },
+    {
+      "id": "L01_E0013",
+      "from": "L01_node_0023",
+      "to": "L01_node_0022",
+      "path": [
+        {
+          "x": 296.863,
+          "y": 575.554
+        },
+        {
+          "x": 247.015,
+          "y": 574.707
+        }
+      ],
+      "distanceMeters": 17.449,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0023_node_0023_node_0022"
+    },
+    {
+      "id": "L01_E0014",
+      "from": "L01_node_0036",
+      "to": "L01_node_0022",
+      "path": [
+        {
+          "x": 247.015,
+          "y": 604.568
+        },
+        {
+          "x": 247.015,
+          "y": 574.707
+        }
+      ],
+      "distanceMeters": 10.451,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0022_node_0036_node_0022"
+    },
+    {
+      "id": "L01_E0015",
+      "from": "L01_node_0021",
+      "to": "L01_node_0022",
+      "path": [
+        {
+          "x": 216.887,
+          "y": 574.707
+        },
+        {
+          "x": 247.015,
+          "y": 574.707
+        }
+      ],
+      "distanceMeters": 10.545,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0021_node_0021_node_0022"
+    },
+    {
+      "id": "L01_E0016",
+      "from": "L01_node_0021",
+      "to": "L01_node_0009",
+      "path": [
+        {
+          "x": 216.887,
+          "y": 574.707
+        },
+        {
+          "x": 218.064,
+          "y": 537.529
+        }
+      ],
+      "distanceMeters": 13.019,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0018_node_0021_node_0009"
+    },
+    {
+      "id": "L01_E0017",
+      "from": "L01_node_0020",
+      "to": "L01_node_0008",
+      "path": [
+        {
+          "x": 126.439,
+          "y": 576.433
+        },
+        {
+          "x": 125.874,
+          "y": 547.985
+        }
+      ],
+      "distanceMeters": 9.959,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0016_node_0020_node_0008"
+    },
+    {
+      "id": "L01_E0018",
+      "from": "L01_node_0006",
+      "to": "L01_node_0008",
+      "path": [
+        {
+          "x": 106.877,
+          "y": 547.985
+        },
+        {
+          "x": 125.874,
+          "y": 547.985
+        }
+      ],
+      "distanceMeters": 6.649,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0015_node_0006_node_0008"
+    },
+    {
+      "id": "L01_E0019",
+      "from": "L01_node_0006",
+      "to": "L01_node_0007",
+      "path": [
+        {
+          "x": 106.877,
+          "y": 547.985
+        },
+        {
+          "x": 107.222,
+          "y": 535.08
+        }
+      ],
+      "distanceMeters": 4.518,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0014_node_0006_node_0007"
+    },
+    {
+      "id": "L01_E0020",
+      "from": "L01_node_0004",
+      "to": "L01_node_0007",
+      "path": [
+        {
+          "x": 107.662,
+          "y": 506.176
+        },
+        {
+          "x": 107.222,
+          "y": 535.08
+        }
+      ],
+      "distanceMeters": 10.118,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0013_node_0004_node_0007"
+    },
+    {
+      "id": "L01_E0021",
+      "from": "L01_node_0039",
+      "to": "L01_node_0020",
+      "path": [
+        {
+          "x": 126.439,
+          "y": 625.951
+        },
+        {
+          "x": 126.439,
+          "y": 576.433
+        }
+      ],
+      "distanceMeters": 17.331,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0009_node_0039_node_0020"
+    },
+    {
+      "id": "L01_E0022",
+      "from": "L01_node_0029_entrada_corredor_d",
+      "to": "L01_node_0015_entrada_corredor_d",
+      "path": [
+        {
+          "x": 830.302,
+          "y": 575.554
+        },
+        {
+          "x": 832.5,
+          "y": 553.245
+        }
+      ],
+      "distanceMeters": 7.846,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0008_node_0029_node_0015"
+    },
+    {
+      "id": "L01_E0023",
+      "from": "L01_node_0029_entrada_corredor_d",
+      "to": "L01_node_0030_entrada_corredor_d",
+      "path": [
+        {
+          "x": 830.302,
+          "y": 575.554
+        },
+        {
+          "x": 854.165,
+          "y": 575.554
+        }
+      ],
+      "distanceMeters": 8.352,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0007_node_0029_node_0030"
+    },
+    {
+      "id": "L01_E0024",
+      "from": "L01_node_0030_entrada_corredor_d",
+      "to": "L01_node_0016_entrada_corredor_d",
+      "path": [
+        {
+          "x": 854.165,
+          "y": 575.554
+        },
+        {
+          "x": 855.06,
+          "y": 553.826
+        }
+      ],
+      "distanceMeters": 7.611,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0006_node_0030_node_0016"
+    },
+    {
+      "id": "L01_E0025",
+      "from": "L01_node_0030_entrada_corredor_d",
+      "to": "L01_node_0033_entrada_corredor_d",
+      "path": [
+        {
+          "x": 854.165,
+          "y": 575.554
+        },
+        {
+          "x": 1032.345,
+          "y": 575.554
+        }
+      ],
+      "distanceMeters": 62.363,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0005_node_0030_node_0033"
+    },
+    {
+      "id": "L01_E0026",
+      "from": "L01_node_0030_entrada_corredor_d",
+      "to": "L01_node_0032_auditorio_l01",
+      "path": [
+        {
+          "x": 854.165,
+          "y": 575.554
+        },
+        {
+          "x": 944.645,
+          "y": 586.858
+        }
+      ],
+      "distanceMeters": 31.914,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0004_node_0030_node_0032"
+    },
+    {
+      "id": "L01_E0027",
+      "from": "L01_node_0033_entrada_corredor_d",
+      "to": "L01_node_0017_entrada_corredor_d",
+      "path": [
+        {
+          "x": 1032.345,
+          "y": 575.554
+        },
+        {
+          "x": 1033.915,
+          "y": 553.826
+        }
+      ],
+      "distanceMeters": 7.625,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0003_node_0033_node_0017"
+    },
+    {
+      "id": "L01_E0028",
+      "from": "L01_node_0033_entrada_corredor_d",
+      "to": "L01_node_0034_entrada_corredor_d",
+      "path": [
+        {
+          "x": 1032.345,
+          "y": 575.554
+        },
+        {
+          "x": 1060.668,
+          "y": 575.554
+        }
+      ],
+      "distanceMeters": 9.913,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0002_node_0033_node_0034"
+    },
+    {
+      "id": "L01_E0029",
+      "from": "L01_node_0034_entrada_corredor_d",
+      "to": "L01_node_0018_entrada_corredor_d",
+      "path": [
+        {
+          "x": 1060.668,
+          "y": 575.554
+        },
+        {
+          "x": 1060.668,
+          "y": 553.826
+        }
+      ],
+      "distanceMeters": 7.605,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0001_node_0034_node_0018"
+    },
+    {
+      "id": "L01_E0030",
+      "from": "L01_node_0027_hall_corredor_c",
+      "to": "L01_node_0028_espaco_kids",
+      "path": [
+        {
+          "x": 556.917,
+          "y": 574.848
+        },
+        {
+          "x": 556.917,
+          "y": 612.245
+        },
+        {
+          "x": 479.045,
+          "y": 612.245
+        },
+        {
+          "x": 479.548,
+          "y": 624.381
+        }
+      ],
+      "distanceMeters": 44.595,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0033_node_0027_node_0028"
+    },
+    {
+      "id": "L01_E0031",
+      "from": "L01_node_0038",
+      "to": "L01_node_0026_entrada_corredor_e",
+      "path": [
+        {
+          "x": 393.999,
+          "y": 606.342
+        },
+        {
+          "x": 393.999,
+          "y": 587.172
+        },
+        {
+          "x": 421.489,
+          "y": 587.172
+        },
+        {
+          "x": 421.489,
+          "y": 575.554
+        }
+      ],
+      "distanceMeters": 20.397,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0032_node_0038_node_0026"
+    },
+    {
+      "id": "L01_E0032",
+      "from": "L01_node_0026_entrada_corredor_e",
+      "to": "L01_node_0014",
+      "path": [
+        {
+          "x": 421.489,
+          "y": 575.554
+        },
+        {
+          "x": 421.489,
+          "y": 561.88
+        },
+        {
+          "x": 413.215,
+          "y": 553.81
+        }
+      ],
+      "distanceMeters": 8.831,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0030_node_0026_node_0014"
+    },
+    {
+      "id": "L01_E0033",
+      "from": "L01_node_0013",
+      "to": "L01_node_0025",
+      "path": [
+        {
+          "x": 376.148,
+          "y": 552.774
+        },
+        {
+          "x": 376.148,
+          "y": 562.147
+        },
+        {
+          "x": 393.999,
+          "y": 575.554
+        }
+      ],
+      "distanceMeters": 11.094,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0029_node_0013_node_0025"
+    },
+    {
+      "id": "L01_E0034",
+      "from": "L01_node_0010",
+      "to": "L01_node_0021",
+      "path": [
+        {
+          "x": 187.591,
+          "y": 557.013
+        },
+        {
+          "x": 206.572,
+          "y": 557.013
+        },
+        {
+          "x": 215.317,
+          "y": 573.137
+        },
+        {
+          "x": 216.887,
+          "y": 574.707
+        }
+      ],
+      "distanceMeters": 13.84,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0020_node_0010_node_0021"
+    },
+    {
+      "id": "L01_E0035",
+      "from": "L01_node_0035",
+      "to": "L01_node_0021",
+      "path": [
+        {
+          "x": 192.034,
+          "y": 606.138
+        },
+        {
+          "x": 192.034,
+          "y": 574.707
+        },
+        {
+          "x": 216.887,
+          "y": 574.707
+        }
+      ],
+      "distanceMeters": 19.699,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0019_node_0035_node_0021"
+    },
+    {
+      "id": "L01_E0036",
+      "from": "L01_node_0010",
+      "to": "L01_node_0008",
+      "path": [
+        {
+          "x": 187.591,
+          "y": 557.013
+        },
+        {
+          "x": 137.194,
+          "y": 557.217
+        },
+        {
+          "x": 137.194,
+          "y": 547.985
+        },
+        {
+          "x": 125.874,
+          "y": 547.985
+        }
+      ],
+      "distanceMeters": 24.832,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0017_node_0010_node_0008"
+    },
+    {
+      "id": "L01_E0037",
+      "from": "L01_node_0003",
+      "to": "L01_node_0004",
+      "path": [
+        {
+          "x": 66.183,
+          "y": 497.525
+        },
+        {
+          "x": 66.183,
+          "y": 504.606
+        },
+        {
+          "x": 105.652,
+          "y": 505.328
+        },
+        {
+          "x": 107.662,
+          "y": 506.176
+        }
+      ],
+      "distanceMeters": 17.058,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0012_node_0003_node_0004"
+    },
+    {
+      "id": "L01_E0038",
+      "from": "L01_node_0019",
+      "to": "L01_node_0020",
+      "path": [
+        {
+          "x": 113.926,
+          "y": 590.438
+        },
+        {
+          "x": 121.933,
+          "y": 590.438
+        },
+        {
+          "x": 124.869,
+          "y": 578.004
+        },
+        {
+          "x": 126.439,
+          "y": 576.433
+        }
+      ],
+      "distanceMeters": 8.051,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0011_node_0019_node_0020"
+    },
+    {
+      "id": "L01_E0039",
+      "from": "L01_node_0031",
+      "to": "L01_node_0020",
+      "path": [
+        {
+          "x": 138.104,
+          "y": 592.008
+        },
+        {
+          "x": 131.259,
+          "y": 592.008
+        },
+        {
+          "x": 126.439,
+          "y": 576.433
+        }
+      ],
+      "distanceMeters": 8.102,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0010_node_0031_node_0020"
+    },
+    {
+      "id": "L01_E0040",
+      "from": "L01_node_0002_hall_principal",
+      "to": "L01_node_0005_escada_emergen",
+      "path": [
+        {
+          "x": 557.938,
+          "y": 481.401
+        },
+        {
+          "x": 598.208,
+          "y": 516.24
+        },
+        {
+          "x": 598.208,
+          "y": 519.003
+        },
+        {
+          "x": 617.755,
+          "y": 519.003
+        }
+      ],
+      "distanceMeters": 26.446,
+      "bidirectional": true,
+      "accessible": false,
+      "active": true,
+      "level": "L01",
+      "zone": "indoor",
+      "type": "stairs",
+      "parkingLot": false,
+      "sourceId": "L01_edge_0037_node_0002_node_0005"
+    },
+    {
+      "id": "L00_L01_E_elevador_templo",
+      "from": "L00_N0077",
+      "to": "L01_node_0001_elevador",
+      "path": [
+        {
+          "x": 327.38,
+          "y": 386.42
+        },
+        {
+          "x": 496.739,
+          "y": 481.386
+        }
+      ],
+      "distanceMeters": 5.5,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00-L01",
+      "zone": "vertical",
+      "type": "elevator",
       "parkingLot": false
     },
     {
@@ -4275,12 +5843,12 @@
     },
     {
       "id": "L01_L02_E_elevador_adm",
-      "from": "L01_elevador",
+      "from": "L01_node_0001_elevador",
       "to": "L02_node_0001_elevador",
       "path": [
         {
-          "x": 498,
-          "y": 482
+          "x": 496.739,
+          "y": 481.386
         },
         {
           "x": 497.195,
@@ -5406,6 +6974,799 @@
       "zone": "vertical",
       "type": "elevator",
       "parkingLot": false
+    },
+    {
+      "id": "L04_E0001",
+      "from": "L04_node_0013_entrada_corredor_e",
+      "to": "L04_node_0014_hall_corredor_c",
+      "path": [
+        {
+          "x": 421.379,
+          "y": 575.57
+        },
+        {
+          "x": 556.808,
+          "y": 574.879
+        }
+      ],
+      "distanceMeters": 47.401,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0024_node_0013_node_0014"
+    },
+    {
+      "id": "L04_E0002",
+      "from": "L04_node_0014_hall_corredor_c",
+      "to": "L04_node_0002_hall_principal",
+      "path": [
+        {
+          "x": 556.808,
+          "y": 574.879
+        },
+        {
+          "x": 557.812,
+          "y": 481.417
+        }
+      ],
+      "distanceMeters": 32.714,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0023_node_0014_node_0002"
+    },
+    {
+      "id": "L04_E0003",
+      "from": "L04_node_0002_hall_principal",
+      "to": "L04_node_0001_elevador",
+      "path": [
+        {
+          "x": 557.812,
+          "y": 481.417
+        },
+        {
+          "x": 496.614,
+          "y": 481.401
+        }
+      ],
+      "distanceMeters": 21.419,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "elevator",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0022_node_0002_node_0001"
+    },
+    {
+      "id": "L04_E0004",
+      "from": "L04_node_0015_entrada_corredor_d",
+      "to": "L04_node_0014_hall_corredor_c",
+      "path": [
+        {
+          "x": 654.163,
+          "y": 575.57
+        },
+        {
+          "x": 556.808,
+          "y": 574.879
+        }
+      ],
+      "distanceMeters": 34.075,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0020_node_0015_node_0014"
+    },
+    {
+      "id": "L04_E0005",
+      "from": "L04_node_0015_entrada_corredor_d",
+      "to": "L04_node_0024_escada_lateral",
+      "path": [
+        {
+          "x": 654.163,
+          "y": 575.57
+        },
+        {
+          "x": 654.163,
+          "y": 621.131
+        }
+      ],
+      "distanceMeters": 15.946,
+      "bidirectional": true,
+      "accessible": false,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "stairs",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0019_node_0015_node_0024"
+    },
+    {
+      "id": "L04_E0006",
+      "from": "L04_node_0015_entrada_corredor_d",
+      "to": "L04_node_0016_entrada_corredor_d",
+      "path": [
+        {
+          "x": 654.163,
+          "y": 575.57
+        },
+        {
+          "x": 875.313,
+          "y": 575.57
+        }
+      ],
+      "distanceMeters": 77.402,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0018_node_0015_node_0016"
+    },
+    {
+      "id": "L04_E0007",
+      "from": "L04_node_0013_entrada_corredor_e",
+      "to": "L04_node_0012",
+      "path": [
+        {
+          "x": 421.379,
+          "y": 575.57
+        },
+        {
+          "x": 393.873,
+          "y": 575.57
+        }
+      ],
+      "distanceMeters": 9.627,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0016_node_0013_node_0012"
+    },
+    {
+      "id": "L04_E0008",
+      "from": "L04_node_0016_entrada_corredor_d",
+      "to": "L04_node_0008_entrada_corredor_d",
+      "path": [
+        {
+          "x": 875.313,
+          "y": 575.57
+        },
+        {
+          "x": 875.313,
+          "y": 552.303
+        }
+      ],
+      "distanceMeters": 8.143,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0013_node_0016_node_0008"
+    },
+    {
+      "id": "L04_E0009",
+      "from": "L04_node_0016_entrada_corredor_d",
+      "to": "L04_node_0017_entrada_corredor_d",
+      "path": [
+        {
+          "x": 875.313,
+          "y": 575.57
+        },
+        {
+          "x": 904.013,
+          "y": 575.633
+        }
+      ],
+      "distanceMeters": 10.045,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0012_node_0016_node_0017"
+    },
+    {
+      "id": "L04_E0010",
+      "from": "L04_node_0017_entrada_corredor_d",
+      "to": "L04_node_0018_entrada_corredor_d",
+      "path": [
+        {
+          "x": 904.013,
+          "y": 575.633
+        },
+        {
+          "x": 928.474,
+          "y": 575.633
+        }
+      ],
+      "distanceMeters": 8.561,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0010_node_0017_node_0018"
+    },
+    {
+      "id": "L04_E0011",
+      "from": "L04_node_0018_entrada_corredor_d",
+      "to": "L04_node_0023_auditorio_l01",
+      "path": [
+        {
+          "x": 928.474,
+          "y": 575.633
+        },
+        {
+          "x": 928.474,
+          "y": 597.848
+        }
+      ],
+      "distanceMeters": 7.775,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0009_node_0018_node_0023"
+    },
+    {
+      "id": "L04_E0012",
+      "from": "L04_node_0018_entrada_corredor_d",
+      "to": "L04_node_0019_entrada_corredor_d",
+      "path": [
+        {
+          "x": 928.474,
+          "y": 575.633
+        },
+        {
+          "x": 1123.326,
+          "y": 574.785
+        }
+      ],
+      "distanceMeters": 68.199,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0008_node_0018_node_0019"
+    },
+    {
+      "id": "L04_E0013",
+      "from": "L04_node_0019_entrada_corredor_d",
+      "to": "L04_node_0010_entrada_corredor_d",
+      "path": [
+        {
+          "x": 1123.326,
+          "y": 574.785
+        },
+        {
+          "x": 1123.326,
+          "y": 553.056
+        }
+      ],
+      "distanceMeters": 7.605,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0007_node_0019_node_0010"
+    },
+    {
+      "id": "L04_E0014",
+      "from": "L04_node_0011",
+      "to": "L04_node_0012",
+      "path": [
+        {
+          "x": 282.748,
+          "y": 577.14
+        },
+        {
+          "x": 393.873,
+          "y": 575.57
+        }
+      ],
+      "distanceMeters": 38.898,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0005_node_0011_node_0012"
+    },
+    {
+      "id": "L04_E0015",
+      "from": "L04_node_0020_entrada_espaco_brincar",
+      "to": "L04_node_0019_entrada_corredor_d",
+      "path": [
+        {
+          "x": 1123.326,
+          "y": 600.25
+        },
+        {
+          "x": 1123.326,
+          "y": 574.785
+        }
+      ],
+      "distanceMeters": 8.913,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0001_node_0020_node_0019"
+    },
+    {
+      "id": "L04_E0016",
+      "from": "L04_node_0021",
+      "to": "L04_node_0013_entrada_corredor_e",
+      "path": [
+        {
+          "x": 388.504,
+          "y": 605.51
+        },
+        {
+          "x": 388.504,
+          "y": 586.34
+        },
+        {
+          "x": 415.994,
+          "y": 586.34
+        },
+        {
+          "x": 421.379,
+          "y": 575.57
+        }
+      ],
+      "distanceMeters": 20.545,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0017_node_0021_node_0013"
+    },
+    {
+      "id": "L04_E0017",
+      "from": "L04_node_0013_entrada_corredor_e",
+      "to": "L04_node_0005",
+      "path": [
+        {
+          "x": 421.379,
+          "y": 575.57
+        },
+        {
+          "x": 421.379,
+          "y": 561.895
+        },
+        {
+          "x": 413.105,
+          "y": 553.841
+        }
+      ],
+      "distanceMeters": 8.828,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0015_node_0013_node_0005"
+    },
+    {
+      "id": "L04_E0018",
+      "from": "L04_node_0003",
+      "to": "L04_node_0012",
+      "path": [
+        {
+          "x": 364.153,
+          "y": 498.719
+        },
+        {
+          "x": 376.038,
+          "y": 562.162
+        },
+        {
+          "x": 393.873,
+          "y": 575.57
+        }
+      ],
+      "distanceMeters": 30.401,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0014_node_0003_node_0012"
+    },
+    {
+      "id": "L04_E0019",
+      "from": "L04_node_0017_entrada_corredor_d",
+      "to": "L04_node_0022_entrada_corredor_d",
+      "path": [
+        {
+          "x": 904.013,
+          "y": 575.633
+        },
+        {
+          "x": 903.463,
+          "y": 589.794
+        },
+        {
+          "x": 817.537,
+          "y": 588.774
+        },
+        {
+          "x": 817.537,
+          "y": 597.33
+        }
+      ],
+      "distanceMeters": 38.031,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0011_node_0017_node_0022"
+    },
+    {
+      "id": "L04_E0020",
+      "from": "L04_node_0018_entrada_corredor_d",
+      "to": "L04_node_0009_entrada_corredor_d",
+      "path": [
+        {
+          "x": 928.474,
+          "y": 575.633
+        },
+        {
+          "x": 928.474,
+          "y": 574.063
+        },
+        {
+          "x": 928.474,
+          "y": 553.26
+        }
+      ],
+      "distanceMeters": 7.831,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0006_node_0018_node_0009"
+    },
+    {
+      "id": "L04_E0021",
+      "from": "L04_node_0012",
+      "to": "L04_node_0020",
+      "path": [
+        {
+          "x": 393.873,
+          "y": 575.57
+        },
+        {
+          "x": 393.873,
+          "y": 581.316
+        },
+        {
+          "x": 356.758,
+          "y": 581.316
+        },
+        {
+          "x": 357.684,
+          "y": 606.201
+        }
+      ],
+      "distanceMeters": 23.717,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0004_node_0012_node_0020"
+    },
+    {
+      "id": "L04_E0022",
+      "from": "L04_node_0015_entrada_corredor_d",
+      "to": "L04_node_0006_entrada_corredor_d",
+      "path": [
+        {
+          "x": 654.163,
+          "y": 575.57
+        },
+        {
+          "x": 654.305,
+          "y": 566.731
+        },
+        {
+          "x": 769.731,
+          "y": 566.731
+        },
+        {
+          "x": 769.731,
+          "y": 553.402
+        }
+      ],
+      "distanceMeters": 48.158,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0003_node_0015_node_0006"
+    },
+    {
+      "id": "L04_E0023",
+      "from": "L04_node_0015_entrada_corredor_d",
+      "to": "L04_node_0007_entrada_corredor_d",
+      "path": [
+        {
+          "x": 654.163,
+          "y": 575.57
+        },
+        {
+          "x": 819.908,
+          "y": 570.923
+        },
+        {
+          "x": 822.53,
+          "y": 553.26
+        }
+      ],
+      "distanceMeters": 64.283,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "corridor",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0002_node_0015_node_0007"
+    },
+    {
+      "id": "L04_E0024",
+      "from": "L04_node_0002_hall_principal",
+      "to": "L04_node_0004_escada_emergen",
+      "path": [
+        {
+          "x": 557.812,
+          "y": 481.417
+        },
+        {
+          "x": 598.083,
+          "y": 516.255
+        },
+        {
+          "x": 598.083,
+          "y": 519.019
+        },
+        {
+          "x": 617.629,
+          "y": 519.019
+        }
+      ],
+      "distanceMeters": 26.446,
+      "bidirectional": true,
+      "accessible": false,
+      "active": true,
+      "level": "L04",
+      "zone": "indoor",
+      "type": "stairs",
+      "parkingLot": false,
+      "sourceId": "L04_edge_0021_node_0002_node_0004"
+    },
+    {
+      "id": "L03_L04_E_elevador_adm",
+      "from": "L03_node_0001",
+      "to": "L04_node_0001_elevador",
+      "path": [
+        {
+          "x": 497.195,
+          "y": 481.574
+        },
+        {
+          "x": 496.614,
+          "y": 481.401
+        }
+      ],
+      "distanceMeters": 4.2,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L03-L04",
+      "zone": "vertical",
+      "type": "elevator",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_L01_E_escada_lateral",
+      "from": "L00_N0075",
+      "to": "L01_node_0040_escada_lateral",
+      "path": [
+        {
+          "x": 352.39,
+          "y": 412.07
+        },
+        {
+          "x": 654.273,
+          "y": 621.116
+        }
+      ],
+      "distanceMeters": 12,
+      "bidirectional": true,
+      "accessible": false,
+      "active": true,
+      "level": "L00-L01",
+      "zone": "vertical",
+      "type": "stairs",
+      "parkingLot": false
+    },
+    {
+      "id": "L01_L02_E_escada_lateral",
+      "from": "L01_node_0040_escada_lateral",
+      "to": "L02_node_0003_escada_laral",
+      "path": [
+        {
+          "x": 654.273,
+          "y": 621.116
+        },
+        {
+          "x": 660.49,
+          "y": 622.513
+        }
+      ],
+      "distanceMeters": 14,
+      "bidirectional": true,
+      "accessible": false,
+      "active": true,
+      "level": "L01-L02",
+      "zone": "vertical",
+      "type": "stairs",
+      "parkingLot": false
+    },
+    {
+      "id": "L02_L03_E_escada_lateral",
+      "from": "L02_node_0003_escada_laral",
+      "to": "L03_node_0003",
+      "path": [
+        {
+          "x": 660.49,
+          "y": 622.513
+        },
+        {
+          "x": 660.49,
+          "y": 622.513
+        }
+      ],
+      "distanceMeters": 14,
+      "bidirectional": true,
+      "accessible": false,
+      "active": true,
+      "level": "L02-L03",
+      "zone": "vertical",
+      "type": "stairs",
+      "parkingLot": false
+    },
+    {
+      "id": "L03_L04_E_escada_lateral",
+      "from": "L03_node_0003",
+      "to": "L04_node_0024_escada_lateral",
+      "path": [
+        {
+          "x": 660.49,
+          "y": 622.513
+        },
+        {
+          "x": 654.163,
+          "y": 621.131
+        }
+      ],
+      "distanceMeters": 14,
+      "bidirectional": true,
+      "accessible": false,
+      "active": true,
+      "level": "L03-L04",
+      "zone": "vertical",
+      "type": "stairs",
+      "parkingLot": false
+    },
+    {
+      "id": "L04_L05_E_escada_lateral",
+      "from": "L04_node_0024_escada_lateral",
+      "to": "L05_node_escada_lateral",
+      "path": [
+        {
+          "x": 654.163,
+          "y": 621.131
+        },
+        {
+          "x": 660.49,
+          "y": 622.513
+        }
+      ],
+      "distanceMeters": 14,
+      "bidirectional": true,
+      "accessible": false,
+      "active": true,
+      "level": "L04-L05",
+      "zone": "vertical",
+      "type": "stairs",
+      "parkingLot": false
+    },
+    {
+      "id": "L05_L06_E_escada_lateral",
+      "from": "L05_node_escada_lateral",
+      "to": "L06_node_escada_lateral",
+      "path": [
+        {
+          "x": 660.49,
+          "y": 622.513
+        },
+        {
+          "x": 660.49,
+          "y": 622.513
+        }
+      ],
+      "distanceMeters": 14,
+      "bidirectional": true,
+      "accessible": false,
+      "active": true,
+      "level": "L05-L06",
+      "zone": "vertical",
+      "type": "stairs",
+      "parkingLot": false
     }
   ],
   "pois": [
@@ -5813,20 +8174,6 @@
       "cat": "estacionamento"
     },
     {
-      "id": "L01_P_elevador",
-      "rawId": "L01_elevador",
-      "name": "Elevador (1º andar)",
-      "nodeIds": [
-        "L01_elevador"
-      ],
-      "active": true,
-      "cat": "acesso",
-      "level": "L01",
-      "building": "Administrativo",
-      "group": "elevadores",
-      "inject": true
-    },
-    {
       "id": "L00_P_escada_mesanino_01",
       "rawId": "escada_mesanino_01",
       "name": "Escadas mezanino templo 01",
@@ -5855,6 +8202,366 @@
       "inject": true
     },
     {
+      "id": "L01_P_L01_poi_0023",
+      "rawId": "L01_poi_0023",
+      "name": "Auditório",
+      "nodeIds": [
+        "L01_node_0032_auditorio_l01"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "auditorios",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0025",
+      "rawId": "L01_poi_0025",
+      "name": "Escadas laterais",
+      "nodeIds": [
+        "L01_node_0040_escada_lateral"
+      ],
+      "active": true,
+      "cat": "acesso",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "elevadores",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0008",
+      "rawId": "L01_poi_0008",
+      "name": "Escadas de emergência",
+      "nodeIds": [
+        "L01_node_0005_escada_emergen"
+      ],
+      "active": true,
+      "cat": "acesso",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "elevadores",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0024",
+      "rawId": "L01_poi_0024",
+      "name": "Área Kids",
+      "nodeIds": [
+        "L01_node_0028_espaco_kids"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0006",
+      "rawId": "L01_poi_0006",
+      "name": "Elevador (1º andar)",
+      "nodeIds": [
+        "L01_node_0001_elevador"
+      ],
+      "active": true,
+      "cat": "acesso",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "elevadores",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0007",
+      "rawId": "L01_poi_0007",
+      "name": "Hall",
+      "nodeIds": [
+        "L01_node_0002_hall_principal"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0022",
+      "rawId": "L01_poi_0022",
+      "name": "Sala 22",
+      "nodeIds": [
+        "L01_node_0038"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0021",
+      "rawId": "L01_poi_0021",
+      "name": "Sala 21",
+      "nodeIds": [
+        "L01_node_0037"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0019",
+      "rawId": "L01_poi_0019",
+      "name": "Sala 19",
+      "nodeIds": [
+        "L01_node_0036"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0020",
+      "rawId": "L01_poi_0020",
+      "name": "Sala 20",
+      "nodeIds": [
+        "L01_node_0036"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0014",
+      "rawId": "L01_poi_0014",
+      "name": "Banheiro",
+      "nodeIds": [
+        "L01_node_0014"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "banheiros",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0009",
+      "rawId": "L01_poi_0009",
+      "name": "Sala 09",
+      "nodeIds": [
+        "L01_node_0015_entrada_corredor_d"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0018",
+      "rawId": "L01_poi_0018",
+      "name": "Sala 18",
+      "nodeIds": [
+        "L01_node_0035"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0017",
+      "rawId": "L01_poi_0017",
+      "name": "Sala 17",
+      "nodeIds": [
+        "L01_node_0039"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0015",
+      "rawId": "L01_poi_0015",
+      "name": "Sala 15",
+      "nodeIds": [
+        "L01_node_0019"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0013",
+      "rawId": "L01_poi_0013",
+      "name": "Sala 13",
+      "nodeIds": [
+        "L01_node_0006"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0001",
+      "rawId": "L01_poi_0001",
+      "name": "Sala 01",
+      "nodeIds": [
+        "L01_node_0003"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0002",
+      "rawId": "L01_poi_0002",
+      "name": "Sala 02",
+      "nodeIds": [
+        "L01_node_0004"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0003",
+      "rawId": "L01_poi_0003",
+      "name": "Banheiro feminino",
+      "nodeIds": [
+        "L01_node_0009"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "banheiros",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0004",
+      "rawId": "L01_poi_0004",
+      "name": "Banheiro masculino",
+      "nodeIds": [
+        "L01_node_0011"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "banheiros",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0005",
+      "rawId": "L01_poi_0005",
+      "name": "Sala pastoral",
+      "nodeIds": [
+        "L01_node_0013"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0010",
+      "rawId": "L01_poi_0010",
+      "name": "Sala 10",
+      "nodeIds": [
+        "L01_node_0016_entrada_corredor_d"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0011",
+      "rawId": "L01_poi_0011",
+      "name": "Secretaria pastoral",
+      "nodeIds": [
+        "L01_node_0017_entrada_corredor_d"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L01_P_L01_poi_0012",
+      "rawId": "L01_poi_0012",
+      "name": "Sala equipe",
+      "nodeIds": [
+        "L01_node_0018_entrada_corredor_d"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L01",
+      "mapLevel": "L01",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
       "id": "L02_P_L02_POI0025_elevador_emerg",
       "rawId": "L02_POI0025_elevador_emerg",
       "name": "Elevador de emergência",
@@ -5867,21 +8574,6 @@
       "mapLevel": "L02",
       "building": "Administrativo",
       "group": "elevadores",
-      "inject": true
-    },
-    {
-      "id": "L02_P_L02_POI0002_area_kids",
-      "rawId": "L02_POI0002_area_kids",
-      "name": "Área Kids",
-      "nodeIds": [
-        "L02_node_0011"
-      ],
-      "active": true,
-      "cat": "geral",
-      "level": "L02",
-      "mapLevel": "L02",
-      "building": "Administrativo",
-      "group": "salas",
       "inject": true
     },
     {
@@ -6095,21 +8787,6 @@
       "inject": true
     },
     {
-      "id": "L03_P_L03_POI0002_area_kids",
-      "rawId": "L03_POI0002_area_kids",
-      "name": "Área Kids",
-      "nodeIds": [
-        "L03_node_0003"
-      ],
-      "active": true,
-      "cat": "geral",
-      "level": "L03",
-      "mapLevel": "L03",
-      "building": "Administrativo",
-      "group": "salas",
-      "inject": true
-    },
-    {
       "id": "L03_P_L03_POI0002_elevador",
       "rawId": "L03_POI0002_elevador",
       "name": "Elevador (3º andar)",
@@ -6181,7 +8858,7 @@
       "level": "L03",
       "mapLevel": "L03",
       "building": "Administrativo",
-      "group": "salas",
+      "group": "elevadores",
       "inject": true
     },
     {
@@ -6468,9 +9145,294 @@
       "building": "Administrativo",
       "group": "salas",
       "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0016",
+      "rawId": "L04_poi_0016",
+      "name": "Auditório",
+      "nodeIds": [
+        "L04_node_0023_auditorio_l01"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "auditorios",
+      "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0017",
+      "rawId": "L04_poi_0017",
+      "name": "Espaço brincar",
+      "nodeIds": [
+        "L04_node_0020_entrada_espaco_brincar"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0012",
+      "rawId": "L04_poi_0012",
+      "name": "Sala 12",
+      "nodeIds": [
+        "L04_node_0011"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0015",
+      "rawId": "L04_poi_0015",
+      "name": "Sala 15",
+      "nodeIds": [
+        "L04_node_0022_entrada_corredor_d"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0005",
+      "rawId": "L04_poi_0005",
+      "name": "Escadas de emergência",
+      "nodeIds": [
+        "L04_node_0004_escada_emergen"
+      ],
+      "active": true,
+      "cat": "acesso",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "elevadores",
+      "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0003",
+      "rawId": "L04_poi_0003",
+      "name": "Elevador (4º andar)",
+      "nodeIds": [
+        "L04_node_0001_elevador"
+      ],
+      "active": true,
+      "cat": "acesso",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "elevadores",
+      "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0004",
+      "rawId": "L04_poi_0004",
+      "name": "Hall",
+      "nodeIds": [
+        "L04_node_0002_hall_principal"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0013",
+      "rawId": "L04_poi_0013",
+      "name": "Sala 13",
+      "nodeIds": [
+        "L04_node_0021"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0010",
+      "rawId": "L04_poi_0010",
+      "name": "Banheiro",
+      "nodeIds": [
+        "L04_node_0005"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "banheiros",
+      "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0002",
+      "rawId": "L04_poi_0002",
+      "name": "Sala calma",
+      "nodeIds": [
+        "L04_node_0003"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0006",
+      "rawId": "L04_poi_0006",
+      "name": "Sala 06",
+      "nodeIds": [
+        "L04_node_0006_entrada_corredor_d"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0007",
+      "rawId": "L04_poi_0007",
+      "name": "Sala 07",
+      "nodeIds": [
+        "L04_node_0008_entrada_corredor_d"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0008",
+      "rawId": "L04_poi_0008",
+      "name": "Sala 08",
+      "nodeIds": [
+        "L04_node_0009_entrada_corredor_d"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0009",
+      "rawId": "L04_poi_0009",
+      "name": "Sala 09",
+      "nodeIds": [
+        "L04_node_0010_entrada_corredor_d"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0001",
+      "rawId": "L04_poi_0001",
+      "name": "Sala 01",
+      "nodeIds": [
+        "L04_node_0003"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L04_P_L04_poi_0011",
+      "rawId": "L04_poi_0011",
+      "name": "Sala 11",
+      "nodeIds": [
+        "L04_node_0011"
+      ],
+      "active": true,
+      "cat": "geral",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "salas",
+      "inject": true
+    },
+    {
+      "id": "L04_P_escada_lateral",
+      "rawId": "L04_node_0024_escada_lateral",
+      "name": "Escada lateral",
+      "nodeIds": [
+        "L04_node_0024_escada_lateral"
+      ],
+      "active": true,
+      "cat": "acesso",
+      "level": "L04",
+      "mapLevel": "L04",
+      "building": "Administrativo",
+      "group": "elevadores",
+      "inject": true
+    },
+    {
+      "id": "L05_P_escada_lateral",
+      "rawId": "L05_node_escada_lateral",
+      "name": "Escada lateral (L05)",
+      "nodeIds": [
+        "L05_node_escada_lateral"
+      ],
+      "active": true,
+      "cat": "acesso",
+      "level": "L05",
+      "mapLevel": "L05",
+      "building": "Administrativo",
+      "group": "elevadores",
+      "inject": true
+    },
+    {
+      "id": "L06_P_escada_lateral",
+      "rawId": "L06_node_escada_lateral",
+      "name": "Escada lateral (L06)",
+      "nodeIds": [
+        "L06_node_escada_lateral"
+      ],
+      "active": true,
+      "cat": "acesso",
+      "level": "L06",
+      "mapLevel": "L06",
+      "building": "Administrativo",
+      "group": "elevadores",
+      "inject": true
     }
   ],
-  "generatedAt": "2026-07-19T14:21:33.836Z",
+  "generatedAt": "2026-07-20T00:38:24.609Z",
   "source": {
     "nodes": "assets/mapa-nodes.svg",
     "edgesIndoor": "assets/mapa-edge-indoor.svg",

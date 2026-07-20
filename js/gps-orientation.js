@@ -93,11 +93,12 @@
     }
 
     function buildHerePoi(nodeId, node, reference, position) {
+      const areaLabel = reference?.name || null;
       return {
         id: "__here__",
-        name: "Você está aqui (GPS)",
-        searchLabel: reference?.name
-          ? `Você está aqui · ${reference.name}`
+        name: areaLabel ? `Você está aqui · ${areaLabel}` : "Você está aqui (GPS)",
+        searchLabel: areaLabel
+          ? `Você está aqui · ${areaLabel}`
           : "Você está aqui (GPS)",
         x: node.x,
         y: node.y,
@@ -285,10 +286,10 @@
         return;
       }
 
-      const svgHint =
-        isFinite(reference.svgX) && isFinite(reference.svgY)
+      const svgHint = geo.latLngToSvg(position.latitude, position.longitude)
+        || (isFinite(reference.svgX) && isFinite(reference.svgY)
           ? { x: reference.svgX, y: reference.svgY }
-          : geo.latLngToSvg(position.latitude, position.longitude);
+          : null);
 
       let startNodeId = global.NearestGraphPoint.resolveStartNodeId(
         reference,
@@ -300,7 +301,7 @@
         const hit = global.NearestGraphPoint.findNearestValidNavNode(
           svgHint,
           navGraph,
-          { level: reference.floorId || "L00", preferOutdoor: true },
+          { level: reference.floorId || "L00", preferOutdoor: false },
         );
         startNodeId = hit?.id || null;
       }

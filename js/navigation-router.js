@@ -8,7 +8,7 @@
   const ALLOW_AUTOMATIC_NODE_CONNECTIONS = false;
   const ALLOW_STRAIGHT_LINE_FALLBACK = false;
   const ALLOW_ROUTE_OUTSIDE_GRAPH = false;
-  const MAX_ROUTE_ALTERNATIVES = 3;
+  const MAX_ROUTE_ALTERNATIVES = 4;
   const MAX_ROUTE_SIMILARITY = 0.85;
 
   function dist(a, b) {
@@ -204,6 +204,7 @@
     const preference = opts.preference || "shortest";
     const blockedEdges = opts.blockedEdges || new Set();
     const avoidParking = !!opts.avoidParking;
+    const bannedTypes = new Set(opts.bannedTypes || []);
 
     // objetivo heurístico: goal mais próximo geometricamente
     let goalNode = graph.nodesById.get([...goals][0]);
@@ -262,6 +263,7 @@
       for (const edge of neighbors) {
         const baseId = edge.id;
         if (blockedEdges.has(baseId)) continue;
+        if (bannedTypes.has(edge.type)) continue;
         if (!edgePassesPreference(edge, preference)) continue;
         if (avoidParking && edge.parkingLot) continue;
 
@@ -464,8 +466,10 @@
 
   function rankLabel(rank, total) {
     if (rank === 1) return "Rota 1 — Mais curta";
-    if (rank === 2) return total >= 3 ? "Rota 2 — Alternativa" : "Rota 2 — Alternativa";
-    return "Rota 3 — Alternativa mais longa";
+    if (rank === 2) return "Rota 2 — Alternativa";
+    if (rank === 3) return total >= 4 ? "Rota 3 — Alternativa" : "Rota 3 — Alternativa mais longa";
+    if (rank === 4) return "Rota 4 — Pela escada lateral";
+    return `Rota ${rank}`;
   }
 
   global.NavigationRouter = {

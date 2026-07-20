@@ -167,13 +167,42 @@
           "P000_templo",
           "escada_mesanino_01",
           "escada_mesanino_02",
-          "L01_elevador",
+          "L01_node_0001_elevador",
           "L02_node_0001_elevador",
         ],
         via: ["L00_N0027", "L00_N0030"],
         endNodes: ["L00_N0029"],
         label: "Pelo jardim",
         avoidParking: false,
+      },
+      // CF / Sala de Oração RGO → Templo: sai pela lateral Av. Batel e reentra na entrada principal
+      {
+        a: [
+          "P005_centro_de_formacao",
+          "P004_sala_de_oracao_RGO",
+        ],
+        b: [
+          "P000_templo",
+          "P027_elevador_templo",
+          "escada_mesanino_01",
+          "escada_mesanino_02",
+          "L01_node_0001_elevador",
+          "L02_node_0001_elevador",
+          "L03_node_0001",
+          "L04_node_0001_elevador",
+        ],
+        via: [
+          "L00_N0032",
+          "L00_N0093_entrada_estacionamento_av_batel",
+          "L00_N0083",
+          "L00_N0082",
+          "L00_N0081",
+        ],
+        endNodes: ["L00_N0084", "L00_N0068"],
+        label: "Por fora · Av. Batel",
+        avoidParking: false,
+        allowParking: true,
+        slot: 4,
       },
     ],
     // Nível lógico (exibição/filtro) × mapa de rota (ícone/grafo)
@@ -198,7 +227,7 @@
       { id: "L01", label: "L01", title: "1º andar · ADM", ready: true, mapUrl: "assets/mapa-L01.svg" },
       { id: "L02", label: "L02", title: "2º andar · ADM", ready: true, mapUrl: "assets/mapa-L02.svg" },
       { id: "L03", label: "L03", title: "3º andar · ADM", ready: true, mapUrl: "assets/mapa-L03.svg" },
-      { id: "L04", label: "L04", title: "4º andar", ready: false },
+      { id: "L04", label: "L04", title: "4º andar · ADM", ready: true, mapUrl: "assets/mapa-L04.svg" },
       { id: "L05", label: "L05", title: "5º andar", ready: false },
       { id: "L06", label: "L06", title: "6º andar", ready: false },
       { id: "L07", label: "L07", title: "7º andar", ready: false },
@@ -208,9 +237,20 @@
     // hubs de elevador por andar (conexão vertical)
     elevatorHubs: {
       L00: { nodeId: "L00_N0077", label: "Elevador Templo" },
-      L01: { nodeId: "L01_elevador", label: "Elevador (1º andar)" },
+      L01: { nodeId: "L01_node_0001_elevador", label: "Elevador (1º andar)" },
       L02: { nodeId: "L02_node_0001_elevador", label: "Elevador (2º andar)" },
       L03: { nodeId: "L03_node_0001", label: "Elevador (3º andar)" },
+      L04: { nodeId: "L04_node_0001_elevador", label: "Elevador (4º andar)" },
+    },
+    // hubs da escada lateral — L00 = ícone Escadas ao lado do Berçário START
+    stairHubs: {
+      L00: { nodeId: "L00_N0075", label: "Escadas (Berçário START)" },
+      L01: { nodeId: "L01_node_0040_escada_lateral", label: "Escada lateral (1º andar)" },
+      L02: { nodeId: "L02_node_0003_escada_laral", label: "Escada lateral (2º andar)" },
+      L03: { nodeId: "L03_node_0003", label: "Escada lateral (3º andar)" },
+      L04: { nodeId: "L04_node_0024_escada_lateral", label: "Escada lateral (4º andar)" },
+      L05: { nodeId: "L05_node_escada_lateral", label: "Escada lateral (5º andar)" },
+      L06: { nodeId: "L06_node_escada_lateral", label: "Escada lateral (6º andar)" },
     },
     // filtros da lista de destinos
     searchGroups: [
@@ -240,6 +280,8 @@
     areaBadge: $("areaBadge"),
     floorHint: $("floorHint"), floorBanner: $("floorBanner"),
     floorBannerTitle: $("floorBannerTitle"), floorBannerMsg: $("floorBannerMsg"),
+    mapTools: $("mapTools"), mapToolsExtras: $("mapToolsExtras"),
+    panelActionsHost: $("panelActionsHost"), panelGrab: $("panelGrab"),
     searchLevelSelect: $("searchLevelSelect"),
     browseBar: $("browseBar"),
     steps: $("steps"), clearBtn: $("clearBtn"), navBtn: $("navBtn"),
@@ -521,6 +563,33 @@
     }
   }
 
+  /** Contagem de locais pesquisáveis por andar (após navigation.json). */
+  function countLocaisForFloor(floorId) {
+    return (G.pois || []).filter((p) => {
+      enrichPoiMeta(p);
+      return isSearchablePoi(p) && (p.level || "L00") === floorId;
+    }).length;
+  }
+
+  /** Indicador por área: T | N locais · L01 | … · L05 | em breve */
+  function renderFloorLocaisHint(overrideText) {
+    if (!el.statusHint) return;
+    if (overrideText) {
+      el.statusHint.classList.remove("hint--floors");
+      el.statusHint.textContent = overrideText;
+      return;
+    }
+    el.statusHint.classList.add("hint--floors");
+    const rows = (CONFIG.floors || []).map((f) => {
+      const tag = f.id === "L00" ? "T" : f.label;
+      const n = countLocaisForFloor(f.id);
+      const ready = !!f.ready && n > 0;
+      const val = ready ? `${n} ${n === 1 ? "local" : "locais"}` : "em breve";
+      return `<div class="floor-stat"><span class="floor-stat__id">${tag}</span><span class="floor-stat__sep">|</span><span class="floor-stat__val">${val}</span></div>`;
+    });
+    el.statusHint.innerHTML = rows.join("");
+  }
+
   function poiLevel(poi) {
     if (!poi) return "L00";
     // Nível do mapa/grafo (rota) — não o subsolo lógico do destino
@@ -538,6 +607,38 @@
     return poi.level || poi.mapLevel || poiLevel(poi);
   }
 
+  /** Título curto na lista/campo: "Área Kids · L01" (sem "2º andar · ADM — Administrativo"). */
+  function poiSuggestTitle(poi) {
+    if (!poi) return "";
+    if (poi.id === "__here__") return poi.searchLabel || poi.name || "Estou aqui";
+    const name = poi.name || "Local";
+    const lvl = poiDisplayLevel(poi);
+    if (!lvl || lvl === "L00") return name;
+    return `${name} · ${lvl}`;
+  }
+
+  /** Área Kids é destino só no L01 (demais andares / L00 não entram na busca). */
+  function isAreaKidsDestination(poi) {
+    if (!poi) return false;
+    const id = norm(poi.rawId || poi.id || "");
+    const n = norm(poi.name || "");
+    return /area[_ ]?kids/.test(id) || n === "area kids";
+  }
+
+  function isSearchablePoi(poi) {
+    if (!poi || poi.active === false) return false;
+    if (isAreaKidsDestination(poi) && (poi.level || "L00") !== "L01") return false;
+    return true;
+  }
+
+  /** Linha secundária da lista: só o código do andar. */
+  function poiSuggestMeta(poi) {
+    if (!poi) return "";
+    const lvl = poiDisplayLevel(poi);
+    if (poi.accessNote) return `${lvl} · acesso pelo L00`;
+    return lvl;
+  }
+
   function poiLevelOverride(rawId) {
     if (!rawId) return null;
     const key = String(rawId).replace(/^L00_P_/i, "").replace(/^B0\d_P_/i, "");
@@ -553,6 +654,50 @@
 
   function elevatorHub(levelId) {
     return (CONFIG.elevatorHubs || {})[levelId] || null;
+  }
+
+  function stairHub(levelId) {
+    return (CONFIG.stairHubs || {})[levelId] || null;
+  }
+
+  function isAdmFloor(levelId) {
+    return /^L0[1-6]$/.test(String(levelId || ""));
+  }
+
+  /** Par elegível à alternativa “Pela escada lateral” (L00↔L01…L06). */
+  function isStairRoutePair(oLvl, dLvl) {
+    if (!oLvl || !dLvl || oLvl === dLvl) return false;
+    const oOk = oLvl === "L00" || isAdmFloor(oLvl);
+    const dOk = dLvl === "L00" || isAdmFloor(dLvl);
+    return oOk && dOk && (isAdmFloor(oLvl) || isAdmFloor(dLvl));
+  }
+
+  /** Nós da escada lateral entre dois andares (inclui L00 e destino). */
+  function stairHubWaypoints(fromLvl, toLvl) {
+    const order = ["L00", "L01", "L02", "L03", "L04", "L05", "L06"];
+    const i = order.indexOf(fromLvl);
+    const j = order.indexOf(toLvl);
+    if (i < 0 || j < 0 || i === j) return [];
+    const lo = Math.min(i, j);
+    const hi = Math.max(i, j);
+    const ids = [];
+    for (let k = lo; k <= hi; k++) {
+      const hub = stairHub(order[k]);
+      if (!hub?.nodeId) return [];
+      if (!state.navGraph?.nodesById?.has(hub.nodeId)) return [];
+      ids.push(hub.nodeId);
+    }
+    if (i > j) ids.reverse();
+    return ids;
+  }
+
+  function routeUsesLateralStairs(route) {
+    if (!route?.edgeIds?.length || !state.navGraph) return false;
+    return route.edgeIds.some((id) => {
+      if (/escada_lateral/i.test(id)) return true;
+      const e = state.navGraph.edgesById.get(id);
+      return e && e.type === "stairs" && /L0[0-6]-L0[1-6]|L00-L01/.test(e.level || "");
+    });
   }
 
   /** POI virtual do elevador do andar (para origem automática / busca). */
@@ -621,7 +766,7 @@
     let s = String(poi.rawId || poi.id || "")
       .replace(/_x5F_/g, "_")
       .replace(/^poi-\d+-/i, "");
-    // nós já canônicos (não stripar L01_elevador → "elevador")
+    // nós já canônicos (não stripar L01_node_0001_elevador → "elevador")
     if (/^(escada_mesanino_|L0[0-7]_elevador)/i.test(s)) return s;
     // L00_P_P027_… / L00_P027_… → P027_…
     s = s.replace(/^L0[0-7]_P_/i, "").replace(/^L0[0-7]_/i, "");
@@ -631,7 +776,7 @@
   function isTempleHubPoi(poi) {
     if (!poi) return false;
     const k = poiRawKey(poi);
-    return /P027_elevador_templo|P000_templo|escada_mesanino|L01_elevador|L02_node_0001_elevador|L03_node_0001/i.test(k);
+    return /P027_elevador_templo|P000_templo|escada_mesanino|L01_node_0001_elevador|L02_node_0001_elevador|L03_node_0001|L04_node_0001_elevador/i.test(k);
   }
 
   function namedExternalSpecsForPair(origin, dest) {
@@ -668,40 +813,62 @@
     return namedExternalSpecsForPair(origin, dest)[0] || null;
   }
 
-  /** Garante a rota nomeada como alternativa 2 (substitui a 2ª opção genérica). */
+  /** Garante rotas nomeadas como alternativas (até 4 quando houver Batel ou escada lateral). */
   function finalizePackedRoutes(packed, NR) {
     const list = (packed || []).filter((r) => r && r.points && r.points.length >= 2);
     list.sort((a, b) => a.length - b.length);
-    const named = list.filter((r) => r.namedExternal);
-    const rest = list.filter((r) => !r.namedExternal);
     const sigOf = (r) => (r.edgeIds || []).join(">");
+    const isStair = (r) => !!(r.viaStairs || /escada lateral/i.test(r.label || ""));
+    const stair = list.find(isStair) || null;
+    const named = list.filter((r) => r.namedExternal && !isStair(r));
+    const rest = list.filter((r) => !r.namedExternal && !isStair(r));
+    const maxRoutes = named.length >= 1 || stair || named.some((r) => /Av\.\s*Batel|Batel/i.test(r.label || ""))
+      ? 4
+      : 3;
 
     const out = [];
     // 1) rota mais curta
     if (rest[0]) out.push(rest[0]);
 
-    // 2) rota nomeada (ex.: Por fora da igreja / Pelo jardim) — ocupa o slot da alternativa 2
+    // 2+) rotas nomeadas externas (jardim / Batel…) — reserva 1 slot p/ escada
+    const namedBudget = Math.max(0, maxRoutes - out.length - (stair ? 1 : 0));
+    let namedAdded = 0;
     for (const n of named) {
+      if (namedAdded >= namedBudget) break;
       if (out.some((r) => sigOf(r) === sigOf(n))) continue;
       out.push(n);
-      break;
+      namedAdded++;
     }
 
-    // 3) demais alternativas distintas
+    // demais alternativas genéricas (ainda reserva escada)
     for (const r of rest.slice(1)) {
-      if (out.length >= 3) break;
+      const room = maxRoutes - out.length - (stair ? 1 : 0);
+      if (room <= 0) break;
       if (out.some((x) => sigOf(x) === sigOf(r))) continue;
       out.push(r);
     }
 
-    // se a nomeada não entrou (ex.: empate de assinatura com a #1), ainda tenta incluir
-    if (named[0] && !out.some((r) => r.namedExternal) && out.length < 3) {
-      out.push(named[0]);
+    // escada lateral sempre entra quando calculada
+    if (stair && !out.some((r) => sigOf(r) === sigOf(stair) || isStair(r))) {
+      if (out.length >= maxRoutes) out[out.length - 1] = stair;
+      else out.push(stair);
+    } else if (stair && out.some(isStair)) {
+      // move para o final (4ª opção)
+      const idx = out.findIndex(isStair);
+      if (idx >= 0 && idx < out.length - 1) {
+        const [s] = out.splice(idx, 1);
+        out.push(s);
+      }
     }
 
     out.forEach((r, i) => {
       r.rank = i + 1;
-      if (r.namedExternal) {
+      if (isStair(r)) {
+        r.kind = "stairs";
+        r.namedExternal = true;
+        r.viaStairs = true;
+        r.label = "Pela escada lateral";
+      } else if (r.namedExternal) {
         r.kind = "fora";
         r.label = r.label || "Por fora da igreja";
       } else if (!r.entranceId) {
@@ -709,7 +876,7 @@
         r.kind = i === 0 ? "best" : "alt";
       }
     });
-    return out.slice(0, 3);
+    return out.slice(0, maxRoutes);
   }
 
   /** Concatena pernas A* (via um ou mais nós) numa única rota. */
@@ -749,6 +916,9 @@
         avoidParking: !!avoidParking,
         walkingSpeedMps: state.walkingSpeedMps || 1.2,
       };
+      if (Array.isArray(spec.bannedTypes) && spec.bannedTypes.length) {
+        opts.bannedTypes = spec.bannedTypes;
+      }
       let best = null;
       for (const s of startIds) {
         if (!s || !state.navGraph.nodesById.has(s)) continue;
@@ -801,7 +971,6 @@
 
   function appendNamedExternalOptions(NR, startIds, endIds, origin, dest, packed) {
     const specs = namedExternalSpecsForPair(origin, dest);
-    if (!specs.length) return packed;
     const list = packed ? packed.slice() : [];
     for (const spec of specs) {
       const external = buildNamedExternalRoute(NR, startIds, endIds, origin, dest, spec);
@@ -810,6 +979,35 @@
       const dup = list.some((r) => (r.edgeIds || []).join(">") === sig);
       if (!dup) list.push(external);
     }
+    return appendAdmStairOption(NR, startIds, endIds, origin, dest, list);
+  }
+
+  /** 4ª alternativa: sobe/desce pela escada lateral (L00 ↔ L01…L06). */
+  function appendAdmStairOption(NR, startIds, endIds, origin, dest, packed) {
+    const oLvl = poiLevel(origin);
+    const dLvl = poiLevel(dest);
+    if (!isStairRoutePair(oLvl, dLvl)) return packed;
+    const via = stairHubWaypoints(oLvl, dLvl);
+    if (via.length < 2) return packed;
+
+    const stairRoute = buildNamedExternalRoute(NR, startIds, endIds, origin, dest, {
+      via,
+      label: "Pela escada lateral",
+      avoidParking: false,
+      allowParking: true,
+      bannedTypes: ["elevator"],
+      slot: 4,
+    });
+    if (!stairRoute) return packed;
+
+    stairRoute.viaStairs = true;
+    stairRoute.kind = "stairs";
+    stairRoute.label = "Pela escada lateral";
+    stairRoute.namedExternal = true;
+
+    const list = packed ? packed.slice() : [];
+    const sig = (stairRoute.edgeIds || []).join(">");
+    if (!list.some((r) => (r.edgeIds || []).join(">") === sig)) list.push(stairRoute);
     return list;
   }
 
@@ -1477,9 +1675,10 @@
       el.svgName.textContent = Object.values(CONFIG.svgFiles)
         .map((url) => url.split("/").pop())
         .join(" · ");
-      el.statusHint.textContent = `Mapa pronto: ${G.pois.length} locais`;
+      el.statusHint.textContent = "Carregando locais por andar…";
       await loadCalibration();
       await loadNavigation();
+      renderFloorLocaisHint();
       autoCalibrateFromSvg(svg);
       if (CONFIG.isDev && state.calibration) {
         drawCalibrationMarks(state.calibration.startPoint, state.calibration.endPoint);
@@ -2293,19 +2492,14 @@
     const group = poi.group || searchGroupFromPoi(poi.rawId, poi.name, poi.cat);
     const code = poi.code || `${level}_${poi.rawId || poi.id}`;
     const accessNote = ov?.accessNote || poi.accessNote || null;
-    const floorLabel = floorById(level);
-    const levelTitle = floorLabel ? `${level} — ${floorLabel.title}` : level;
-    const searchLabel = poi.searchLabel
-      || (accessNote
-        ? `${poi.name} — ${levelTitle} — ${building}`
-        : `${poi.name} — ${levelTitle} — ${building}`);
     poi.level = level;
     poi.mapLevel = mapLevel;
     poi.building = building;
     poi.group = group;
     poi.code = code;
     poi.accessNote = accessNote;
-    poi.searchLabel = searchLabel;
+    // Sempre rótulo curto (ignora searchLabel longo legado)
+    poi.searchLabel = poiSuggestTitle(poi);
     return poi;
   }
 
@@ -2379,10 +2573,6 @@
         const level = ov?.level || levelFromId(rawId) || levelFromId(c.id) || "L00";
         const mapLevel = ov?.mapLevel || "L00";
         const poiId = `${level}_${rawId}`;
-        c.setAttribute("data-poi", poiId);
-        c.style.cursor = "pointer";
-        // área de clique maior (ícones minúsculos como Jardim)
-        ensurePoiHitArea(c, p);
         const poi = enrichPoiMeta({
           id: poiId, name, cat, x: p.x, y: p.y,
           iconX: p.x, iconY: p.y,
@@ -2391,6 +2581,16 @@
           mapLevel,
         });
         G.pois.push(poi);
+        if (!isSearchablePoi(poi)) {
+          c.removeAttribute("data-poi");
+          c.style.cursor = "default";
+          c.style.pointerEvents = "none";
+        } else {
+          c.setAttribute("data-poi", poiId);
+          c.style.cursor = "pointer";
+          // área de clique maior (ícones minúsculos como Jardim)
+          ensurePoiHitArea(c, p);
+        }
       });
     });
 
@@ -2833,8 +3033,13 @@
       node.addEventListener("mouseleave", () => node.removeAttribute("data-hover"));
       node.addEventListener("click", (e) => {
         e.stopPropagation();
+        // Evita que o click após “Estou aqui” vire destino do POI sob o dedo
+        if (state.placingHere || state._ignoreNextPoiClick) {
+          state._ignoreNextPoiClick = false;
+          return;
+        }
         const poi = G.pois.find((p) => p.id === poiId);
-        if (!poi) return;
+        if (!poi || !isSearchablePoi(poi)) return;
         const lvl = poi.level || "L00";
         if (lvl !== state.activeLevel) setActiveLevel(lvl, { silent: true });
         if (!state.origin) setField("origin", poi);
@@ -2847,10 +3052,52 @@
   /** Associa ícones/áreas do SVG de andar (L02/L03) aos POIs do grafo. */
   function bindFloorPois(svg, levelId) {
     if (!svg || !levelId) return;
-    const levelPois = (G.pois || []).filter((p) => (p.level || p.mapLevel) === levelId);
+    const levelPois = (G.pois || []).filter((p) => (p.level || p.mapLevel) === levelId && isSearchablePoi(p));
+
+    // Ícones de Área Kids fora do L01: só decorativos (sem clique / sem destino)
+    if (levelId !== "L01") {
+      [
+        "P007_L01_area_kids",
+        "L01_sala_019_p007_area_kids",
+        "L02_POI0002_area_kids",
+        "L03_POI0002_area_kids",
+        "L04_poi_0014",
+      ].forEach((id) => {
+        const el = svg.getElementById(id);
+        if (!el) return;
+        el.removeAttribute("data-poi");
+        el.style.pointerEvents = "none";
+        el.style.cursor = "default";
+      });
+    }
+
     if (!levelPois.length) return;
 
     const iconMaps = {
+      L01: {
+        L01_sala_001: "L01_poi_0001",
+        "L01_sala_001-2": "L01_poi_0001",
+        L01_sala_002: "L01_poi_0002",
+        L01_sala_003: "L01_poi_0013",
+        L01_sala_004: "L01_poi_0015",
+        L01_sala_005: "L01_poi_0017",
+        L01_sala_006: "L01_poi_0018",
+        L01_sala_007: "L01_poi_0019",
+        L01_sala_008: "L01_poi_0021",
+        L01_sala_009: "L01_poi_0022",
+        L01_sala_012: "L01_poi_0010",
+        L01_sala_020: "L01_poi_0009",
+        L01_sala_000_sala_pastoral: "L01_poi_0005",
+        L01_sala_011_secretaria_pastoral: "L01_poi_0011",
+        L01_sala_014_salaequipe: "L01_poi_0012",
+        L01_sala_019_p007_area_kids: "L01_poi_0024",
+        L01_sala_021_l02_auditorio_01: "L01_poi_0023",
+        L01_sala_010_p027_l01_elevador_templo: "L01_poi_0006",
+        L01_sala_005_p023_l02_banheiro_feminino: "L01_poi_0003",
+        L01_sala_004_p023_l02_banheiro_feminino: "L01_poi_0003",
+        L01_sala_002_p024_l02_banheiro_masculino: "L01_poi_0004",
+        L01_sala_003_p024_l02_banheiro_masculino: "L01_poi_0004",
+      },
       L02: {
         L02_sala_001: "L02_POI0010_sala_01",
         L02_sala_002: "L02_POI0011_sala_02",
@@ -2863,7 +3110,6 @@
         P024_L02_banheiro_masculino: "L02_POI0009_banheiro_masculino",
         P024__L02_banheiro_masculino: "L02_POI0009_banheiro_masculino",
         P027_L01_elevador_templo: "L02_POI0002_elevador",
-        P007_L01_area_kids: "L02_POI0002_area_kids",
       },
       L03: {
         L03_sala_001: "L03_POI0010_sala_01",
@@ -2889,7 +3135,22 @@
         P024_L02_banheiro_masculino: "L03_POI0009_banheiro_masculino",
         P024__L02_banheiro_masculino: "L03_POI0009_banheiro_masculino",
         P027_L01_elevador_templo: "L03_POI0002_elevador",
-        P007_L01_area_kids: "L03_POI0002_area_kids",
+      },
+      L04: {
+        L04_sala_021_l04_auditorio_01: "L04_poi_0016",
+        L01_sala_010_p027_l01_elevador_templo: "L04_poi_0003",
+        L01_sala_020: "L04_poi_0006",
+        L01_sala_004_sala_calma: "L04_poi_0002",
+        L01_sala_003: "L04_poi_0001",
+        L01_sala_009: "L04_poi_0009",
+        L01_sala_008: "L04_poi_0008",
+        L01_sala_005: "L04_poi_0013",
+        L01_sala_007: "L04_poi_0007",
+        L01_sala_006: "L04_poi_0015",
+        L01_sala_005_p023_l02_banheiro_feminino: "L04_poi_0010",
+        P023_L02_banheiro_feminino: "L04_poi_0010",
+        P024__L02_banheiro_masculino: "L04_poi_0010",
+        P024_L02_banheiro_masculino: "L04_poi_0010",
       },
     };
     const iconMap = iconMaps[levelId] || {};
@@ -3284,9 +3545,9 @@
     const raw = ((which === "origin" ? el.originInput : el.destInput).value || "").trim();
     if (!raw) return null;
     const q = norm(raw);
-    const exact = G.pois.find((p) => norm(p.name) === q);
+    const exact = G.pois.find((p) => isSearchablePoi(p) && norm(p.name) === q);
     if (exact) return exact;
-    const hits = G.pois.filter((p) => norm(p.name).includes(q) || q.includes(norm(p.name)));
+    const hits = G.pois.filter((p) => isSearchablePoi(p) && (norm(p.name).includes(q) || q.includes(norm(p.name))));
     return hits.length === 1 ? hits[0] : null;
   }
 
@@ -3397,9 +3658,9 @@
     const outdoorIds = shortest(startNode, endNode, null, null, { ...baseOpts, preferZone: "outdoor" });
     pushPath(outdoorIds, "fora");
 
-    // 4b) rotas externas nomeadas (ex.: pelo jardim → entrada lateral oeste)
+    // 4b) rotas externas nomeadas (ex.: pelo jardim / Av. Batel)
     for (const extSpec of namedExternalSpecsForPair(origin, dest)) {
-      if (out.length >= 4) break;
+      if (out.length >= 5) break;
       const vias = (Array.isArray(extSpec.via) ? extSpec.via : [extSpec.via])
         .filter((id) => G.nodes[id]);
       if (!vias.length) continue;
@@ -3415,7 +3676,6 @@
       let ok = true;
       for (let i = 0; i < chain.length - 1; i++) {
         let leg = shortest(chain[i], chain[i + 1], null, null, extOpts);
-        // lateral do templo toca zona de estacionamento — tenta liberar se falhar
         if ((!leg || leg.length < 2) && extOpts.avoidParking) {
           leg = shortest(chain[i], chain[i + 1], null, null, { ...extOpts, avoidParking: false });
         }
@@ -3501,16 +3761,19 @@
       if (doors.length) return doors;
     }
 
+    const namedAll = out.filter((r) => r.namedExternal);
+    const maxPick = namedAll.length >= 2 || namedAll.some((r) => /Batel/i.test(r.label || "")) ? 4 : 3;
+
     // garante no máximo uma de cada perfil + a melhor sempre em 1º
     const picked = [];
     const usedKinds = new Set();
     for (const r of out) {
-      if (picked.length >= 3) break;
+      if (picked.length >= maxPick) break;
       if (r.namedExternal) {
         r.kind = "fora";
         r.label = r.label || "Por fora (externa)";
         picked.push(r);
-        usedKinds.add("fora");
+        usedKinds.add("fora-" + (r.label || picked.length));
         continue;
       }
       const kind = r.kind === "best" ? classifyRouteKind(r.nodeIds) : r.kind;
@@ -3536,7 +3799,7 @@
     // se só sobrou 1 opção mas havia 2+ no out com labels genéricos, completa
     if (picked.length < 2) {
       for (const r of out) {
-        if (picked.length >= 3) break;
+        if (picked.length >= maxPick) break;
         if (picked.includes(r)) continue;
         if (r.namedExternal) {
           r.kind = "fora";
@@ -3551,21 +3814,25 @@
       }
     }
 
-    // garante a externa nomeada como alternativa 2
-    const namedExt = out.find((r) => r.namedExternal);
-    if (namedExt) {
-      const without = picked.filter((r) => r !== namedExt && !r.namedExternal);
+    // garante todas as externas nomeadas (jardim + Batel) nas alternativas
+    const namedExts = out.filter((r) => r.namedExternal);
+    if (namedExts.length) {
+      const without = picked.filter((r) => !r.namedExternal);
       const next = [];
       if (without[0]) next.push(without[0]);
-      next.push(namedExt);
+      for (const n of namedExts) {
+        if (next.length >= maxPick) break;
+        if (next.some((r) => (r.edgeIds || []).join(">") === (n.edgeIds || []).join(">"))) continue;
+        next.push(n);
+      }
       for (const r of without.slice(1)) {
-        if (next.length >= 3) break;
+        if (next.length >= maxPick) break;
         next.push(r);
       }
-      return next.slice(0, 3);
+      return next.slice(0, maxPick);
     }
 
-    return picked.slice(0, 3);
+    return picked.slice(0, maxPick);
   }
 
   // geometria real da edge do grafo — NUNCA inventa segmento sem edge
@@ -3700,30 +3967,33 @@
     steps.push({ ico: "S", txt: `Início: ${state.origin.name}`, dist: "" });
 
     if (oLvl !== dLvl && legs.length >= 2) {
-      const exitHub = elevatorHub(oLvl);
-      const arriveHub = elevatorHub(dLvl);
+      const viaStairs = routeUsesLateralStairs(route);
+      const exitHub = viaStairs ? stairHub(oLvl) : elevatorHub(oLvl);
+      const arriveHub = viaStairs ? stairHub(dLvl) : elevatorHub(dLvl);
+      const accessLabel = viaStairs ? "escada lateral" : "elevador";
+      const prep = viaStairs ? "a" : "o";
       const firstLeg = legs[0];
       if (firstLeg?.edgeIds?.length) {
         steps.push({
           ico: "U",
-          txt: `Siga até o elevador${exitHub ? ` (${exitHub.label})` : ""}`,
+          txt: `Siga até ${prep} ${accessLabel}${exitHub ? ` (${exitHub.label})` : ""}`,
           dist: "",
         });
       } else {
         steps.push({
           ico: "U",
-          txt: `Vá ao elevador${exitHub ? ` — ${exitHub.label}` : ""}`,
+          txt: `Vá ${viaStairs ? "à" : "ao"} ${accessLabel}${exitHub ? ` — ${exitHub.label}` : ""}`,
           dist: "",
         });
       }
       steps.push({
         ico: "U",
-        txt: `Pegue o elevador até ${floorTitle(dLvl)}${arriveHub ? ` — ${arriveHub.label}` : ""}`,
+        txt: `Use ${prep} ${accessLabel} até ${floorTitle(dLvl)}${arriveHub ? ` — ${arriveHub.label}` : ""}`,
         dist: "",
       });
       steps.push({
         ico: "U",
-        txt: `Do elevador, siga até ${state.dest.name}`,
+        txt: `${viaStairs ? "Da escada" : "Do elevador"}, siga até ${state.dest.name}`,
         dist: "",
       });
       steps.push({ ico: "F", txt: `Chegada: ${state.dest.name}`, dist: "" });
@@ -3910,7 +4180,7 @@
       el.summaryDist.textContent = fmtMeters(route.length);
       if (el.summaryTime) el.summaryTime.textContent = fmtRouteTime(route.length);
       el.summaryMeta.textContent = multi
-        ? `${state.origin.name} → ${state.dest.name} · via elevador (${oLvl}→${dLvl})`
+        ? `${state.origin.name} → ${state.dest.name} · ${routeUsesLateralStairs(route) ? "via escada lateral" : "via elevador"} (${oLvl}→${dLvl})`
         : `${state.origin.name} → ${state.dest.name}`;
       const steps = buildSteps(route);
       el.steps.innerHTML = steps.map((s) => `
@@ -3924,8 +4194,13 @@
         requestAnimationFrame(() => fitRouteInView(route, { navMode: false }));
       }
       if (multi) {
-        const arrive = elevatorHub(dLvl);
-        toast(`Via elevador: desça em ${arrive?.label || floorTitle(dLvl)} e siga até ${state.dest.name}. Troque o andar para ver cada trecho.`);
+        if (routeUsesLateralStairs(route)) {
+          const arrive = stairHub(dLvl);
+          toast(`Via escada lateral: saia em ${arrive?.label || floorTitle(dLvl)} e siga até ${state.dest.name}. Troque o andar para ver cada trecho.`);
+        } else {
+          const arrive = elevatorHub(dLvl);
+          toast(`Via elevador: desça em ${arrive?.label || floorTitle(dLvl)} e siga até ${state.dest.name}. Troque o andar para ver cada trecho.`);
+        }
       }
     };
 
@@ -3962,7 +4237,8 @@
       const name = r.label
         || (i === 0 ? "Rota 1 — Mais curta"
           : i === 1 ? "Rota 2 — Alternativa"
-          : "Rota 3 — Alternativa mais longa");
+          : i === 2 ? "Rota 3 — Alternativa"
+          : "Rota 4 — Alternativa");
       return `<button type="button" class="route-opt${active}" data-idx="${i}">
         <span class="route-opt__badge">${i + 1}</span>
         <span class="route-opt__txt"><span class="route-opt__name">${name}</span>
@@ -4047,6 +4323,7 @@
     const q = norm(query);
     return (G.pois || []).filter((p) => {
       enrichPoiMeta(p);
+      if (!isSearchablePoi(p)) return false;
       // filtro de nível (padrão: todos)
       if (state.searchLevel && state.searchLevel !== "all" && (p.level || "L00") !== state.searchLevel) {
         return false;
@@ -4088,10 +4365,8 @@
       return;
     }
     html += items.map((p) => {
-      const label = p.searchLabel || `${p.name} — ${poiDisplayLevel(p)} — ${p.building || "Campus"}`;
-      const meta = p.accessNote
-        ? `${poiDisplayLevel(p)} · ${p.building || "Campus"} · acesso pelo L00`
-        : `${poiDisplayLevel(p)} · ${p.building || "Campus"}`;
+      const label = poiSuggestTitle(p);
+      const meta = poiSuggestMeta(p);
       return `
       <li data-id="${p.id}" aria-selected="false">
         <span class="s-ico">${iconFor()}</span>
@@ -4275,30 +4550,81 @@
 
   function placeHere(p) {
     const lvl = state.activeLevel || "L00";
+    // Clique no mapa de andar usa viewBox com offset (ex.: L01 y≈385+)
+    const maxSnap = lvl === "L00" ? 120 : 55;
     let snap = null;
-    // andares internos: ancora no grafo JSON do mesmo nível (ex.: L01_elevador)
-    if (lvl !== "L00" && state.navGraph && globalThis.NavigationRouter) {
+
+    // 1) Nó amarelo do andar atual (limite curto = preciso)
+    if (state.navGraph && globalThis.NearestGraphPoint?.findNearestValidNavNode) {
+      const hit = NearestGraphPoint.findNearestValidNavNode(p, state.navGraph, {
+        level: lvl,
+        maxDistanceSvg: maxSnap,
+        metersPerUnit: G.metersPerUnit || CONFIG.metersPerUnit || 0.35,
+      });
+      if (hit?.id && hit.node) {
+        snap = { id: hit.id, x: hit.node.x, y: hit.node.y, d: hit.distanceSvg };
+      }
+    }
+
+    // 2) Projeção na edge caminhável do andar (corredor entre nós)
+    if (!snap && state.navGraph && globalThis.NearestGraphPoint?.findNearestWalkableEdge) {
+      const edgeHit = NearestGraphPoint.findNearestWalkableEdge(p, state.navGraph, {
+        level: lvl,
+        maxDistanceSvg: maxSnap,
+        metersPerUnit: G.metersPerUnit || CONFIG.metersPerUnit || 0.35,
+      });
+      if (edgeHit?.nearestNodeId) {
+        const node = state.navGraph.nodesById.get(edgeHit.nearestNodeId);
+        if (node) {
+          snap = {
+            id: edgeHit.nearestNodeId,
+            x: node.x,
+            y: node.y,
+            d: edgeHit.distanceSvg,
+          };
+        }
+      }
+    }
+
+    // 3) Fallback NavigationRouter (ainda com limite)
+    if (!snap && state.navGraph && globalThis.NavigationRouter) {
       const nid = NavigationRouter.nearestNodeId(p, state.navGraph, { level: lvl });
       const node = nid && state.navGraph.nodesById.get(nid);
-      if (node) snap = { id: nid, x: node.x, y: node.y };
-      if (!snap) {
-        const hub = elevatorHub(lvl);
-        const hn = hub && state.navGraph.nodesById.get(hub.nodeId);
-        if (hn) snap = { id: hub.nodeId, x: hn.x, y: hn.y };
+      if (node && isFinite(node.x) && isFinite(node.y)) {
+        const d = Math.hypot(p.x - node.x, p.y - node.y);
+        if (d <= maxSnap * 1.35) snap = { id: nid, x: node.x, y: node.y, d };
       }
-    } else {
-      const routable = nearestRoutableNode(p, true) || nearestRoutableNode(p, false);
+    }
+
+    // 4) Malha SVG local (L00)
+    if (!snap && lvl === "L00") {
+      const routable = nearestRoutableNode(p, true, maxSnap) || nearestRoutableNode(p, false, maxSnap);
       snap = routable
-        ? { id: routable.id, x: routable.n.x, y: routable.n.y }
-        : snapToNetwork(p);
+        ? { id: routable.id, x: routable.n.x, y: routable.n.y, d: routable.d }
+        : null;
       if (snap?.id) attachNodeToMeshSafe(snap.id, true);
     }
-    if (!snap?.id) { toast("Aproxime-se de um caminho do mapa."); return; }
+
+    if (!snap?.id) {
+      toast("Toque mais perto de um corredor ou porta deste andar.");
+      return;
+    }
+
+    // Origem alinhada ao nó (rota precisa); clique só escolhe qual nó
     state.here = {
-      id: "__here__", name: "Estou aqui", x: p.x, y: p.y,
-      anchor: snap.id, snap: { x: snap.x, y: snap.y }, cat: "acesso",
-      level: lvl, navNodeIds: [snap.id],
+      id: "__here__",
+      name: "Estou aqui",
+      x: snap.x,
+      y: snap.y,
+      iconX: p.x,
+      iconY: p.y,
+      anchor: snap.id,
+      snap: { x: snap.x, y: snap.y },
+      cat: "acesso",
+      level: lvl,
+      navNodeIds: [snap.id],
     };
+    state._ignoreNextPoiClick = true;
     setField("origin", state.here);
     // LP: ponto azul “hereMarker” permanece oculto
     if (el.hereMarker) {
@@ -4309,7 +4635,7 @@
     }
     state.placingHere = false;
     el.viewport.style.cursor = "";
-    toast("Posição definida. Agora escolha o destino.");
+    toast("Posição marcada neste andar. Agora escolha o destino.");
   }
 
   /* ============================================================ PAN / ZOOM
@@ -4424,7 +4750,10 @@
   }
   function viewportPoint(e) {
     const r = el.viewport.getBoundingClientRect();
-    return { x: (e.clientX - r.left - state.panX) / state.scale, y: (e.clientY - r.top - state.panY) / state.scale };
+    // SVG width/height = vbW/vbH * scale; viewBox pode começar em (vbX, vbY) nos andares
+    const x = (e.clientX - r.left - state.panX) / state.scale + (G.vbX || 0);
+    const y = (e.clientY - r.top - state.panY) / state.scale + (G.vbY || 0);
+    return { x, y };
   }
 
   /* ============================================================ NAVEGACAO / BUSSOLA */
@@ -4560,7 +4889,7 @@
   }
 
   function poisForActiveLevel() {
-    return (G.pois || []).filter((p) => (p.level || "L00") === state.activeLevel);
+    return (G.pois || []).filter((p) => (p.level || "L00") === state.activeLevel && isSearchablePoi(p));
   }
 
   function closeFloorMenu() {
@@ -4689,7 +5018,7 @@
     const vbH = vb[3] || 600;
     // Só injeta fundo se o SVG não trouxer um (ex.: L01 já tem #fffef5)
     const hasOwnBg = !!svg.querySelector(
-      "[data-floor-bg], #L01_adm_map_bacground > rect, #L02_adm_map_background > rect, #L03_adm_map_background > rect, rect.cls-4, rect.l02-bg, rect.l03-bg",
+      "[data-floor-bg], #L01_adm_map_background > rect, #L01_adm_map_bacground > rect, #L02_adm_map_background > rect, #L03_adm_map_background > rect, #L04_adm_map_background > rect, rect.cls-4, rect.l01-bg, rect.l02-bg, rect.l03-bg, rect.l04-bg",
     );
     if (!hasOwnBg) {
       const bg = document.createElementNS(NS, "rect");
@@ -4713,7 +5042,7 @@
     state.floorMeta[floor.id] = { vbX, vbY, vbW, vbH };
 
     // Andares internos: esconder camadas técnicas (poi/node/edge) se existirem
-    ["L02_POI", "L02_NODES", "L02_EDGES", "L03_POI", "L03_NODES", "L03_EDGES", "NODES", "EDGES"].forEach((id) => {
+    ["L01_POI", "L01_NODES", "L01_EDGES", "L02_POI", "L02_NODES", "L02_EDGES", "L03_POI", "L03_NODES", "L03_EDGES", "L04_POI", "L04_NODES", "L04_EDGES", "NODES", "EDGES"].forEach((id) => {
       const g = svg.getElementById(id);
       if (!g) return;
       g.style.display = "none";
@@ -4820,22 +5149,162 @@
       } else if (floor.ready && floor.mapUrl) {
         toast(`${floor.title} · mapa base carregado`);
       } else if (floor.ready) {
-        toast(`${floor.title} · ${n} local${n === 1 ? "" : "is"}`);
+        toast(`${floor.title} · ${n} ${n === 1 ? "local" : "locais"}`);
       } else {
         toast(`${floor.label} · em breve (mapa ainda não publicado)`);
       }
     }
     if (el.statusHint) {
       if (state.route && multiTrip) {
-        el.statusHint.textContent = `${floor.title}: trecho da rota · via elevador`;
-      } else if (floor.mapUrl) {
-        el.statusHint.textContent = `${floor.title}: mapa base (salas em breve)`;
-      } else if (floor.ready) {
-        el.statusHint.textContent = `${floor.title}: ${n} locais`;
+        const via = routeUsesLateralStairs(state.route) ? "via escada lateral" : "via elevador";
+        renderFloorLocaisHint(`${floor.title}: trecho da rota · ${via}`);
       } else {
-        el.statusHint.textContent = `${floor.label}: aguardando mapa e salas`;
+        renderFloorLocaisHint();
       }
     }
+  }
+
+  /* ============================================================ MOBILE: TOOLS + BOTTOM SHEET */
+  function isMobileLayout() {
+    return window.matchMedia && window.matchMedia("(max-width: 860px)").matches;
+  }
+
+  function syncMapToolsPlacement() {
+    const extras = el.mapToolsExtras;
+    const host = el.panelActionsHost;
+    const tools = el.mapTools;
+    if (!extras || !host || !tools) return;
+    if (isMobileLayout()) {
+      if (extras.parentElement !== tools) tools.appendChild(extras);
+    } else if (extras.parentElement !== host) {
+      host.appendChild(extras);
+    }
+  }
+
+  function setPanelOpen(open) {
+    if (!el.panel) return;
+    el.panel.classList.toggle("open", !!open);
+    el.panel.style.transform = "";
+    el.panel.classList.remove("is-dragging");
+    if (el.panelToggle) {
+      el.panelToggle.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+  }
+
+  function togglePanelSheet() {
+    if (!el.panel) return;
+    setPanelOpen(!el.panel.classList.contains("open"));
+  }
+
+  function panelPeekPx() {
+    return 128;
+  }
+
+  function panelClosedOffset() {
+    const h = el.panel?.offsetHeight || 0;
+    return Math.max(0, h - panelPeekPx());
+  }
+
+  function initPanelSheetGesture() {
+    const panel = el.panel;
+    const grab = el.panelGrab;
+    if (!panel || !grab) return;
+
+    let active = false;
+    let startY = 0;
+    let startOffset = 0;
+    let lastY = 0;
+    let lastT = 0;
+    let velocity = 0;
+    let moved = false;
+    let pointerId = null;
+
+    function canGesture() {
+      return isMobileLayout()
+        && !panel.classList.contains("is-searching")
+        && !document.body.classList.contains("is-navigating");
+    }
+
+    function currentOffset() {
+      if (panel.classList.contains("open") && !panel.classList.contains("is-dragging")) return 0;
+      const t = panel.style.transform;
+      const m = /translateY\(([-\d.]+)px\)/.exec(t || "");
+      if (m) return +m[1];
+      return panel.classList.contains("open") ? 0 : panelClosedOffset();
+    }
+
+    function setOffset(y) {
+      const max = panelClosedOffset();
+      const clamped = Math.min(max, Math.max(0, y));
+      panel.style.transform = `translateY(${clamped}px)`;
+      return clamped;
+    }
+
+    function isGrabTarget(target) {
+      if (!target || !panel.contains(target)) return false;
+      if (target.closest("input, textarea, select, button, a, .suggest, .floor-menu, .trip__actions, .summary, .browse")) {
+        return false;
+      }
+      if (grab.contains(target) || target === grab) return true;
+      if (target.closest(".panel__head, .brand")) return true;
+      // painel fechado: qualquer toque na faixa visível abre por gesto
+      if (!panel.classList.contains("open")) return true;
+      return false;
+    }
+
+    function onDown(e) {
+      if (!canGesture()) return;
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      if (!isGrabTarget(e.target)) return;
+      active = true;
+      moved = false;
+      pointerId = e.pointerId;
+      startY = e.clientY;
+      lastY = e.clientY;
+      lastT = performance.now();
+      velocity = 0;
+      startOffset = currentOffset();
+      panel.classList.add("is-dragging");
+      try { panel.setPointerCapture?.(e.pointerId); } catch {}
+    }
+
+    function onMove(e) {
+      if (!active || (pointerId != null && e.pointerId !== pointerId)) return;
+      const y = e.clientY;
+      const now = performance.now();
+      const dy = y - startY;
+      if (Math.abs(dy) > 4) moved = true;
+      const dt = Math.max(1, now - lastT);
+      velocity = (y - lastY) / dt;
+      lastY = y;
+      lastT = now;
+      setOffset(startOffset + dy);
+      if (moved) e.preventDefault();
+    }
+
+    function onUp(e) {
+      if (!active || (pointerId != null && e.pointerId !== pointerId)) return;
+      active = false;
+      const wasMoved = moved;
+      pointerId = null;
+      panel.classList.remove("is-dragging");
+      const offset = currentOffset();
+      const max = panelClosedOffset() || 1;
+      const flickOpen = velocity < -0.45;
+      const flickClose = velocity > 0.45;
+      let open;
+      if (flickOpen) open = true;
+      else if (flickClose) open = false;
+      else if (!wasMoved) open = !panel.classList.contains("open");
+      else open = offset < max * 0.55;
+      panel.style.transform = "";
+      setPanelOpen(open);
+    }
+
+    panel.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove, { passive: false });
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
   }
 
   /* ============================================================ TEMA (dark/light) */
@@ -4863,6 +5332,7 @@
 
   /* ============================================================ EVENTOS */
   function bind() {
+    syncMapToolsPlacement();
     if (el.themeBtn) el.themeBtn.addEventListener("click", (e) => { e.preventDefault(); toggleTheme(); });
     if (el.areaBtn) {
       el.areaBtn.addEventListener("click", (e) => {
@@ -4932,7 +5402,16 @@
     el.zoomIn.addEventListener("click", (e) => { e.preventDefault(); zoomAt(1.25); });
     el.zoomOut.addEventListener("click", (e) => { e.preventDefault(); zoomAt(0.8); });
     el.fitBtn.addEventListener("click", (e) => { e.preventDefault(); fit(); });
-    el.panelToggle.addEventListener("click", (e) => { e.preventDefault(); el.panel.classList.toggle("open"); });
+    el.panelToggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      togglePanelSheet();
+    });
+    syncMapToolsPlacement();
+    initPanelSheetGesture();
+    window.addEventListener("resize", () => syncMapToolsPlacement());
+    if (window.matchMedia) {
+      window.matchMedia("(max-width: 860px)").addEventListener("change", () => syncMapToolsPlacement());
+    }
 
     if (el.calibBtn) {
       el.calibBtn.addEventListener("click", (e) => {
@@ -4997,7 +5476,12 @@
         }
         return;
       }
-      if (state.placingHere) { placeHere(viewportPoint(e)); return; }
+      if (state.placingHere) {
+        e.preventDefault();
+        state._ignoreNextPoiClick = true;
+        placeHere(viewportPoint(e));
+        return;
+      }
       state.drag = true; state.moved = false;
       state.sx = e.clientX; state.sy = e.clientY;
       state.px = state.panX; state.py = state.panY;

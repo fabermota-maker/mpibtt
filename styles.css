@@ -173,6 +173,22 @@ body {
 .brand__sub { margin: 3px 0 0; font-size: 13px; color: var(--ink-soft); font-weight: 500; }
 
 .panel__actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.panel__actions:empty { display: none; }
+
+.panel__grab {
+  display: none;
+}
+
+/* Desktop: extras ficam no header do painel (JS move). Mobile: rail à esquerda. */
+.map-tools {
+  display: none;
+}
+.map-tools__extras {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
 
 .floor-picker,
 .area-picker { position: relative; flex: none; }
@@ -423,6 +439,23 @@ body {
 
 .hint { font-size: 13px; color: var(--ink-soft); margin: 0; line-height: 1.5; }
 .hint--scale { margin-top: 6px; font-size: 12px; }
+.hint--floors {
+  display: grid;
+  gap: 2px;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+.floor-stat {
+  display: grid;
+  grid-template-columns: 2.4em 0.8em 1fr;
+  align-items: baseline;
+  gap: 4px;
+}
+.floor-stat__id { font-weight: 700; color: var(--ink); }
+.floor-stat__sep { color: color-mix(in srgb, var(--ink-soft) 70%, transparent); }
+.floor-stat__val { color: var(--ink-soft); }
 body:not(.is-dev) .hint--scale,
 body:not(.is-dev) .calib-box,
 body:not(.is-dev) .panel__foot,
@@ -772,10 +805,11 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
 .ctrl:hover { color: var(--brand); transform: translateY(-1px); }
 
 .panel-toggle {
-  position: absolute; left: 16px; top: 16px; width: 48px; height: 48px; border-radius: var(--radius-pill);
+  width: 48px; height: 48px; border-radius: var(--radius-pill);
   border: 1px solid var(--line); background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
   color: var(--ink); cursor: pointer; box-shadow: var(--shadow-sm);
   display: none; place-items: center; z-index: 25;
+  flex: none;
 }
 
 .nav-overlay {
@@ -836,12 +870,31 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
     position: absolute; inset: auto 10px 10px 10px; z-index: 40; max-height: 82dvh;
     border-radius: 24px; transform: translateY(calc(100% - 128px));
     transition: transform .3s cubic-bezier(.22,1,.36,1), top .2s ease, max-height .2s ease;
-    padding-top: 16px;
+    padding-top: 8px;
+    touch-action: pan-y;
   }
-  .panel::before {
-    content: ""; position: absolute; top: 9px; left: 50%; transform: translateX(-50%);
-    width: 46px; height: 5px; border-radius: 3px; background: var(--line-strong);
+  .panel.is-dragging {
+    transition: none;
   }
+  .panel__grab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    height: 28px;
+    margin: 0 -4px 2px;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .panel__grab-bar {
+    width: 46px;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--line-strong);
+  }
+  .panel::before { display: none; }
   .panel.open { transform: translateY(0); }
   /* Busca no celular: painel colado no topo, acima do teclado */
   .panel.is-searching,
@@ -861,8 +914,42 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
   .panel.is-searching .suggest {
     max-height: min(42vh, 280px);
   }
-  .panel-toggle { display: grid; }
-  body.is-searching-mobile .panel-toggle {
+
+  /* Lateral superior: menu, filtro, andar, tema */
+  .map-tools {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    position: absolute;
+    left: max(12px, env(safe-area-inset-left, 0px));
+    top: max(12px, env(safe-area-inset-top, 0px));
+    z-index: 45;
+    pointer-events: none;
+  }
+  .map-tools__extras {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    pointer-events: auto;
+  }
+  .map-tools .panel-toggle,
+  .map-tools .floor-toggle,
+  .map-tools .theme-toggle {
+    pointer-events: auto;
+    width: 48px;
+    height: 48px;
+    box-shadow: var(--shadow-sm);
+  }
+  .map-tools .panel-toggle { display: grid; }
+  .map-tools .floor-menu {
+    left: calc(100% + 8px);
+    right: auto;
+    top: 0;
+    min-width: 176px;
+  }
+  body.is-searching-mobile .map-tools {
     opacity: 0;
     pointer-events: none;
   }
@@ -920,7 +1007,7 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
     font-size: 11px;
   }
   body.is-navigating .panel,
-  body.is-navigating .panel-toggle {
+  body.is-navigating .map-tools {
     visibility: hidden;
     pointer-events: none;
   }

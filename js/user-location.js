@@ -57,6 +57,7 @@
     let displaySvg = { x: null, y: null };
     let lastGeofenceToast = "";
     let lastGeofenceToastAt = 0;
+    let lastAreaId = null;
 
     const defaultNav = {
       latitude: null,
@@ -191,19 +192,8 @@
 
       const level = getState()?.activeLevel || "L00";
 
-      // 1) referência GPS próxima com navNodeId confirmado
-      const refHit = geofence?.nearestGpsReference?.(pos.latitude, pos.longitude);
-      const refNodeId = refHit?.point?.navNodeId;
-      if (refNodeId) {
-        const n =
-          graph.nodesById?.get?.(refNodeId) ||
-          graph.nodes?.[refNodeId];
-        if (n && isFinite(n.x) && isFinite(n.y)) {
-          return { x: n.x, y: n.y };
-        }
-      }
-
-      // 2) nó caminhável mais próximo no SVG
+      // Sempre o nó amarelo (NAV) mais próximo da posição GPS no SVG —
+      // áreas/refs GPS só nomeiam o local (Templo etc.), não forçam entrada fixa.
       const nid = NR.nearestNodeId(svgPt, graph, { level });
       if (!nid) return svgPt;
       const node = graph.nodesById?.get?.(nid) || graph.nodes?.[nid];
@@ -279,6 +269,18 @@
       if (geofence) {
         const verdict = geofence.evaluate(pos);
         patchNav({ geofenceStatus: verdict.status });
+
+        const areaRef = verdict.nearestReference?.inArea
+          ? verdict.nearestReference
+          : geofence.findGpsArea?.(pos.latitude, pos.longitude);
+        const areaId = areaRef?.point?.id || null;
+        if (areaId && areaId !== lastAreaId) {
+          lastAreaId = areaId;
+          const label = areaRef.point.name || "área mapeada";
+          toastGeofence(`Você está na área: ${label}.`);
+        } else if (!areaId) {
+          lastAreaId = null;
+        }
 
         if (verdict.status === "LOW_ACCURACY") {
           // Mostra posição aproximada mesmo com precisão ruim (até ~120 m)

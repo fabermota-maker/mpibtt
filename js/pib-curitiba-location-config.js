@@ -156,6 +156,9 @@
       category: "DESTINATION",
       floorId: "L00",
       navNodeId: null,
+      poiId: "P000_templo",
+      svgX: 353.09,
+      svgY: 640,
       useForGpsSync: true,
     },
     {
@@ -270,6 +273,37 @@
     },
   ];
 
+  /**
+   * Áreas GPS (polígonos) — prioridade sobre pontos isolados.
+   * Se o usuário estiver DENTRO do polígono com GPS ativo, detecta o local imediatamente.
+   * Coordenadas derivadas do palco/plateia do templo no mapa L00 (zona marcada "Templo").
+   */
+  const PIB_CURITIBA_GPS_AREAS = [
+    {
+      id: "TEMPLO_PALCO",
+      name: "Templo",
+      type: "GPS_AREA",
+      category: "DESTINATION",
+      floorId: "L00",
+      navNodeId: null,
+      poiId: "P000_templo",
+      useForGpsSync: true,
+      // Centro aproximado do palco (SVG ~353, 650)
+      lat: -25.442008776529402,
+      lng: -49.28509659957371,
+      svgX: 353,
+      svgY: 650,
+      polygon: [
+        { lat: -25.441940049786574, lng: -49.28506268273768 },
+        { lat: -25.442048509839392, lng: -49.284990124910195 },
+        { lat: -25.442095092047495, lng: -49.285101273067816 },
+        { lat: -25.442089005504695, lng: -49.285180245286305 },
+        { lat: -25.441986571010364, lng: -49.285248772123374 },
+        { lat: -25.441950478643736, lng: -49.285198016837796 },
+      ],
+    },
+  ];
+
   const PIB_CURITIBA_LOCATION_RULES = {
     coordinateSystem: "WGS84",
     requireInsideGeofence: true,
@@ -290,6 +324,7 @@
     mapCenter: PIB_CURITIBA_MAP_CENTER,
     geofence: PIB_CURITIBA_GEOFENCE,
     gpsReferencePoints: PIB_CURITIBA_GPS_REFERENCE_POINTS,
+    gpsAreas: PIB_CURITIBA_GPS_AREAS,
     rules: PIB_CURITIBA_LOCATION_RULES,
   };
 
@@ -365,6 +400,7 @@
     PIB_CURITIBA_MAP_CENTER,
     PIB_CURITIBA_GEOFENCE,
     PIB_CURITIBA_GPS_REFERENCE_POINTS,
+    PIB_CURITIBA_GPS_AREAS,
     PIB_CURITIBA_LOCATION_RULES,
     PIB_CURITIBA_LOCATION_CONFIG,
     getGoogleMapsGeofencePath,

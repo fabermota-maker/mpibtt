@@ -103,6 +103,15 @@
     const gpsReferencePoints = (config.gpsReferencePoints || [])
       .map(normPoint)
       .filter(Boolean);
+    const gpsAreas = (config.gpsAreas || [])
+      .map((area) => {
+        const base = normPoint(area);
+        if (!base) return null;
+        const polygon = (area.polygon || []).map(normPoint).filter(Boolean);
+        if (polygon.length < 3) return null;
+        return { ...base, ...area, polygon, latitude: base.latitude, longitude: base.longitude };
+      })
+      .filter(Boolean);
     const rules = mapRules(config.rules || {});
     const centerRaw = config.mapCenter || null;
     const mapCenter = centerRaw
@@ -116,7 +125,25 @@
     let lastValid = null;
     let lastStatus = "CHECKING";
 
+    function findGpsArea(lat, lng) {
+      for (const area of gpsAreas) {
+        if (area.useForGpsSync === false) continue;
+        if (containsLocation(lat, lng, area.polygon)) {
+          return {
+            point: area,
+            distanceMeters: 0,
+            inArea: true,
+          };
+        }
+      }
+      return null;
+    }
+
     function nearestGpsReference(lat, lng) {
+      // Áreas (polígonos) têm prioridade — ex.: palco do Templo
+      const areaHit = findGpsArea(lat, lng);
+      if (areaHit) return areaHit;
+
       if (!rules.useGpsReferencePoints) return null;
       const refs = gpsReferencePoints.filter((p) => p.useForGpsSync !== false);
       const hit = nearestPoint(lat, lng, refs);
@@ -243,10 +270,12 @@
       rules,
       mapCenter,
       gpsReferencePoints,
+      gpsAreas,
       contains: (lat, lng) => containsLocation(lat, lng, perimeter),
       evaluate,
       reset,
       nearestGpsReference,
+      findGpsArea,
       getLastValid: () => (lastValid ? { ...lastValid } : null),
       getStatus: () => lastStatus,
       nearestEntrance: (lat, lng) =>
@@ -265,6 +294,7 @@
     return createGeofenceService({
       geofence: config.geofence,
       gpsReferencePoints: config.gpsReferencePoints,
+      gpsAreas: config.gpsAreas,
       mapCenter: config.mapCenter,
       rules: config.rules,
     });
