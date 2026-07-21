@@ -9,7 +9,8 @@
   const ALLOW_STRAIGHT_LINE_FALLBACK = false;
   const ALLOW_ROUTE_OUTSIDE_GRAPH = false;
   const MAX_ROUTE_ALTERNATIVES = 4;
-  const MAX_ROUTE_SIMILARITY = 0.85;
+  const MAX_ROUTE_SIMILARITY = 0.72;
+  const MAX_ROUTE_POINT_SIMILARITY = 0.78;
 
   function dist(a, b) {
     const dx = (a.x || 0) - (b.x || 0);
@@ -284,16 +285,95 @@
   }
 
   function calculateEdgeSimilarity(routeA, routeB) {
-    const edgesA = new Set(routeA.edgeIds);
-    const edgesB = new Set(routeB.edgeIds);
+    const edgesA = new Set(routeA.edgeIds || []);
+    const edgesB = new Set(routeB.edgeIds || []);
     const intersection = [...edgesA].filter((id) => edgesB.has(id)).length;
-    const union = new Set([...routeA.edgeIds, ...routeB.edgeIds]).size;
+    const union = new Set([...(routeA.edgeIds || []), ...(routeB.edgeIds || [])]).size;
     if (union === 0) return 1;
     return intersection / union;
   }
 
+  function polylineLength(pts) {
+    let total = 0;
+    for (let i = 1; i < (pts || []).length; i++) total += dist(pts[i - 1], pts[i]);
+    return total;
+  }
+
+  function samplePolyline(pts, count) {
+    if (!pts?.length) return [];
+    if (pts.length === 1) return Array(count).fill({ x: pts[0].x, y: pts[0].y });
+    const total = polylineLength(pts);
+    if (total < 0.01) return Array(count).fill({ x: pts[0].x, y: pts[0].y });
+    const out = [];
+    let seg = 0;
+    let acc = 0;
+    let segLen = dist(pts[0], pts[1]);
+    const n = Math.max(2, count);
+    for (let i = 0; i < n; i++) {
+      const target = (total * i) / (n - 1);
+      while (seg < pts.length - 2 && acc + segLen < target - 1e-6) {
+        acc += segLen;
+        seg++;
+        segLen = dist(pts[seg], pts[seg + 1]);
+      }
+      const t = segLen > 1e-6 ? Math.min(1, Math.max(0, (target - acc) / segLen)) : 0;
+      out.push({
+        x: pts[seg].x + (pts[seg + 1].x - pts[seg].x) * t,
+        y: pts[seg].y + (pts[seg + 1].y - pts[seg].y) * t,
+      });
+    }
+    return out;
+  }
+
+  function calculatePointSimilarity(ptsA, ptsB) {
+    if (!ptsA?.length || !ptsB?.length) return 0;
+    const lenA = polylineLength(ptsA);
+    const lenB = polylineLength(ptsB);
+    if (lenA < 1 || lenB < 1) return ptsA.length === ptsB.length ? 1 : 0;
+    const lenRatio = Math.min(lenA, lenB) / Math.max(lenA, lenB);
+    if (lenRatio < 0.78) return 0;
+    const sa = samplePolyline(ptsA, 20);
+    const sb = samplePolyline(ptsB, 20);
+    let sum = 0;
+    for (let i = 0; i < sa.length; i++) sum += dist(sa[i], sb[i]);
+    const avg = sum / sa.length;
+    return Math.max(0, 1 - avg / 24) * lenRatio;
+  }
+
+  function nodeSetSimilarity(routeA, routeB) {
+    const na = routeA?.nodeIds || [];
+    const nb = routeB?.nodeIds || [];
+    if (!na.length || !nb.length) return 0;
+    const setA = new Set(na);
+    const setB = new Set(nb);
+    let inter = 0;
+    for (const id of setA) if (setB.has(id)) inter++;
+    const union = new Set([...na, ...nb]).size;
+    return union ? inter / union : 0;
+  }
+
+  /** Rotas iguais ou quase iguais — nunca devem aparecer como alternativas distintas. */
+  function isTooSimilarRoute(routeA, routeB) {
+    if (!routeA || !routeB || routeA === routeB) return !!routeA && routeA === routeB;
+    const nodeA = (routeA.nodeIds || []).join(">");
+    const nodeB = (routeB.nodeIds || []).join(">");
+    if (nodeA && nodeA === nodeB) return true;
+    if (calculateEdgeSimilarity(routeA, routeB) >= MAX_ROUTE_SIMILARITY) return true;
+    if (calculatePointSimilarity(routeA.points, routeB.points) >= MAX_ROUTE_POINT_SIMILARITY) return true;
+    if (nodeSetSimilarity(routeA, routeB) >= 0.88) return true;
+    const lenA = routeA.distanceMeters || polylineLength(routeA.points);
+    const lenB = routeB.distanceMeters || polylineLength(routeB.points);
+    if (lenA > 0 && lenB > 0) {
+      const lenRatio = Math.min(lenA, lenB) / Math.max(lenA, lenB);
+      const ptSim = calculatePointSimilarity(routeA.points, routeB.points);
+      if (lenRatio >= 0.9 && ptSim >= 0.68) return true;
+      if (lenRatio >= 0.94 && calculateEdgeSimilarity(routeA, routeB) >= 0.62) return true;
+    }
+    return false;
+  }
+
   function routeSignature(route) {
-    return route.edgeIds.join(">");
+    return (route.edgeIds || []).join(">");
   }
 
   /**
@@ -365,21 +445,19 @@
       A.push(B.shift());
     }
 
-    // filtrar similaridade alta
+    // filtrar rotas visualmente iguais ou quase iguais
     const filtered = [];
     for (const route of A.sort((a, b) => a.distanceMeters - b.distanceMeters)) {
-      const tooSimilar = filtered.some(
-        (r) => calculateEdgeSimilarity(r, route) > MAX_ROUTE_SIMILARITY
-      );
-      if (tooSimilar && filtered.length > 0) continue;
+      if (filtered.some((r) => isTooSimilarRoute(r, route))) continue;
       filtered.push(route);
       if (filtered.length >= K) break;
     }
 
-    // se filtro removeu tudo além da 1ª e havia alternativas, relaxa
+    // se só restou 1, tenta incluir alternativas realmente distintas
     if (filtered.length === 1 && A.length > 1) {
       for (const route of A) {
         if (filtered.some((r) => routeSignature(r) === routeSignature(route))) continue;
+        if (filtered.some((r) => isTooSimilarRoute(r, route))) continue;
         filtered.push(route);
         if (filtered.length >= K) break;
       }
@@ -410,15 +488,14 @@
     all.sort((a, b) => a.distanceMeters - b.distanceMeters);
     const out = [];
     for (const route of all) {
-      const tooSimilar = out.some((r) => calculateEdgeSimilarity(r, route) > MAX_ROUTE_SIMILARITY);
-      if (tooSimilar && out.length) continue;
+      if (out.some((r) => isTooSimilarRoute(r, route))) continue;
       out.push(route);
       if (out.length >= MAX_ROUTE_ALTERNATIVES) break;
     }
-    // se só sobrou 1 mas há mais válidas pouco semelhantes — já tratado
     if (out.length < Math.min(2, all.length)) {
       for (const route of all) {
         if (out.some((r) => routeSignature(r) === routeSignature(route))) continue;
+        if (out.some((r) => isTooSimilarRoute(r, route))) continue;
         out.push(route);
         if (out.length >= MAX_ROUTE_ALTERNATIVES) break;
       }
@@ -478,6 +555,10 @@
     ALLOW_ROUTE_OUTSIDE_GRAPH,
     MAX_ROUTE_ALTERNATIVES,
     MAX_ROUTE_SIMILARITY,
+    MAX_ROUTE_POINT_SIMILARITY,
+    calculateEdgeSimilarity,
+    calculatePointSimilarity,
+    isTooSimilarRoute,
     validateNavigationGraph,
     createNavigationGraph,
     findKShortestRoutes,

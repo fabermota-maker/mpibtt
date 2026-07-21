@@ -1744,8 +1744,8 @@
     {
       "id": "L04_node_0023_auditorio_l01",
       "level": "L04",
-      "x": 928.474,
-      "y": 597.848,
+      "x": 166.27,
+      "y": 586.56,
       "active": true,
       "hidden": true
     },
@@ -7217,19 +7217,19 @@
     },
     {
       "id": "L04_E0011",
-      "from": "L04_node_0018_entrada_corredor_d",
+      "from": "L04_node_0011",
       "to": "L04_node_0023_auditorio_l01",
       "path": [
         {
-          "x": 928.474,
-          "y": 575.633
+          "x": 282.748,
+          "y": 577.14
         },
         {
-          "x": 928.474,
-          "y": 597.848
+          "x": 166.27,
+          "y": 586.56
         }
       ],
-      "distanceMeters": 7.775,
+      "distanceMeters": 40.9,
       "bidirectional": true,
       "accessible": true,
       "active": true,
@@ -7237,7 +7237,7 @@
       "zone": "indoor",
       "type": "corridor",
       "parkingLot": false,
-      "sourceId": "L04_edge_0009_node_0018_node_0023"
+      "sourceId": "L04_edge_0009_node_0011_node_0023"
     },
     {
       "id": "L04_E0012",
@@ -9149,7 +9149,7 @@
     {
       "id": "L04_P_L04_poi_0016",
       "rawId": "L04_poi_0016",
-      "name": "Auditório",
+      "name": "Auditório L04",
       "nodeIds": [
         "L04_node_0023_auditorio_l01"
       ],
@@ -9162,9 +9162,9 @@
       "inject": true
     },
     {
-      "id": "L04_P_L04_poi_0017",
-      "rawId": "L04_poi_0017",
-      "name": "Espaço brincar",
+      "id": "L04_P_L04_poi_0017_espaco_brincar",
+      "rawId": "L04_poi_0017_espaco_brincar",
+      "name": "Sala 17_espaco_brincar",
       "nodeIds": [
         "L04_node_0020_entrada_espaco_brincar"
       ],
@@ -9432,7 +9432,7 @@
       "inject": true
     }
   ],
-  "generatedAt": "2026-07-20T00:38:24.609Z",
+  "generatedAt": "2026-07-21T12:11:36.768Z",
   "source": {
     "nodes": "assets/mapa-nodes.svg",
     "edgesIndoor": "assets/mapa-edge-indoor.svg",

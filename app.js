@@ -130,6 +130,11 @@
       P029_entrada_pedestre_02_batel: "L00_N0082",
       P030_entrada_estacionamento_av_batel: "L00_N0093_entrada_estacionamento_av_batel",
       P031_entrada_estacionamento_bento_viana: "L00_N0002_entrada_estacionamento_principal_bento",
+      L04_poi_0016: "L04_node_0023_auditorio_l01",
+    },
+    // centro visual (planta local ADM) → pin de origem/destino nos andares internos
+    poiIconLocal: {
+      L04_poi_0016: { x: 82, y: 118 },
     },
     // entradas do templo — opções de rota “por dentro” do estabelecimento
     templeEntrances: [
@@ -544,6 +549,7 @@
           }
         }
         enrichPoiMeta(poi);
+        applyInjectedPoiIcon(poi);
       }
       // POIs só no JSON (outros andares ou nós ocultos com inject:true)
       for (const jp of data.pois || []) {
@@ -576,7 +582,9 @@
           iconHidden: true,
         });
         G.pois.push(poi);
+        applyInjectedPoiIcon(poi);
       }
+      G.pois.forEach((p) => applyInjectedPoiIcon(p));
       G.pois.sort((a, b) => (a.searchLabel || a.name).localeCompare(b.searchLabel || b.name, "pt-BR"));
       return true;
     } catch (err) {
@@ -781,6 +789,47 @@
     return null;
   }
 
+  /** Planta ADM (L01–L07): coordenada local → campus (viewBox do mapa de andar). */
+  function localAdmToCampus(local) {
+    const TX = 37.53;
+    const TY = 401.3;
+    const SCALE = 1.57;
+    return {
+      x: +(TX + local.x * SCALE).toFixed(3),
+      y: +(TY + local.y * SCALE).toFixed(3),
+    };
+  }
+
+  /** Pin visual de POIs injetados (rota continua ancorada no nodeIds). */
+  function applyInjectedPoiIcon(poi) {
+    if (!poi) return poi;
+    const raw = poi.rawId || poi.id || "";
+    const local = CONFIG.poiIconLocal?.[raw];
+    if (!local) return poi;
+    const c = localAdmToCampus(local);
+    poi.iconX = c.x;
+    poi.iconY = c.y;
+    poi.x = c.x;
+    poi.y = c.y;
+    return poi;
+  }
+
+  function syncFloorPoiIconsFromSvg(svg, iconMap) {
+    if (!svg || !iconMap) return;
+    Object.entries(iconMap).forEach(([elId, rawId]) => {
+      const el = svg.getElementById(elId);
+      const poi = (G.pois || []).find((p) => p.rawId === rawId);
+      if (!el || !poi) return;
+      const c = poiCenter(el);
+      if (!isFinite(c.x) || !isFinite(c.y)) return;
+      const campus = localAdmToCampus(c);
+      poi.iconX = campus.x;
+      poi.iconY = campus.y;
+      poi.x = campus.x;
+      poi.y = campus.y;
+    });
+  }
+
   function isTemplePoi(poi) {
     if (!poi) return false;
     const raw = poi.rawId || "";
@@ -841,55 +890,139 @@
     return namedExternalSpecsForPair(origin, dest)[0] || null;
   }
 
-  /** Garante rotas nomeadas como alternativas (até 4 quando houver Batel ou escada lateral). */
-  function finalizePackedRoutes(packed, NR) {
-    const list = (packed || []).filter((r) => r && r.points && r.points.length >= 2);
-    list.sort((a, b) => a.length - b.length);
-    const sigOf = (r) => (r.edgeIds || []).join(">");
-    const isStair = (r) => !!(r.viaStairs || /escada lateral/i.test(r.label || ""));
-    const stair = list.find(isStair) || null;
-    const named = list.filter((r) => r.namedExternal && !isStair(r));
-    const rest = list.filter((r) => !r.namedExternal && !isStair(r));
-    const maxRoutes = named.length >= 1 || stair || named.some((r) => /Av\.\s*Batel|Batel/i.test(r.label || ""))
-      ? 4
-      : 3;
+  const MAX_ROUTE_OPTIONS = 4;
+  const ROUTE_DUPE_EDGE = 0.72;
+  const ROUTE_DUPE_POINTS = 0.78;
 
+  function polylineLength(pts) {
+    let total = 0;
+    for (let i = 1; i < (pts || []).length; i++) total += dist(pts[i - 1], pts[i]);
+    return total;
+  }
+
+  function samplePolyline(pts, count) {
+    if (!pts?.length) return [];
+    if (pts.length === 1) return Array(count).fill({ x: pts[0].x, y: pts[0].y });
+    const total = polylineLength(pts);
+    if (total < 0.01) return Array(count).fill({ x: pts[0].x, y: pts[0].y });
     const out = [];
-    // 1) rota mais curta
-    if (rest[0]) out.push(rest[0]);
-
-    // 2+) rotas nomeadas externas (jardim / Batel…) — reserva 1 slot p/ escada
-    const namedBudget = Math.max(0, maxRoutes - out.length - (stair ? 1 : 0));
-    let namedAdded = 0;
-    for (const n of named) {
-      if (namedAdded >= namedBudget) break;
-      if (out.some((r) => sigOf(r) === sigOf(n))) continue;
-      out.push(n);
-      namedAdded++;
-    }
-
-    // demais alternativas genéricas (ainda reserva escada)
-    for (const r of rest.slice(1)) {
-      const room = maxRoutes - out.length - (stair ? 1 : 0);
-      if (room <= 0) break;
-      if (out.some((x) => sigOf(x) === sigOf(r))) continue;
-      out.push(r);
-    }
-
-    // escada lateral sempre entra quando calculada
-    if (stair && !out.some((r) => sigOf(r) === sigOf(stair) || isStair(r))) {
-      if (out.length >= maxRoutes) out[out.length - 1] = stair;
-      else out.push(stair);
-    } else if (stair && out.some(isStair)) {
-      // move para o final (4ª opção)
-      const idx = out.findIndex(isStair);
-      if (idx >= 0 && idx < out.length - 1) {
-        const [s] = out.splice(idx, 1);
-        out.push(s);
+    let seg = 0;
+    let acc = 0;
+    let segLen = dist(pts[0], pts[1]);
+    const n = Math.max(2, count);
+    for (let i = 0; i < n; i++) {
+      const target = (total * i) / (n - 1);
+      while (seg < pts.length - 2 && acc + segLen < target - 1e-6) {
+        acc += segLen;
+        seg++;
+        segLen = dist(pts[seg], pts[seg + 1]);
       }
+      const t = segLen > 1e-6 ? Math.min(1, Math.max(0, (target - acc) / segLen)) : 0;
+      out.push({
+        x: pts[seg].x + (pts[seg + 1].x - pts[seg].x) * t,
+        y: pts[seg].y + (pts[seg + 1].y - pts[seg].y) * t,
+      });
     }
+    return out;
+  }
 
-    out.forEach((r, i) => {
+  function routePointSimilarity(ptsA, ptsB) {
+    if (!ptsA?.length || !ptsB?.length) return 0;
+    const lenA = polylineLength(ptsA);
+    const lenB = polylineLength(ptsB);
+    if (lenA < 1 || lenB < 1) return ptsA.length === ptsB.length ? 1 : 0;
+    const lenRatio = Math.min(lenA, lenB) / Math.max(lenA, lenB);
+    if (lenRatio < 0.82) return 0;
+    const sa = samplePolyline(ptsA, 20);
+    const sb = samplePolyline(ptsB, 20);
+    let sum = 0;
+    for (let i = 0; i < sa.length; i++) sum += dist(sa[i], sb[i]);
+    const avg = sum / sa.length;
+    return Math.max(0, 1 - avg / 22) * lenRatio;
+  }
+
+  function routeEdgeSimilarity(a, b) {
+    const NR = globalThis.NavigationRouter;
+    if (NR?.calculateEdgeSimilarity && a?.edgeIds?.length && b?.edgeIds?.length) {
+      return NR.calculateEdgeSimilarity(a, b);
+    }
+    const sigA = (a?.edgeIds || []).join(">") || String(a?.sig || "");
+    const sigB = (b?.edgeIds || []).join(">") || String(b?.sig || "");
+    if (sigA && sigA === sigB) return 1;
+    return 0;
+  }
+
+  function nodeSetSimilarity(a, b) {
+    const na = a?.nodeIds || [];
+    const nb = b?.nodeIds || [];
+    if (!na.length || !nb.length) return 0;
+    const setA = new Set(na);
+    const setB = new Set(nb);
+    let inter = 0;
+    for (const id of setA) if (setB.has(id)) inter++;
+    const union = new Set([...na, ...nb]).size;
+    return union ? inter / union : 0;
+  }
+
+  /** Pontos usados para comparar rotas (perna do andar ativo quando disponível). */
+  function routeComparePoints(route) {
+    if (!route) return [];
+    const legs = route.legs;
+    if (legs?.length) {
+      const leg = legs.find((l) => l.level === state.activeLevel) || legs[0];
+      if (leg?.points?.length >= 2) return leg.points;
+    }
+    if (route.nodeIds?.length && state.navGraph && globalThis.NavigationRouter) {
+      try {
+        const built = routeLegsFromGraph(route);
+        route.legs = built;
+        const leg = built.find((l) => l.level === state.activeLevel) || built[0];
+        if (leg?.points?.length >= 2) return leg.points;
+      } catch { /* usa pontos completos */ }
+    }
+    return route.points || [];
+  }
+
+  /** Rotas visualmente iguais ou quase iguais (edgeIds diferentes mas mesmo caminho). */
+  function isDuplicateRoute(a, b) {
+    if (!a || !b || a === b) return !!a && a === b;
+    const NR = globalThis.NavigationRouter;
+    if (NR?.isTooSimilarRoute?.(a, b)) return true;
+    const nodeA = (a.nodeIds || []).join(">");
+    const nodeB = (b.nodeIds || []).join(">");
+    if (nodeA && nodeA === nodeB) return true;
+    if (routeEdgeSimilarity(a, b) >= ROUTE_DUPE_EDGE) return true;
+    const ptsA = routeComparePoints(a);
+    const ptsB = routeComparePoints(b);
+    if (routePointSimilarity(ptsA, ptsB) >= ROUTE_DUPE_POINTS) return true;
+    if (routePointSimilarity(a.points, b.points) >= ROUTE_DUPE_POINTS) return true;
+    if (nodeSetSimilarity(a, b) >= 0.88) return true;
+    const lenA = a.length || polylineLength(a.points);
+    const lenB = b.length || polylineLength(b.points);
+    if (lenA > 0 && lenB > 0) {
+      const lenRatio = Math.min(lenA, lenB) / Math.max(lenA, lenB);
+      const ptSim = routePointSimilarity(ptsA, ptsB);
+      if (lenRatio >= 0.9 && ptSim >= 0.68) return true;
+      if (lenRatio >= 0.94 && routeEdgeSimilarity(a, b) >= 0.62) return true;
+    }
+    return false;
+  }
+
+  function listHasDuplicateRoute(list, candidate) {
+    return (list || []).some((r) => isDuplicateRoute(r, candidate));
+  }
+
+  function pushUniqueRoute(list, route, max = MAX_ROUTE_OPTIONS) {
+    if (!route?.points || route.points.length < 2) return false;
+    if (list.length >= max) return false;
+    if (listHasDuplicateRoute(list, route)) return false;
+    list.push(route);
+    return true;
+  }
+
+  function relabelRouteOptions(routes, NR) {
+    const isStair = (r) => !!(r.viaStairs || /escada lateral/i.test(r.label || ""));
+    routes.forEach((r, i) => {
       r.rank = i + 1;
       if (isStair(r)) {
         r.kind = "stairs";
@@ -900,11 +1033,85 @@
         r.kind = "fora";
         r.label = r.label || "Por fora da igreja";
       } else if (!r.entranceId) {
-        r.label = (NR && NR.rankLabel) ? NR.rankLabel(i + 1, out.length) : `Rota ${i + 1}`;
+        r.label = (NR && NR.rankLabel) ? NR.rankLabel(i + 1, routes.length) : `Rota ${i + 1}`;
         r.kind = i === 0 ? "best" : "alt";
       }
     });
-    return out.slice(0, maxRoutes);
+    return routes;
+  }
+
+  /** Remove duplicatas preservando ordem; máx. 4 opções distintas. */
+  function dedupeRouteOptionsStrict(routes, NR) {
+    const isStair = (r) => !!(r.viaStairs || /escada lateral/i.test(r.label || ""));
+    const unique = [];
+    for (const r of (routes || [])) {
+      if (!r?.points || r.points.length < 2) continue;
+      if (unique.length >= MAX_ROUTE_OPTIONS) break;
+      if (listHasDuplicateRoute(unique, r)) continue;
+      unique.push(r);
+    }
+    const stair = unique.find(isStair) || (routes || []).find(isStair);
+    let core = unique.filter((r) => !isStair(r));
+    if (stair) {
+      core = core.filter((r) => !isDuplicateRoute(r, stair));
+      if (!core.some(isStair) && !listHasDuplicateRoute(core, stair)) {
+        if (core.length >= MAX_ROUTE_OPTIONS) core = core.slice(0, MAX_ROUTE_OPTIONS - 1);
+        core.push(stair);
+      }
+    }
+    const final = [];
+    for (const r of core) {
+      if (final.length >= MAX_ROUTE_OPTIONS) break;
+      if (listHasDuplicateRoute(final, r)) continue;
+      final.push(r);
+    }
+    return relabelRouteOptions(final, NR);
+  }
+
+  /** Garante rotas distintas (máx. 4) — sem alternativas repetidas. */
+  function finalizePackedRoutes(packed, NR) {
+    const list = (packed || []).filter((r) => r && r.points && r.points.length >= 2);
+    list.sort((a, b) => (a.length || 0) - (b.length || 0));
+    const isStair = (r) => !!(r.viaStairs || /escada lateral/i.test(r.label || ""));
+    const stair = list.find(isStair) || null;
+    const named = list.filter((r) => r.namedExternal && !isStair(r));
+    const rest = list.filter((r) => !r.namedExternal && !isStair(r));
+    const maxRoutes = MAX_ROUTE_OPTIONS;
+
+    const out = [];
+    if (rest[0]) out.push(rest[0]);
+
+    const namedBudget = Math.max(0, maxRoutes - out.length - (stair ? 1 : 0));
+    let namedAdded = 0;
+    for (const n of named) {
+      if (namedAdded >= namedBudget) break;
+      if (pushUniqueRoute(out, n, maxRoutes)) namedAdded++;
+    }
+
+    for (const r of rest.slice(1)) {
+      const room = maxRoutes - out.length - (stair ? 1 : 0);
+      if (room <= 0) break;
+      pushUniqueRoute(out, r, maxRoutes);
+    }
+
+    if (stair && !out.some((r) => isStair(r) || isDuplicateRoute(r, stair))) {
+      if (out.length >= maxRoutes) out[maxRoutes - 1] = stair;
+      else out.push(stair);
+    } else if (stair && out.some(isStair)) {
+      const idx = out.findIndex(isStair);
+      if (idx >= 0 && idx < out.length - 1) {
+        const [s] = out.splice(idx, 1);
+        out.push(s);
+      }
+    }
+
+    const deduped = [];
+    for (const r of out) {
+      if (deduped.length >= maxRoutes) break;
+      pushUniqueRoute(deduped, r, maxRoutes);
+    }
+
+    return dedupeRouteOptionsStrict(deduped, NR);
   }
 
   /** Concatena pernas A* (via um ou mais nós) numa única rota. */
@@ -1004,7 +1211,7 @@
       const external = buildNamedExternalRoute(NR, startIds, endIds, origin, dest, spec);
       if (!external) continue;
       const sig = (external.edgeIds || []).join(">");
-      const dup = list.some((r) => (r.edgeIds || []).join(">") === sig);
+      const dup = list.some((r) => (r.edgeIds || []).join(">") === sig || isDuplicateRoute(r, external));
       if (!dup) list.push(external);
     }
     return appendAdmStairOption(NR, startIds, endIds, origin, dest, list);
@@ -1035,7 +1242,7 @@
 
     const list = packed ? packed.slice() : [];
     const sig = (stairRoute.edgeIds || []).join(">");
-    if (!list.some((r) => (r.edgeIds || []).join(">") === sig)) list.push(stairRoute);
+    if (!list.some((r) => (r.edgeIds || []).join(">") === sig || isDuplicateRoute(r, stairRoute))) list.push(stairRoute);
     return list;
   }
 
@@ -3252,6 +3459,7 @@
     });
 
     bindPOIs(svg);
+    syncFloorPoiIconsFromSvg(svg, iconMaps[levelId] || {});
   }
 
   /* ============================================================ DIJKSTRA */
@@ -3673,6 +3881,7 @@
       if (seen.has(sig)) return false;
       const r = assembleRoute(ids, origin, dest);
       if (!r || r.points.length < 2) return false;
+      if (out.some((x) => isDuplicateRoute(x, r))) return false;
       r.sig = sig;
       r.kind = kind || classifyRouteKind(ids);
       out.push(r);
@@ -3705,6 +3914,7 @@
         if (!r || r.points.length < 2) continue;
         const sig = ids.join(">");
         if (seen.has(sig)) continue;
+        if (out.some((x) => isDuplicateRoute(x, r))) continue;
         r.sig = sig;
         r.kind = "templo";
         r.label = gate.label;
@@ -3753,7 +3963,7 @@
         ? { id: preferredEnds[0], x: G.nodes[preferredEnds[0]].x, y: G.nodes[preferredEnds[0]].y }
         : dest;
       const r = assembleRoute(ids, origin, destGate);
-      if (r && r.points.length >= 2) {
+      if (r && r.points.length >= 2 && !out.some((x) => isDuplicateRoute(x, r))) {
         r.sig = sig;
         r.kind = "fora";
         r.label = extSpec.label || "Por fora (externa)";
@@ -3822,11 +4032,11 @@
         doors.push(r);
         if (doors.length >= 4) break;
       }
-      if (doors.length) return doors;
+      if (doors.length) return finalizePackedRoutes(doors, globalThis.NavigationRouter);
     }
 
     const namedAll = out.filter((r) => r.namedExternal);
-    const maxPick = namedAll.length >= 2 || namedAll.some((r) => /Batel/i.test(r.label || "")) ? 4 : 3;
+    const maxPick = MAX_ROUTE_OPTIONS;
 
     // garante no máximo uma de cada perfil + a melhor sempre em 1º
     const picked = [];
@@ -3886,17 +4096,18 @@
       if (without[0]) next.push(without[0]);
       for (const n of namedExts) {
         if (next.length >= maxPick) break;
-        if (next.some((r) => (r.edgeIds || []).join(">") === (n.edgeIds || []).join(">"))) continue;
+        if (next.some((r) => isDuplicateRoute(r, n))) continue;
         next.push(n);
       }
       for (const r of without.slice(1)) {
         if (next.length >= maxPick) break;
+        if (next.some((x) => isDuplicateRoute(x, r))) continue;
         next.push(r);
       }
-      return next.slice(0, maxPick);
+      return finalizePackedRoutes(next, globalThis.NavigationRouter);
     }
 
-    return picked.slice(0, maxPick);
+    return finalizePackedRoutes(picked, globalThis.NavigationRouter);
   }
 
   // geometria real da edge do grafo — NUNCA inventa segmento sem edge
@@ -4225,16 +4436,16 @@
     }
 
     let options = routeOptions(state.origin, state.dest);
+    const NR = globalThis.NavigationRouter;
     // garantia: se o par tem rota nomeada, ela precisa aparecer (alt. 2)
-    if (state.navGraph && globalThis.NavigationRouter) {
-      const NR = globalThis.NavigationRouter;
+    if (state.navGraph && NR) {
       const startIds = resolveNavNodeIds(state.origin, state.origin.id === "__here__" ? "here" : "origin");
       const endIds = resolveNavNodeIds(state.dest, "dest");
       if (startIds.length && endIds.length) {
         options = appendNamedExternalOptions(NR, startIds, endIds, state.origin, state.dest, options || []);
-        options = finalizePackedRoutes(options, NR);
       }
     }
+    options = dedupeRouteOptionsStrict(finalizePackedRoutes(options || [], NR), NR);
     // garantia: só malha (nodes/edges) — nunca linha reta
     if (!options.length) {
       const er = emergencyRoute(state.origin, state.dest);
@@ -4314,7 +4525,12 @@
   }
 
   function renderRouteOptions() {
-    const options = state.routeOptions || [];
+    const NR = globalThis.NavigationRouter;
+    let options = dedupeRouteOptionsStrict(state.routeOptions || [], NR);
+    if (options.length !== (state.routeOptions || []).length) {
+      state.routeOptions = options;
+      if (state.routeIdx >= options.length) state.routeIdx = Math.max(0, options.length - 1);
+    }
     if (!el.routePick) return;
 
     if (!options.length) {
