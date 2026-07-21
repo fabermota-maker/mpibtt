@@ -74,10 +74,16 @@
     function start() {
       if (active || !navigator.geolocation) return false;
       active = true;
+      // Fix imediato com posição em cache (não bloqueia o watch)
+      navigator.geolocation.getCurrentPosition(onPosition, () => {}, {
+        enableHighAccuracy: true,
+        maximumAge: 120000,
+        timeout: 3500,
+      });
       watchId = navigator.geolocation.watchPosition(onPosition, onError, {
         enableHighAccuracy: true,
-        maximumAge: opts.maximumAge ?? 3000,
-        timeout: opts.timeout ?? 15000,
+        maximumAge: opts.maximumAge ?? 2000,
+        timeout: opts.timeout ?? 12000,
       });
       return true;
     }

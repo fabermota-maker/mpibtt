@@ -26,6 +26,19 @@
       return locationStatus;
     }
 
+    function coordsFromPosition(pos) {
+      const c = pos?.coords;
+      if (!c || !isFinite(c.latitude) || !isFinite(c.longitude)) return null;
+      return {
+        latitude: c.latitude,
+        longitude: c.longitude,
+        accuracy: c.accuracy,
+        speed: c.speed,
+        locationBearing: isFinite(c.heading) && c.heading >= 0 ? c.heading : null,
+        timestamp: pos.timestamp || Date.now(),
+      };
+    }
+
     async function requestLocationPermission() {
       if (!navigator.geolocation) {
         locationStatus = "unavailable";
@@ -45,19 +58,24 @@
           code: "INSECURE_CONTEXT",
         };
       }
+      const fastOpts = {
+        enableHighAccuracy: true,
+        timeout: locationStatus === "granted" ? 4000 : 8000,
+        maximumAge: locationStatus === "granted" ? 120000 : 15000,
+      };
       return new Promise((resolve) => {
         navigator.geolocation.getCurrentPosition(
-          () => {
+          (pos) => {
             locationStatus = "granted";
-            resolve({ ok: true, status: locationStatus });
+            resolve({ ok: true, status: locationStatus, position: coordsFromPosition(pos) });
           },
           (err) => {
             // 1ª tentativa falhou — tenta de novo com cache mais tolerante
             if (err.code === 3 || err.code === 2) {
               navigator.geolocation.getCurrentPosition(
-                () => {
+                (pos) => {
                   locationStatus = "granted";
-                  resolve({ ok: true, status: locationStatus });
+                  resolve({ ok: true, status: locationStatus, position: coordsFromPosition(pos) });
                 },
                 (err2) => {
                   if (err2.code === 1) locationStatus = "denied";
@@ -117,7 +135,7 @@
               permanent: err.code === 1,
             });
           },
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
+          fastOpts,
         );
       });
     }

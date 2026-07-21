@@ -88,8 +88,24 @@
       root.style.display = "none";
     }
 
+    function setSearching(svgX, svgY, radiusSvg) {
+      if (svgX == null || svgY == null) {
+        root.removeAttribute("data-searching");
+        return;
+      }
+      root.setAttribute("data-searching", "true");
+      x = svgX;
+      y = svgY;
+      accuracy.setAttribute("cx", String(svgX));
+      accuracy.setAttribute("cy", String(svgY));
+      accuracy.setAttribute("r", String(Math.max(12, radiusSvg || 24)));
+      body.setAttribute("transform", `translate(${svgX} ${svgY}) rotate(${displayHeading})`);
+      show();
+    }
+
     function setPosition(svgX, svgY, accuracyMeters, metersToSvgUnits) {
       if (!isFinite(svgX) || !isFinite(svgY)) return;
+      root.removeAttribute("data-searching");
       x = svgX;
       y = svgY;
       accuracy.setAttribute("cx", String(svgX));
@@ -125,6 +141,7 @@
       show,
       hide,
       setPosition,
+      setSearching,
       setHeading,
       ensureInOverlay,
       getPosition: () => ({ x, y }),

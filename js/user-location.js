@@ -99,9 +99,10 @@
       const nav = getState().userNav || {};
       const mode = nav.followMode || "free";
       locBtn.dataset.mode = mode;
-      locBtn.dataset.gps = (started || nav.gpsAvailable) ? "on" : "off";
+      locBtn.dataset.gps = (started || nav.gpsAvailable || starting) ? "on" : "off";
       locBtn.classList.toggle("is-follow", mode === "follow");
       locBtn.classList.toggle("is-follow-heading", mode === "follow-heading");
+      locBtn.classList.toggle("is-busy", !!starting);
       const labels = {
         free: "Ativar minha localização",
         follow: "Seguindo localização (toque p/ seguir direção)",
@@ -205,6 +206,29 @@
       return (typeof getOverlay === "function" ? getOverlay() : null) || overlay;
     }
 
+    function showSearchingPuck() {
+      ensureServices();
+      puck?.ensureInOverlay?.(resolveOverlay());
+      let pt = null;
+      if (displaySvg.x != null && displaySvg.y != null) {
+        pt = { x: displaySvg.x, y: displaySvg.y };
+      } else if (geo?.mapCenter) {
+        pt = geo.latLngToSvg(geo.mapCenter.latitude, geo.mapCenter.longitude);
+      }
+      if (!pt || !isFinite(pt.x) || !isFinite(pt.y)) {
+        const vb = getViewBox?.() || {};
+        pt = { x: (vb.w || 600) / 2, y: (vb.h || 400) / 2 };
+      }
+      targetSvg = { ...pt };
+      displaySvg = { ...pt };
+      puck?.setSearching?.(pt.x, pt.y, metersToSvgUnits(40));
+      puck?.setHeading?.(0, getState().userNav?.cameraBearing || 0);
+      puck?.show?.();
+      showGpsCompass(true);
+      patchNav({ gpsAvailable: false });
+      updateLocBtn();
+    }
+
     function applyAcceptedPosition(pos) {
       if (!geo?.transform && !geo?.latLngToSvg) return;
       const rawSvg = geo.latLngToSvg(pos.latitude, pos.longitude);
@@ -244,6 +268,7 @@
       });
 
       puck?.setPosition(displaySvg.x, displaySvg.y, pos.accuracy, metersToSvgUnits);
+      puck?.setSearching?.(null);
       // Cone imediato (norte do mapa até a bússola responder)
       let mapHeading = 0;
       const nav = getState().userNav || {};
@@ -347,7 +372,7 @@
 
     async function ensurePermissions() {
       permissions = permissions || global.PermissionService?.create?.();
-      if (!permissions) return false;
+      if (!permissions) return { ok: false };
 
       await permissions.probeGeolocation();
       const loc = await permissions.requestLocationPermission();
@@ -359,15 +384,18 @@
             ? "Permissão de localização negada. Ative nas configurações do navegador."
             : "Localização indisponível. Ative o GPS do aparelho e tente de novo."
         ));
-        return false;
+        return { ok: false };
       }
 
-      const ori = await permissions.requestOrientationPermission();
-      patchNav({ orientationStatus: ori.status });
-      if (!ori.ok) {
-        toast("Bússola indisponível — exibindo o ponto azul com cone fixo.");
-      }
-      return true;
+      // Bússola em paralelo — não atrasa o puck
+      permissions.requestOrientationPermission().then((ori) => {
+        patchNav({ orientationStatus: ori.status });
+        if (!ori.ok) {
+          toast("Bússola indisponível — exibindo o ponto azul com cone fixo.");
+        }
+      }).catch(() => {});
+
+      return { ok: true, position: loc.position || null };
     }
 
     async function loadGeo() {
@@ -426,9 +454,9 @@
       }
       if (!location) {
         location = global.LocationService?.create?.({
-          positionSmoothing: 0.18,
-          maximumAge: 3000,
-          timeout: 15000,
+          positionSmoothing: 0.28,
+          maximumAge: 2000,
+          timeout: 12000,
         });
         location?.subscribe(onLocationUpdate);
       }
@@ -456,30 +484,43 @@
       startPromise = (async () => {
         starting = true;
         initState();
+        updateLocBtn();
+        showSearchingPuck();
 
         try {
           if (typeof navigator === "undefined" || !navigator.geolocation) {
             if (!silent) toast("Geolocalização não suportada neste navegador.");
+            puck?.hide?.();
             return false;
           }
 
-          try {
-            await Promise.resolve(ensureCampusView?.());
-          } catch (err) {
+          const campusPromise = Promise.resolve(ensureCampusView?.()).catch((err) => {
             console.warn("ensureCampusView:", err);
-          }
+          });
+          const geoPromise = geo?.transform ? Promise.resolve(true) : loadGeo();
 
-          const geoOk = await loadGeo();
-          if (!geoOk) {
+          await Promise.all([campusPromise, geoPromise]);
+
+          if (!geo?.transform) {
             if (!silent) toast("Georreferência do mapa indisponível.");
+            puck?.hide?.();
             return false;
           }
-
-          const ok = await ensurePermissions();
-          if (!ok) return false;
 
           ensureServices();
-          // Não posiciona puck no centro do campus — só aparece com fix GPS real
+
+          const perm = await ensurePermissions();
+          if (!perm.ok) {
+            puck?.hide?.();
+            showGpsCompass(false);
+            return false;
+          }
+
+          if (perm.position) {
+            applyAcceptedPosition(perm.position);
+            if (displaySvg.x != null) camera?.centerOnPoint(displaySvg.x, displaySvg.y);
+          }
+
           location?.start();
           heading?.start();
 
@@ -487,10 +528,11 @@
           started = true;
           updateLocBtn();
           showGpsCompass(true);
-          if (!silent) toast("Buscando sua localização…");
+          if (!silent && !perm.position) toast("Buscando sua localização…");
           return true;
         } finally {
           starting = false;
+          updateLocBtn();
         }
       })();
 
@@ -525,22 +567,27 @@
     }
 
     async function onLocBtnClick() {
-      // 1) ainda não iniciou → pede permissão e liga GPS
+      // 1) ainda não iniciou → feedback imediato + permissão/GPS
       if (!started) {
+        showSearchingPuck();
         const ok = await start();
         if (!ok) return;
-        // entra em "seguir" após primeira permissão
         camera?.setFollowMode("follow");
         updateLocBtn();
+        if (displaySvg.x != null) camera?.centerOnPoint(displaySvg.x, displaySvg.y);
         toast("Seguindo sua localização.");
         return;
       }
 
-      // 2) GPS ligado mas ainda sem fix → tenta de novo e centra se já tiver
+      // 2) GPS ligado mas ainda sem fix → tenta de novo
       if (!getState().userNav?.gpsAvailable) {
-        const ok = await ensurePermissions();
-        if (ok) {
-          location?.start();
+        showSearchingPuck();
+        location?.start();
+        const perm = await ensurePermissions();
+        if (perm.ok && perm.position) {
+          applyAcceptedPosition(perm.position);
+          camera?.centerOnPoint(displaySvg.x, displaySvg.y);
+        } else if (perm.ok) {
           toast("Buscando sua localização…");
         }
         return;
@@ -600,6 +647,7 @@
     initState();
     bindLocBtn();
     updateLocBtn();
+    loadGeo().catch(() => {});
 
     return {
       start,

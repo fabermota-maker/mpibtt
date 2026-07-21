@@ -9,11 +9,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=113" />
+  <link rel="stylesheet" href="styles.css?v=123" />
 </head>
 <body>
   <div class="app-bg" aria-hidden="true">
-    <img class="app-bg__img" src="assets/background_street_map.svg?v=113" alt="" decoding="async" fetchpriority="low" />
+    <img class="app-bg__img" src="assets/background_street_map.svg?v=123" alt="" decoding="async" fetchpriority="low" />
   </div>
   <div class="app" id="app">
     <!-- ============ PAINEL LATERAL (glass) ============ -->
@@ -24,11 +24,11 @@
       <header class="panel__head">
         <div class="brand">
           <span class="brand__icon" aria-hidden="true">
-            <img class="brand__icon-img" src="assets/brand-map-pin.png?v=113" alt="" width="28" height="28" decoding="async" />
+            <img class="brand__icon-img" src="assets/brand-map-pin.png?v=123" alt="" width="28" height="28" decoding="async" />
           </span>
           <div>
             <h1 class="brand__title">Mapa Interativo</h1>
-            <p class="brand__sub" id="floorHint">Térreo · Campus (L00)</p>
+            <p class="brand__sub" id="floorHint">L00 — Térreo</p>
           </div>
         </div>
         <div class="panel__actions" id="panelActionsHost">
@@ -115,30 +115,33 @@
           <svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 17c0-6 5-6 8-6s8 0 8-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="4" cy="18" r="2.4" fill="currentColor"/><path d="M20 3l2 4-4 0z" fill="currentColor"/></svg>
           Traçar rota
         </button>
+        <button type="button" class="btn btn--nav" id="navBtn" disabled
+                title="Trace uma rota com origem e destino" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 2 4.5 20l7.5-4 7.5 4z" fill="currentColor"/></svg>
+          <span class="btn__label" id="navBtnLabel">Navegar</span>
+        </button>
       </div>
 
       <!-- Resumo da rota -->
       <section class="summary" id="summary" hidden>
-        <div class="summary__top">
-          <div>
+        <div class="summary__top" id="summaryTop">
+          <div class="summary__stats" id="summaryStats">
             <span class="summary__dist" id="summaryDist">—</span>
             <span class="summary__time" id="summaryTime">—</span>
             <span class="summary__meta" id="summaryMeta">—</span>
           </div>
-          <button type="button" class="btn btn--nav" id="navBtn">
-            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 2 4.5 20l7.5-4 7.5 4z" fill="currentColor"/></svg>
-            Navegar
-          </button>
         </div>
+        <div class="summary__body" id="summaryBody" hidden>
         <div class="route-pick" id="routePick" hidden>
           <div class="route-pick__head">
-            <span class="route-pick__title" id="routePickLabel">Rota mais próxima</span>
+            <span class="route-pick__title" id="routePickLabel">Opções de rota</span>
             <span class="route-pick__count" id="routePickCount" hidden>3</span>
           </div>
           <div class="route-options" id="routeOptions"></div>
         </div>
         <ol class="steps" id="steps"></ol>
         <button type="button" class="btn btn--ghost btn--block" id="clearBtn">Limpar rota</button>
+        </div>
       </section>
 
       <p class="hint" id="statusHint">Carregando mapa⬦</p>
@@ -299,22 +302,22 @@
     </div>
   </div>
 
-  <script src="js/calibration.js?v=113"></script>
-  <script src="js/navigation-router.js?v=113"></script>
-  <script src="js/geo-transform.js?v=113"></script>
-  <script src="js/pib-curitiba-location-config.js?v=113"></script>
-  <script src="js/geofence-service.js?v=113"></script>
-  <script src="js/gps-reading-collector.js?v=113"></script>
-  <script src="js/nearest-graph-point.js?v=113"></script>
-  <script src="js/route-snap-service.js?v=113"></script>
-  <script src="js/route-tracking-service.js?v=113"></script>
-  <script src="js/gps-orientation.js?v=113"></script>
-  <script src="js/permission-service.js?v=113"></script>
-  <script src="js/location-service.js?v=113"></script>
-  <script src="js/heading-service.js?v=113"></script>
-  <script src="js/user-location-puck.js?v=113"></script>
-  <script src="js/map-camera-controller.js?v=113"></script>
-  <script src="js/user-location.js?v=113"></script>
-  <script src="app.js?v=113"></script>
+  <script src="js/calibration.js?v=123"></script>
+  <script src="js/navigation-router.js?v=123"></script>
+  <script src="js/geo-transform.js?v=123"></script>
+  <script src="js/pib-curitiba-location-config.js?v=123"></script>
+  <script src="js/geofence-service.js?v=123"></script>
+  <script src="js/gps-reading-collector.js?v=123"></script>
+  <script src="js/nearest-graph-point.js?v=123"></script>
+  <script src="js/route-snap-service.js?v=123"></script>
+  <script src="js/route-tracking-service.js?v=123"></script>
+  <script src="js/gps-orientation.js?v=123"></script>
+  <script src="js/permission-service.js?v=123"></script>
+  <script src="js/location-service.js?v=123"></script>
+  <script src="js/heading-service.js?v=123"></script>
+  <script src="js/user-location-puck.js?v=123"></script>
+  <script src="js/map-camera-controller.js?v=123"></script>
+  <script src="js/user-location.js?v=123"></script>
+  <script src="app.js?v=123"></script>
 </body>
 </html>

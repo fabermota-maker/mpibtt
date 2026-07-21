@@ -57,13 +57,35 @@
     walkingSpeedMps: 1.2,
     calibrationUrl: "data/map-calibration.json",
     navigationUrl: "data/navigation.json",
-    snapTol: 8,        // encaixe genérico entre nós
-    edgeEndpointTol: 24, // ponta de edge ↔ node oficial (folgas do Illustrator)
-    spurTol: 80,       // ícone POI ↔ entrada da malha (curto; sem atravessar parede)
-    edgeSnapTol: 180,  // distância máx. POI → edge de entrada
-    entranceTol: 160,  // busca de node oficial de porta
-    bridgeTol: 6,      // só micro-folgas da malha oficial (não inventa atalho)
-    componentBridgeTol: 28, // une componentes separados por folga de exportação
+    snapTol: 8,        // encaixe genérico entre nós (~2,8 m com escala 0,35)
+    // Fallback global; preferir toleranceByZone (indoor/outdoor/parking)
+    edgeEndpointTol: 20, // ponta de edge ↔ node oficial
+    spurTol: 55,       // ícone POI ↔ malha (só visualização da rota)
+    edgeSnapTol: 100,  // POI → edge de entrada (fallback)
+    entranceTol: 100,  // node oficial de porta ↔ POI (fallback)
+    bridgeTol: 6,      // micro-folgas da malha oficial
+    componentBridgeTol: 22, // une componentes por folga de exportação (efetivo ≤ bridgeTol×3)
+    // Por zona — validar em paredes finas, salas vizinhas, corredores paralelos, estacionamento e templo
+    toleranceByZone: {
+      indoor: {
+        edgeEndpointTol: 18,
+        entranceTol: 95,
+        edgeSnapTol: 85,
+        spurTol: 48,
+      },
+      outdoor: {
+        edgeEndpointTol: 24,
+        entranceTol: 130,
+        edgeSnapTol: 140,
+        spurTol: 72,
+      },
+      parking: {
+        edgeEndpointTol: 22,
+        entranceTol: 105,
+        edgeSnapTol: 110,
+        spurTol: 62,
+      },
+    },
     // zonas de estacionamento (bbox em unidades SVG) — evita atravessar o pátio
     parkingZones: [
       // pátio principal (vagas ao sul do toldo / templo)
@@ -223,14 +245,14 @@
     },
     // Andares: L00 = térreo/campus; L01–L07 = andares; B01/B02 = subsolos
     floors: [
-      { id: "L00", label: "L00", title: "Térreo · Campus", ready: true },
-      { id: "L01", label: "L01", title: "1º andar · ADM", ready: true, mapUrl: "assets/mapa-L01.svg" },
-      { id: "L02", label: "L02", title: "2º andar · ADM", ready: true, mapUrl: "assets/mapa-L02.svg" },
-      { id: "L03", label: "L03", title: "3º andar · ADM", ready: true, mapUrl: "assets/mapa-L03.svg" },
-      { id: "L04", label: "L04", title: "4º andar · ADM", ready: true, mapUrl: "assets/mapa-L04.svg" },
-      { id: "L05", label: "L05", title: "5º andar", ready: false },
-      { id: "L06", label: "L06", title: "6º andar", ready: false },
-      { id: "L07", label: "L07", title: "7º andar", ready: false },
+      { id: "L00", label: "L00", title: "Térreo", subtitle: "Ação Social, Aconselhamento, Plantão Pastoral", ready: true },
+      { id: "L01", label: "L01", title: "1º andar", subtitle: "Min. Infantil · TDP (2 a 5 anos)", ready: true, mapUrl: "assets/mapa-L01.svg" },
+      { id: "L02", label: "L02", title: "2º andar", subtitle: "Mulheres e Idosos · TDP (6 e 7 anos)", ready: true, mapUrl: "assets/mapa-L02.svg" },
+      { id: "L03", label: "L03", title: "3º andar", subtitle: "Juventude e Educação Cristã", ready: true, mapUrl: "assets/mapa-L03.svg" },
+      { id: "L04", label: "L04", title: "4º andar", subtitle: "Min. Infantil · Espaço START (8 e 9 anos)", ready: true, mapUrl: "assets/mapa-L04.svg" },
+      { id: "L05", label: "L05", title: "5º andar", subtitle: "Ministérios: Administração, RH, TI, Missões e Eficiente", ready: false },
+      { id: "L06", label: "L06", title: "6º andar", subtitle: "Ministérios: Pastoral, Adoração, Integração, Células, Movimento Discipular, Família", ready: false },
+      { id: "L07", label: "L07", title: "7º andar", subtitle: "Espaço ao Ar Livre", ready: false },
       { id: "B01", label: "B01", title: "Subsolo 01", ready: false },
       { id: "B02", label: "B02", title: "Subsolo 02 · Nárnia", ready: false },
     ],
@@ -284,7 +306,8 @@
     panelActionsHost: $("panelActionsHost"), panelGrab: $("panelGrab"),
     searchLevelSelect: $("searchLevelSelect"),
     browseBar: $("browseBar"),
-    steps: $("steps"), clearBtn: $("clearBtn"), navBtn: $("navBtn"),
+    steps: $("steps"), clearBtn: $("clearBtn"), navBtn: $("navBtn"), navBtnLabel: $("navBtnLabel"),
+    summaryTop: $("summaryTop"), summaryStats: $("summaryStats"), summaryBody: $("summaryBody"),
     statusHint: $("statusHint"), scaleHint: $("scaleHint"), svgName: $("svgName"),
     calibBtn: $("calibBtn"), calibPanel: $("calibPanel"), calibHelp: $("calibHelp"),
     calibRealInput: $("calibRealInput"), calibResult: $("calibResult"),
@@ -648,8 +671,13 @@
   function floorTitle(levelId) {
     const f = floorById(levelId);
     if (!f) return levelId || "andar";
-    // Ex.: "B01 — Subsolo 01", "L00 — Térreo · Campus"
     return `${f.id} — ${f.title}`;
+  }
+
+  function floorMenuMeta(f) {
+    if (f.mapUrl || (f.ready && countLocaisForFloor(f.id) > 0)) return "";
+    if (f.ready) return "";
+    return "em breve";
   }
 
   function elevatorHub(levelId) {
@@ -1015,19 +1043,20 @@
   function appendPoiEndpoints(points, origin, dest) {
     const pts = (points || []).map((p) => ({ x: p.x, y: p.y }));
     if (!pts.length) return pts;
-    const maxSpur = CONFIG.spurTol || 80;
+    const maxSpurO = tol("spurTol", poiToleranceZone(origin));
+    const maxSpurD = tol("spurTol", poiToleranceZone(dest));
     const o = poiIcon(origin);
     const d = poiIcon(dest);
     const oLvl = poiLevel(origin);
     const dLvl = poiLevel(dest);
     // não mistura coordenadas de andares diferentes
-    if (o && oLvl === dLvl && dist(o, pts[0]) > 0.8 && dist(o, pts[0]) <= maxSpur) {
+    if (o && oLvl === dLvl && dist(o, pts[0]) > 0.8 && dist(o, pts[0]) <= maxSpurO) {
       if (!crossesWall(o, pts[0])) pts.unshift({ x: o.x, y: o.y });
     }
     if (d && oLvl === dLvl && dist(pts[pts.length - 1], d) > 0.8) {
       if (isTemplePoi(dest)) return pts;
       const tip = pts[pts.length - 1];
-      if (dist(tip, d) <= maxSpur && !crossesWall(tip, d)) {
+      if (dist(tip, d) <= maxSpurD && !crossesWall(tip, d)) {
         pts.push({ x: d.x, y: d.y });
       }
     }
@@ -1918,6 +1947,35 @@
     return id;
   }
 
+  /** Tolerância efetiva: zona (indoor/outdoor/parking) ou fallback global. */
+  function tol(key, zone) {
+    const z = zone && CONFIG.toleranceByZone?.[zone];
+    if (z && z[key] != null) return z[key];
+    return CONFIG[key];
+  }
+
+  /** Zona de tolerância do POI — indoor conservador; outdoor/parking mais folgado. */
+  function poiToleranceZone(poi) {
+    if (!poi) return "indoor";
+    if (pointInParkingZone(poi) || isParkingPoi(poi)) return "parking";
+    const id = norm(poi.rawId || poi.id || "");
+    const n = norm(poi.name || "");
+    const blob = `${id} ${n}`;
+    if (/estacionamento|pedestre|batel|bento|patio|pátio|motos?/.test(blob)) return "parking";
+    if (/jardim|externo|toldo|narnia|servir|refeitorio|capela|templo|batist|ginasio|seven_pass/.test(blob)) {
+      return "outdoor";
+    }
+    return "indoor";
+  }
+
+  function edgeZonePenalty(poiZone, edgeZone) {
+    if (!poiZone || !edgeZone || poiZone === edgeZone) return 0;
+    if (poiZone === "indoor" && edgeZone === "outdoor") return 45;
+    if (poiZone === "outdoor" && edgeZone === "indoor") return 22;
+    if (poiZone === "parking") return edgeZone === "outdoor" ? 0 : 14;
+    return 12;
+  }
+
   // nó mais próximo que faça parte do grafo navegável (maior componente conectado)
   function nearestConnectedNode(p, officialOnly = false) {
     const pool = G.main && G.main.size
@@ -2245,7 +2303,7 @@
   }
 
   /** Projeção na edge mais próxima (opcionalmente exigindo caminho livre de parede). */
-  function findNearestEdgeHit(p, maxDist, requireClear) {
+  function findNearestEdgeHit(p, maxDist, requireClear, preferredZone) {
     let best = null;
     const seen = new Set();
     const lat = CONFIG.snapLateral || 0;
@@ -2262,7 +2320,10 @@
           const pr = projectOnSeg(p, geom[i - 1], geom[i]);
           if (pr.d > maxDist) continue;
           if (requireClear && crossesWall(p, { x: pr.x, y: pr.y })) continue;
-          const score = pr.d + lat * Math.abs(pr.x - p.x) + lat * 0.25 * Math.abs(pr.y - p.y);
+          const score = pr.d
+            + edgeZonePenalty(preferredZone, e.zone)
+            + lat * Math.abs(pr.x - p.x)
+            + lat * 0.25 * Math.abs(pr.y - p.y);
           if (!best || score < best.score) {
             best = { score, d: pr.d, proj: { x: pr.x, y: pr.y }, a, b: e.id, official: !!e.official };
           }
@@ -2277,7 +2338,8 @@
    */
   function snapToEntrance(p, excludeIds) {
     const banned = excludeIds instanceof Set ? excludeIds : new Set(excludeIds || []);
-    const maxD = CONFIG.entranceTol || 160;
+    const zone = poiToleranceZone(p);
+    const maxD = tol("entranceTol", zone);
 
     const cfg = configuredAnchor(p);
     if (cfg && !banned.has(cfg.id)) return cfg;
@@ -2293,7 +2355,7 @@
         if (score < 70) continue;
         if (crossesWall(p, n)) continue;
         const d = dist(p, n);
-        if (d > maxD * 1.5) continue;
+        if (d > maxD * 1.25) continue;
         const rank = d - score;
         if (!named || rank < named.rank) named = { id, x: n.x, y: n.y, d, rank, how: "name" };
       }
@@ -2325,7 +2387,7 @@
     }
 
     // 3) projeção na edge caminhável SEM atravessar parede
-    const hit = findNearestEdgeHit(p, CONFIG.edgeSnapTol, true);
+    const hit = findNearestEdgeHit(p, tol("edgeSnapTol", zone), true, zone);
     if (hit && !banned.has(hit.a) && !banned.has(hit.b)) {
       let door = null;
       for (const id of Object.keys(G.nodes)) {
@@ -2537,7 +2599,7 @@
       shapes.forEach((c) => {
         const pts = edgeEndpoints(c);
         if (pts.length < 2) return;
-        const epTol = CONFIG.edgeEndpointTol || CONFIG.snapTol * 3;
+        const epTol = tol("edgeEndpointTol", zone);
         const ids = pts.map((p) => ensureNode(p, epTol));
         for (let k = 1; k < ids.length; k++) {
           const a = ids[k - 1], b = ids[k];
@@ -2552,7 +2614,7 @@
     attachOrphanOfficialNodes();
     pruneIllegalEdges();
     computeMainComponent();
-    connectComponentsToMain(CONFIG.componentBridgeTol || 120);
+    connectComponentsToMain(CONFIG.componentBridgeTol || 22);
     computeMainComponent();
 
     // POIS — ancora na ENTRADA (mapa explícito + node oficial sem atravessar parede)
@@ -2682,12 +2744,14 @@
     // node da malha principal mais próximo SEM atravessar parede
     let best = null;
     const pool = G.main && G.main.size ? G.main : new Set(Object.keys(G.nodes));
+    const zone = poiToleranceZone(poi);
+    const maxReach = tol("entranceTol", zone) * 1.5;
     for (const id of pool) {
       if (!(G.adj[id] || []).some((e) => e.official)) continue;
       const n = G.nodes[id];
       if (!n) continue;
       const d = dist(poi, n);
-      if (d > (CONFIG.entranceTol || 160) * 2) continue;
+      if (d > maxReach) continue;
       if (crossesWall(poi, n)) continue;
       if (!best || d < best.d) best = { id, n, d };
     }
@@ -3473,8 +3537,8 @@
       origin.snap = { x: n.x, y: n.y };
       dest.snap = { x: n.x, y: n.y };
       const pts = [{ x: n.x, y: n.y }];
-      if (canSpurTo(origin, n)) pts.unshift({ x: origin.x, y: origin.y });
-      if (canSpurTo(dest, n)) pts.push({ x: dest.x, y: dest.y });
+      if (canSpurTo(origin, n, origin)) pts.unshift({ x: origin.x, y: origin.y });
+      if (canSpurTo(dest, n, dest)) pts.push({ x: dest.x, y: dest.y });
       if (pts.length < 2) pts.push({ x: n.x + 0.5, y: n.y });
       let len = 0;
       for (let i = 1; i < pts.length; i++) len += dist(pts[i - 1], pts[i]);
@@ -3532,8 +3596,8 @@
   }
 
   // Spur ícone↔malha: curto e sem atravessar parede
-  function canSpurTo(from, to) {
-    const max = CONFIG.spurTol || 80;
+  function canSpurTo(from, to, poiForTol) {
+    const max = tol("spurTol", poiForTol ? poiToleranceZone(poiForTol) : "indoor");
     return from && to && from.x != null && to.x != null
       && dist(from, to) > 0.8
       && dist(from, to) <= max
@@ -3889,8 +3953,9 @@
     const dIcon = poiIcon(dest);
 
     // origem: só começa no ícone se o trecho for curto e livre de parede
-    const maxSpur = CONFIG.spurTol || 80;
-    if (oIcon && dist(oIcon, startSnap) > 0.8 && dist(oIcon, startSnap) <= maxSpur && !crossesWall(oIcon, startSnap)) {
+    const maxSpurO = tol("spurTol", poiToleranceZone(origin));
+    const maxSpurD = tol("spurTol", poiToleranceZone(dest));
+    if (oIcon && dist(oIcon, startSnap) > 0.8 && dist(oIcon, startSnap) <= maxSpurO && !crossesWall(oIcon, startSnap)) {
       appendGeom(pts, [{ x: oIcon.x, y: oIcon.y }]);
     }
     appendGeom(pts, [{ x: startSnap.x, y: startSnap.y }]);
@@ -3919,7 +3984,7 @@
     // destino: ícone só se curto e sem parede (templo = fica na porta)
     if (dIcon && !isTemplePoi(dest)) {
       const tip = pts[pts.length - 1] || endSnap;
-      if (dist(tip, dIcon) > 0.8 && dist(tip, dIcon) <= maxSpur && !crossesWall(tip, dIcon)) {
+      if (dist(tip, dIcon) > 0.8 && dist(tip, dIcon) <= maxSpurD && !crossesWall(tip, dIcon)) {
         appendGeom(pts, [{ x: dIcon.x, y: dIcon.y }]);
       }
     }
@@ -4101,6 +4166,43 @@
     });
   }
 
+  function isNavigating() {
+    return document.body.classList.contains("is-navigating");
+  }
+
+  function canStartNavigation() {
+    return !!(state.route?.points?.length && state.origin && state.dest);
+  }
+
+  function updateNavBtn() {
+    if (!el.navBtn) return;
+    const navigating = isNavigating();
+    const ready = canStartNavigation();
+
+    if (navigating) {
+      el.navBtn.disabled = false;
+      el.navBtn.setAttribute("aria-pressed", "true");
+      el.navBtn.title = "Encerrar navegação passo a passo";
+      if (el.navBtnLabel) el.navBtnLabel.textContent = "Sair da navegação";
+      el.navBtn.classList.add("btn--nav-exit");
+    } else {
+      el.navBtn.disabled = !ready;
+      el.navBtn.setAttribute("aria-pressed", "false");
+      el.navBtn.title = ready
+        ? "Iniciar navegação passo a passo"
+        : "Trace uma rota com origem e destino";
+      if (el.navBtnLabel) el.navBtnLabel.textContent = "Navegar";
+      el.navBtn.classList.remove("btn--nav-exit");
+    }
+  }
+
+  function updateSummaryChrome() {
+    const hasRoute = !!state.route;
+    if (el.summary) el.summary.hidden = !hasRoute;
+    if (el.summaryBody) el.summaryBody.hidden = !hasRoute;
+    updateNavBtn();
+  }
+
   function drawRoute() {
     const origin = resolvePoi("origin");
     const dest = resolvePoi("dest");
@@ -4152,7 +4254,7 @@
     // No celular: fecha o painel antes do zoom para a rota caber no viewport
     if (innerWidth <= 860) el.panel.classList.remove("open");
     selectRoute(0, true);
-    el.summary.hidden = false;
+    updateSummaryChrome();
     const n = state.routeOptions.length;
     toast(n > 1
       ? `${n} rotas — Rota 1 (mais curta) selecionada.`
@@ -4189,6 +4291,7 @@
 
       renderRouteOptions();
       state.navIdx = 0;
+      updateNavBtn();
       if (doFit) {
         fitSoon(() => fitRouteInView(route, { navMode: false, preferActiveLeg: true }));
       }
@@ -4222,8 +4325,7 @@
 
     el.routePick.hidden = false;
     if (el.routePickLabel) {
-      const cur = options[state.routeIdx];
-      el.routePickLabel.textContent = cur?.label || "Rota 1 — Mais curta";
+      el.routePickLabel.textContent = "Opções de rota";
     }
     if (el.routePickCount) {
       el.routePickCount.hidden = options.length <= 1;
@@ -4253,14 +4355,15 @@
   }
 
   function clearRoute(silent) {
+    if (isNavigating()) exitNav();
     state.route = null;
     state.routeOptions = [];
     state.routeIdx = 0;
     state.routePickOpen = false;
     clearRoutePaint();
-    el.summary.hidden = true;
     if (el.routePick) el.routePick.hidden = true;
     if (el.routeOptions) { el.routeOptions.hidden = true; el.routeOptions.innerHTML = ""; }
+    updateSummaryChrome();
     if (!silent) toast("Rota removida.");
   }
 
@@ -4525,10 +4628,7 @@
       const floors = CONFIG.floors || [];
       el.searchLevelSelect.innerHTML = [
         `<option value="all">Todos os níveis</option>`,
-        ...floors.map((f) => {
-          const title = `${f.id} — ${f.title}`;
-          return `<option value="${f.id}">${title}</option>`;
-        }),
+        ...floors.map((f) => `<option value="${f.id}">${f.id} — ${f.title}</option>`),
       ].join("");
       el.searchLevelSelect.value = state.searchLevel || "all";
       el.searchLevelSelect.addEventListener("change", () => {
@@ -4825,7 +4925,7 @@
   }
 
   function enterNav() {
-    if (!state.route?.points?.length) { toast("Trace uma rota primeiro."); return; }
+    if (!canStartNavigation()) return;
     if (navSegments() < 1) { toast("Rota inválida para navegação."); return; }
     state.navIdx = 0;
     if (innerWidth <= 860) el.panel.classList.remove("open");
@@ -4833,6 +4933,7 @@
     el.navOverlay.classList.add("is-open");
     el.navOverlay.setAttribute("aria-hidden", "false");
     document.body.classList.add("is-navigating");
+    updateNavBtn();
     requestOrientation();
     updateNav({ fitCamera: true });
 
@@ -4849,6 +4950,7 @@
     el.navOverlay.setAttribute("aria-hidden", "true");
     document.body.classList.remove("is-navigating");
     state.navIdx = 0;
+    updateNavBtn();
     if (msg) toast(msg);
   }
 
@@ -4969,14 +5071,15 @@
     el.floorMenu.innerHTML = floors.map((f) => {
       const selected = f.id === state.activeLevel;
       const available = !!(f.mapUrl || f.ready);
-      const meta = f.mapUrl
-        ? `${f.title} · disponível`
-        : (f.ready ? f.title : `${f.title} · em breve`);
+      const meta = floorMenuMeta(f);
       return `<li role="option">
         <button type="button" class="floor-menu__item${available ? "" : " floor-menu__item--soon"}" data-floor="${f.id}"
           aria-selected="${selected ? "true" : "false"}">
-          <span>${f.id} — ${f.title}</span>
-          <span class="floor-menu__meta">${meta}</span>
+          <span class="floor-menu__text">
+            <span class="floor-menu__title">${f.id} — ${f.title}</span>
+            ${f.subtitle ? `<span class="floor-menu__sub">${f.subtitle}</span>` : ""}
+          </span>
+          ${meta ? `<span class="floor-menu__meta">${meta}</span>` : ""}
         </button>
       </li>`;
     }).join("");
@@ -4990,15 +5093,9 @@
   }
 
   function updateFloorChrome() {
-    const floor = floorById(state.activeLevel) || { id: "L00", title: "Térreo · Campus", ready: true };
+    const floor = floorById(state.activeLevel) || { id: "L00", title: "Térreo", ready: true };
     if (el.floorHint) {
-      if (floor.mapUrl) {
-        el.floorHint.textContent = `${floor.title} · mapa base (${floor.id})`;
-      } else if (floor.ready) {
-        el.floorHint.textContent = `${floor.title} (${floor.id})`;
-      } else {
-        el.floorHint.textContent = `${floor.label} · mapa em preparação`;
-      }
+      el.floorHint.textContent = `${floor.id} — ${floor.title}`;
     }
     if (el.floorBtn) {
       el.floorBtn.title = `Escolha o Andar · atual: ${floor.id}`;
@@ -5218,7 +5315,7 @@
       if (state.route && multiTrip) {
         toast(`${floor.title}: trecho da rota neste andar`);
       } else if (floor.ready && floor.mapUrl) {
-        toast(`${floor.title} · mapa base carregado`);
+        toast(`${floor.id} — ${floor.title}`);
       } else if (floor.ready) {
         toast(`${floor.title} · ${n} ${n === 1 ? "local" : "locais"}`);
       } else {
@@ -5243,10 +5340,10 @@
   function syncMapToolsPlacement() {
     const extras = el.mapToolsExtras;
     const host = el.panelActionsHost;
-    const tools = el.mapTools;
-    if (!extras || !host || !tools) return;
+    const stage = el.stage;
+    if (!extras || !host || !stage) return;
     if (isMobileLayout()) {
-      if (extras.parentElement !== tools) tools.appendChild(extras);
+      if (extras.parentElement !== stage) stage.appendChild(extras);
     } else if (extras.parentElement !== host) {
       host.appendChild(extras);
     }
@@ -5428,12 +5525,22 @@
       enterMobileSearchMode();
       renderSuggest("origin", el.originInput.value);
     });
-    el.originInput.addEventListener("input", () => { state.origin = null; renderSuggest("origin", el.originInput.value); });
+    el.originInput.addEventListener("input", () => {
+      state.origin = null;
+      if (state.route) clearRoute(true);
+      else updateNavBtn();
+      renderSuggest("origin", el.originInput.value);
+    });
     el.destInput.addEventListener("focus", () => {
       enterMobileSearchMode();
       renderSuggest("dest", el.destInput.value);
     });
-    el.destInput.addEventListener("input", () => { state.dest = null; renderSuggest("dest", el.destInput.value); });
+    el.destInput.addEventListener("input", () => {
+      state.dest = null;
+      if (state.route) clearRoute(true);
+      else updateNavBtn();
+      renderSuggest("dest", el.destInput.value);
+    });
     el.originInput.addEventListener("blur", () => scheduleExitMobileSearchMode());
     el.destInput.addEventListener("blur", () => scheduleExitMobileSearchMode());
     document.addEventListener("pointerdown", (e) => {
@@ -5456,7 +5563,12 @@
     el.hereBtn.addEventListener("click", (e) => { e.preventDefault(); startPlacingHere(); });
     el.routeBtn.addEventListener("click", (e) => { e.preventDefault(); drawRoute(); });
     el.clearBtn.addEventListener("click", (e) => { e.preventDefault(); clearRoute(); });
-    el.navBtn.addEventListener("click", (e) => { e.preventDefault(); enterNav(); });
+    el.navBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (el.navBtn.disabled) return;
+      if (isNavigating()) exitNav();
+      else enterNav();
+    });
 
     // Delegação no overlay — garante clique mesmo com SVG/filho no caminho
     el.navOverlay.addEventListener("click", (e) => {
@@ -5479,6 +5591,7 @@
     });
     syncMapToolsPlacement();
     initPanelSheetGesture();
+    updateSummaryChrome();
     window.addEventListener("resize", () => syncMapToolsPlacement());
     if (window.matchMedia) {
       window.matchMedia("(max-width: 860px)").addEventListener("change", () => syncMapToolsPlacement());
