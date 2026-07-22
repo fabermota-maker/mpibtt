@@ -346,6 +346,9 @@ body {
   border-radius: var(--radius-sm); padding: 13px 15px; font-size: 15px; font-family: inherit;
   color: var(--ink); transition: border-color .15s, box-shadow .15s, background .15s;
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: normal;
 }
 .field__input:focus { outline: none; border-color: color-mix(in srgb, var(--brand) 70%, white); background: var(--field-bg-focus); box-shadow: var(--ring); }
 .field__input::placeholder { color: var(--ink-dim); }

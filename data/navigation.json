@@ -5142,6 +5142,56 @@
       "parkingLot": false
     },
     {
+      "id": "L00_E_lateral_batel_norte",
+      "from": "L00_N0032",
+      "to": "L00_N0093_entrada_estacionamento_av_batel",
+      "path": [
+        {
+          "x": 10.69,
+          "y": 269.38
+        },
+        {
+          "x": 21.39,
+          "y": 269.38
+        },
+        {
+          "x": 21.5,
+          "y": 347
+        }
+      ],
+      "distanceMeters": 32.2,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
+      "id": "L00_E_lateral_batel_sul",
+      "from": "L00_N0083",
+      "to": "L00_N0082",
+      "path": [
+        {
+          "x": 21.86,
+          "y": 429.51
+        },
+        {
+          "x": 20.51,
+          "y": 457.4
+        }
+      ],
+      "distanceMeters": 9.8,
+      "bidirectional": true,
+      "accessible": true,
+      "active": true,
+      "level": "L00",
+      "zone": "outdoor",
+      "type": "outdoor_path",
+      "parkingLot": false
+    },
+    {
       "id": "L01_E0001",
       "from": "L01_node_0026_entrada_corredor_e",
       "to": "L01_node_0027_hall_corredor_c",
@@ -12626,6 +12676,22 @@
       "inject": true
     },
     {
+      "id": "L00_P_min_esportes",
+      "rawId": "min_esportes",
+      "name": "Min. Esportes",
+      "nodeIds": [
+        "L00_N0019_intersection_entrada_seven_pass_elevador"
+      ],
+      "active": true,
+      "cat": "acesso",
+      "level": "L00",
+      "mapLevel": "L00",
+      "building": "Ginásio",
+      "group": "salas",
+      "accessNote": "Entrada pelo elevador lateral",
+      "inject": true
+    },
+    {
       "id": "L01_P_L01_poi_0023",
       "rawId": "L01_poi_0023",
       "name": "Auditório",
@@ -14861,9 +14927,9 @@
       "inject": true
     },
     {
-      "id": "B02_P_B01_poi_0006",
-      "rawId": "B01_poi_0006",
-      "name": "Comunicação / Rede Super",
+      "id": "B02_P_encomun",
+      "rawId": "encomun",
+      "name": "Encomun",
       "nodeIds": [
         "B02_node_0012_comunicacao_encomun"
       ],
@@ -14906,9 +14972,9 @@
       "inject": true
     },
     {
-      "id": "B02_P_B02_poi_0004",
-      "rawId": "B02_poi_0004",
-      "name": "Sala Abert M.",
+      "id": "B02_P_sala_albert",
+      "rawId": "sala_albert",
+      "name": "Sala Albert",
       "nodeIds": [
         "B02_node_0004_albert"
       ],
@@ -15026,7 +15092,7 @@
       "inject": true
     }
   ],
-  "generatedAt": "2026-07-22T12:22:15.035Z",
+  "generatedAt": "2026-07-22T14:30:26.229Z",
   "source": {
     "nodes": "assets/mapa-nodes.svg",
     "edgesIndoor": "assets/mapa-edge-indoor.svg",

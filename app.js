@@ -131,8 +131,35 @@
       P030_entrada_estacionamento_av_batel: "L00_N0093_entrada_estacionamento_av_batel",
       P031_entrada_estacionamento_bento_viana: "L00_N0002_entrada_estacionamento_principal_bento",
       entrada_ginasio: "L00_N0020_intersection_sevenpass_estaionamento",
+      min_esportes: "L00_N0019_intersection_entrada_seven_pass_elevador",
+      encomun: "B02_node_0012_comunicacao_encomun",
+      sala_albert: "B02_node_0004_albert",
       L04_poi_0016: "L04_node_0023_auditorio_l01",
     },
+    // rótulos oficiais na busca (podem diferir do ícone no mapa)
+    poiDisplayNames: {
+      P005_centro_de_formacao: "Centro de Formação CF",
+      encomun: "Encomun · Comunicação",
+    },
+    // atalhos de busca → rawId do POI
+    poiSearchAliases: {
+      P005_centro_de_formacao: ["cf", "centro de formacao cf", "centro formacao cf", "formacao cf"],
+      P004_sala_de_oracao_RGO: ["rgo", "sala rgo", "sala de oracao rgo"],
+      min_esportes: ["min esportes", "ministerio esportes", "ministerio de esportes", "esportes"],
+      encomun: ["encomun", "comunicacao", "comunicação", "rede super", "sala 08", "sala 08 b02"],
+      sala_albert: ["sala albert", "albert", "sala abert", "sala 06", "sala 06 b02"],
+      P000_templo: ["templo", "igreja"],
+      P016_jardim: ["jardim"],
+      entrada_ginasio: ["ginasio", "ginásio", "seven pass", "sevenpass"],
+    },
+    // limita opções de rota em pares específicos (evita desvios absurdos no grafo)
+    routeOptionCaps: [
+      {
+        a: ["P005_centro_de_formacao", "P004_sala_de_oracao_RGO"],
+        b: ["min_esportes"],
+        max: 3,
+      },
+    ],
     // centro visual (planta local ADM) → pin de origem/destino nos andares internos
     poiIconLocal: {
       L04_poi_0016: { x: 82, y: 118 },
@@ -234,6 +261,28 @@
         allowParking: true,
         slot: 4,
       },
+      // CF / RGO → Jardim / Espaço Servir: lateral Av. Batel (sem dar volta ao templo)
+      {
+        a: [
+          "P005_centro_de_formacao",
+          "P004_sala_de_oracao_RGO",
+        ],
+        b: [
+          "P016_jardim",
+          "P020_espaco_servir",
+        ],
+        via: [
+          "L00_N0032",
+          "L00_N0093_entrada_estacionamento_av_batel",
+          "L00_N0083",
+          "L00_N0082",
+          "L00_N0081",
+        ],
+        endNodes: ["L00_N0030", "L00_N0028"],
+        label: "Entrada/saída · Av. Batel",
+        avoidParking: false,
+        allowParking: true,
+      },
       // Estacionamento conveniado → Templo: lateral Av. Batel (sem desvio pelo CF)
       {
         a: ["P003_estacionamento_01"],
@@ -260,6 +309,53 @@
         avoidParking: false,
         allowParking: true,
         slot: 4,
+      },
+      // Estacionamento 02 → Templo: lateral Av. Batel
+      {
+        a: ["P006_estacionamento_02"],
+        b: [
+          "P000_templo",
+          "P027_elevador_templo",
+          "escada_mesanino_01",
+          "escada_mesanino_02",
+          "L01_node_0001_elevador",
+          "L02_node_0001_elevador",
+          "L03_node_0001",
+          "L04_node_0001_elevador",
+          "L05_node_0001_elevador",
+          "L06_node_0033_elevador",
+        ],
+        via: [
+          "L00_N0032",
+          "L00_N0093_entrada_estacionamento_av_batel",
+          "L00_N0083",
+          "L00_N0082",
+          "L00_N0081",
+        ],
+        endNodes: ["L00_N0084", "L00_N0068"],
+        label: "Entrada/saída · Av. Batel",
+        avoidParking: false,
+        allowParking: true,
+        slot: 4,
+      },
+      // Estacionamento 02 → Jardim / Espaço Servir: lateral Av. Batel
+      {
+        a: ["P006_estacionamento_02"],
+        b: [
+          "P016_jardim",
+          "P020_espaco_servir",
+        ],
+        via: [
+          "L00_N0032",
+          "L00_N0093_entrada_estacionamento_av_batel",
+          "L00_N0083",
+          "L00_N0082",
+          "L00_N0081",
+        ],
+        endNodes: ["L00_N0030", "L00_N0028"],
+        label: "Entrada/saída · Av. Batel",
+        avoidParking: false,
+        allowParking: true,
       },
     ],
     // Nível lógico (exibição/filtro) × mapa de rota (ícone/grafo)
@@ -413,7 +509,56 @@
   /* ============================================================ UTIL */
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
   const norm = (s = "") => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  /** Normaliza texto de busca (sem acentos, pontuação vira espaço). */
+  const normSearch = (s = "") => norm(s).replace(/[.\-_/]+/g, " ").replace(/\s+/g, " ").trim();
   const Cal = () => (typeof MapCalibration !== "undefined" ? MapCalibration : null);
+
+  function poiSearchHaystacks(poi) {
+    if (!poi) return [];
+    const raw = poiRawKey(poi);
+    const aliases = (CONFIG.poiSearchAliases || {})[raw]
+      || (CONFIG.poiSearchAliases || {})[poi.rawId]
+      || [];
+    return [
+      poi.name,
+      poi.searchLabel,
+      poi.building,
+      poi.level,
+      poi.code,
+      raw,
+      poi.rawId,
+      CAT_LABEL[poi.cat] || "",
+      ...aliases,
+    ].filter(Boolean).map((s) => normSearch(String(s)));
+  }
+
+  function poiSearchScore(poi, query) {
+    const q = normSearch(String(query || "").trim());
+    if (!q) return 1;
+    let best = 0;
+    for (const h of poiSearchHaystacks(poi)) {
+      if (!h) continue;
+      if (h === q) best = Math.max(best, 100);
+      else if (h.startsWith(q)) best = Math.max(best, 85);
+      else if (h.split(/\s+/).some((w) => w === q)) best = Math.max(best, 78);
+      else if (h.split(/\s+/).some((w) => w.startsWith(q))) best = Math.max(best, 68);
+      else if (h.includes(q)) best = Math.max(best, 50);
+    }
+    return best;
+  }
+
+  function poiMatchesSearch(poi, query) {
+    return poiSearchScore(poi, query) > 0;
+  }
+
+  function applyPoiDisplayName(poi) {
+    if (!poi) return poi;
+    const raw = poiRawKey(poi);
+    const display = (CONFIG.poiDisplayNames || {})[raw]
+      || (CONFIG.poiDisplayNames || {})[poi.rawId];
+    if (display) poi.name = display;
+    return poi;
+  }
 
   function getMetersPerUnit() {
     if (state.calibration?.metersPerUnit > 0) return state.calibration.metersPerUnit;
@@ -617,10 +762,12 @@
           y: node.y,
           iconX: node.x,
           iconY: node.y,
-          level: node.level || "L00",
+          level: jp.level || node.level || "L00",
+          mapLevel: jp.mapLevel || (floorById(jp.level || node.level)?.mapUrl ? (jp.level || node.level) : undefined),
           building: jp.building,
           group: jp.group,
           cat: jp.cat || "acesso",
+          accessNote: jp.accessNote || null,
           navNodeIds: jp.nodeIds.slice(),
           navId: jp.id,
           anchor: nid,
@@ -760,8 +907,16 @@
     return /area[_ ]?kids/.test(id) || n === "area kids";
   }
 
+  /** Elevador ginásio (ícone no mapa) — busca usa “Min. Esportes” na entrada lateral. */
+  function isElevadorGinasioSearchHidden(poi) {
+    if (!poi) return false;
+    const id = norm(poi.rawId || poi.id || "");
+    return id === "p026_elevador_ginasio";
+  }
+
   function isSearchablePoi(poi) {
     if (!poi || poi.active === false) return false;
+    if (isElevadorGinasioSearchHidden(poi)) return false;
     if (isAreaKidsDestination(poi) && (poi.level || "L00") !== "L01") return false;
     return true;
   }
@@ -1097,19 +1252,20 @@
     return poi;
   }
 
-  function syncFloorPoiIconsFromSvg(svg, iconMap) {
+  function syncFloorPoiIconsFromSvg(svg, iconMap, floorId) {
     if (!svg || !iconMap) return;
+    const useLocal = floorId === "B01" || floorId === "B02";
     Object.entries(iconMap).forEach(([elId, rawId]) => {
       const el = svg.getElementById(elId);
       const poi = (G.pois || []).find((p) => p.rawId === rawId);
       if (!el || !poi) return;
       const c = poiCenter(el);
       if (!isFinite(c.x) || !isFinite(c.y)) return;
-      const campus = localAdmToCampus(c);
-      poi.iconX = campus.x;
-      poi.iconY = campus.y;
-      poi.x = campus.x;
-      poi.y = campus.y;
+      const pos = useLocal ? c : localAdmToCampus(c);
+      poi.iconX = pos.x;
+      poi.iconY = pos.y;
+      poi.x = pos.x;
+      poi.y = pos.y;
     });
   }
 
@@ -1174,6 +1330,45 @@
   }
 
   const MAX_ROUTE_OPTIONS = 4;
+  /** Máx. rotas exibidas para um par (CONFIG.routeOptionCaps). */
+  function maxRouteOptionsForPair(origin, dest) {
+    const specs = CONFIG.routeOptionCaps || [];
+    if (!specs.length) return MAX_ROUTE_OPTIONS;
+    const a = poiRawKey(origin);
+    const b = poiRawKey(dest);
+    const matchSide = (spec, key) => {
+      if (Array.isArray(spec)) {
+        return spec.some((item) => {
+          const t = String(item);
+          return t === key || t.toLowerCase() === key.toLowerCase()
+            || key.endsWith(t) || t.endsWith(key);
+        });
+      }
+      return spec === key;
+    };
+    for (const spec of specs) {
+      if ((matchSide(spec.a, a) && matchSide(spec.b, b))
+        || (matchSide(spec.a, b) && matchSide(spec.b, a))) {
+        return Math.max(1, Math.min(MAX_ROUTE_OPTIONS, spec.max || MAX_ROUTE_OPTIONS));
+      }
+    }
+    return MAX_ROUTE_OPTIONS;
+  }
+
+  /** Remove alternativas absurdamente longas no mesmo andar (ex.: desvio pelo jardim). */
+  function pruneAbsurdSameFloorRoutes(routes, origin, dest) {
+    const list = (routes || []).filter((r) => r?.points?.length >= 2);
+    if (list.length < 2) return list;
+    if (poiLevel(origin) !== poiLevel(dest)) return list;
+    const mpu = getMetersPerUnit();
+    const meters = (r) => r.distanceMeters || (r.length || 0) * mpu;
+    const sorted = [...list].sort((a, b) => meters(a) - meters(b));
+    const best = meters(sorted[0]);
+    if (best <= 0) return list;
+    const maxRatio = 2.35;
+    const cap = maxRouteOptionsForPair(origin, dest);
+    return sorted.filter((r, i) => i === 0 || meters(r) <= best * maxRatio).slice(0, cap);
+  }
   const ROUTE_DUPE_EDGE = 0.72;
   const ROUTE_DUPE_POINTS = 0.78;
 
@@ -1304,7 +1499,7 @@
   }
 
   function relabelRouteOptions(routes, NR) {
-    const isStair = (r) => !!(r.viaStairs || /escada lateral/i.test(r.label || ""));
+    const isStair = (r) => !!r.viaStairs;
     routes.forEach((r, i) => {
       r.rank = i + 1;
       if (isStair(r)) {
@@ -1326,12 +1521,13 @@
   }
 
   /** Remove duplicatas preservando ordem; máx. 4 opções distintas. */
-  function dedupeRouteOptionsStrict(routes, NR) {
-    const isStair = (r) => !!(r.viaStairs || /escada lateral/i.test(r.label || ""));
+  function dedupeRouteOptionsStrict(routes, NR, origin, dest) {
+    const cap = origin && dest ? maxRouteOptionsForPair(origin, dest) : MAX_ROUTE_OPTIONS;
+    const isStair = (r) => !!r.viaStairs;
     const unique = [];
     for (const r of (routes || [])) {
       if (!r?.points || r.points.length < 2) continue;
-      if (unique.length >= MAX_ROUTE_OPTIONS) break;
+      if (unique.length >= cap) break;
       if (listHasDuplicateRoute(unique, r)) continue;
       unique.push(r);
     }
@@ -1340,13 +1536,13 @@
     if (stair) {
       core = core.filter((r) => !isDuplicateRoute(r, stair));
       if (!core.some(isStair) && !listHasDuplicateRoute(core, stair)) {
-        if (core.length >= MAX_ROUTE_OPTIONS) core = core.slice(0, MAX_ROUTE_OPTIONS - 1);
+        if (core.length >= cap) core = core.slice(0, cap - 1);
         core.push(stair);
       }
     }
     const final = [];
     for (const r of core) {
-      if (final.length >= MAX_ROUTE_OPTIONS) break;
+      if (final.length >= cap) break;
       if (listHasDuplicateRoute(final, r)) continue;
       final.push(r);
     }
@@ -1354,14 +1550,15 @@
   }
 
   /** Garante rotas distintas (máx. 4) — sem alternativas repetidas. */
-  function finalizePackedRoutes(packed, NR) {
-    const list = (packed || []).filter((r) => r && r.points && r.points.length >= 2);
+  function finalizePackedRoutes(packed, NR, origin, dest) {
+    let list = (packed || []).filter((r) => r && r.points && r.points.length >= 2);
+    if (origin && dest) list = pruneAbsurdSameFloorRoutes(list, origin, dest);
     list.sort((a, b) => (a.length || 0) - (b.length || 0));
-    const isStair = (r) => !!(r.viaStairs || /escada lateral/i.test(r.label || ""));
+    const isStair = (r) => !!r.viaStairs;
     const stair = list.find(isStair) || null;
     const named = list.filter((r) => r.namedExternal && !isStair(r));
     const rest = list.filter((r) => !r.namedExternal && !isStair(r));
-    const maxRoutes = MAX_ROUTE_OPTIONS;
+    const maxRoutes = origin && dest ? maxRouteOptionsForPair(origin, dest) : MAX_ROUTE_OPTIONS;
 
     const out = [];
     if (rest[0]) out.push(rest[0]);
@@ -1396,7 +1593,7 @@
       pushUniqueRoute(deduped, r, maxRoutes);
     }
 
-    return dedupeRouteOptionsStrict(deduped, NR);
+    return dedupeRouteOptionsStrict(deduped, NR, origin, dest);
   }
 
   /** Concatena pernas A* (via um ou mais nós) numa única rota. */
@@ -1422,13 +1619,34 @@
   /** Rota opcional externa forçada por via (string ou lista de waypoints). */
   function buildNamedExternalRoute(NR, startIds, endIds, origin, dest, spec) {
     if (!NR?.astar || !state.navGraph || !spec?.via) return null;
-    const vias = (Array.isArray(spec.via) ? spec.via : [spec.via])
+    let vias = (Array.isArray(spec.via) ? spec.via : [spec.via])
       .filter((id) => state.navGraph.nodesById.has(id));
     if (!vias.length) return null;
     const preferredEnds = (Array.isArray(spec.endNodes) ? spec.endNodes : [])
       .filter((id) => state.navGraph.nodesById.has(id));
-    const ends = preferredEnds.length ? preferredEnds : endIds;
+    let ends = preferredEnds.length ? preferredEnds : endIds;
     const allowPark = spec.allowParking === true || spec.avoidParking === false;
+
+    // Inverte waypoints quando origem/destino estão na ordem b→a do spec
+    const aKey = poiRawKey(origin);
+    const bKey = poiRawKey(dest);
+    const sideMatch = (side, key) => {
+      if (Array.isArray(side)) {
+        return side.some((item) => {
+          const t = String(item);
+          return t === key || t.toLowerCase() === key.toLowerCase()
+            || key.endsWith(t) || t.endsWith(key);
+        });
+      }
+      return side === key;
+    };
+    const forward = sideMatch(spec.a, aKey) && sideMatch(spec.b, bKey);
+    const reverse = sideMatch(spec.a, bKey) && sideMatch(spec.b, aKey);
+    if (reverse && !forward) {
+      vias = vias.slice().reverse();
+      ends = endIds.filter((id) => state.navGraph.nodesById.has(id));
+      if (!ends.length) return null;
+    }
 
     const tryBuild = (avoidParking) => {
       const opts = {
@@ -1775,19 +1993,19 @@
 
     if (routeInvolvesBasementTransfer(oLvl, dLvl)) {
       const narnia = buildBasementNarniaRoutes(NR, startIds, endIds, origin, dest);
-      if (narnia.length) return finalizePackedRoutes(narnia, NR);
+      if (narnia.length) return finalizePackedRoutes(narnia, NR, origin, dest);
     }
 
     if (isCrossCampusFloorPair(oLvl, dLvl)) {
       const cross = buildCrossCampusFloorRoutes(NR, startIds, endIds, origin, dest);
-      if (cross.length) return finalizePackedRoutes(cross, NR);
+      if (cross.length) return finalizePackedRoutes(cross, NR, origin, dest);
     }
 
     // destino = Templo → opções por cada entrada + rota por fora (se houver)
     if (isTemplePoi(dest)) {
       let viaDoors = routesViaTempleEntrances(NR, startIds, origin, dest, allowParking);
       viaDoors = appendNamedExternalOptions(NR, startIds, endIds, origin, dest, viaDoors);
-      if (viaDoors.length) return finalizePackedRoutes(viaDoors, NR);
+      if (viaDoors.length) return finalizePackedRoutes(viaDoors, NR, origin, dest);
     }
     // origem = Templo → sai por cada entrada
     if (isTemplePoi(origin)) {
@@ -1835,7 +2053,7 @@
         });
       }
       flipped = appendNamedExternalOptions(NR, startIds, endIds, origin, dest, flipped);
-      if (flipped.length) return finalizePackedRoutes(flipped, NR);
+      if (flipped.length) return finalizePackedRoutes(flipped, NR, origin, dest);
     }
 
     const pack = (routes) => {
@@ -1901,7 +2119,7 @@
 
     let packed = pack(routes);
     packed = appendNamedExternalOptions(NR, startIds, endIds, origin, dest, packed);
-    return finalizePackedRoutes(packed, NR);
+    return finalizePackedRoutes(packed, NR, origin, dest);
   }
 
   function autoCalibrateFromSvg(svg) {
@@ -3065,8 +3283,8 @@
       || /templo|capela|narnia/.test(n)) {
       return "Templo";
     }
-    if (/ginasio|seven_pass|^p014_|^p021_|^p022_|^p026_|elevador_ginasio/.test(id)
-      || /ginasio|seven pass|restaurante seven/.test(n)) {
+    if (/ginasio|seven_pass|^p014_|^p021_|^p022_|^p026_|elevador_ginasio|^min_esportes|min\. esportes|ministerio esportes|ministério esportes/.test(id)
+      || /ginasio|seven pass|restaurante seven|min\. esportes|ministerio esportes|ministério esportes/.test(n)) {
       return "Ginásio";
     }
     if (/abasc|bazar|^p015_|^p018_/.test(id) || /abasc|bazar transforma/.test(n)) {
@@ -3110,9 +3328,12 @@
     if (poi.rawId || poi.id) {
       poi.name = decodePoiName(poi.rawId || poi.id, poi.name);
     }
+    applyPoiDisplayName(poi);
     const ov = poiLevelOverride(poi.rawId || poi.id);
     const level = ov?.level || poi.level || levelFromId(poi.rawId) || "L00";
-    const mapLevel = ov?.mapLevel || poi.mapLevel || (level.startsWith("B") ? "L00" : level);
+    const floorForLevel = floorById(level);
+    const mapLevel = ov?.mapLevel || poi.mapLevel
+      || (floorForLevel?.mapUrl ? level : (level.startsWith("B") ? "L00" : level));
     const building = ov?.building || poi.building || buildingFromPoi(poi.rawId, poi.name);
     const group = poi.group || searchGroupFromPoi(poi.rawId, poi.name, poi.cat);
     const code = poi.code || `${level}_${poi.rawId || poi.id}`;
@@ -3578,6 +3799,7 @@
       "restaurante seven pass", "seven pass", "bazar transforma abasc",
       "bazar transforma", "bazar abasc", "abasc - acao social", "acao social",
       "entrada sevenpass", "entrada seven pass", "ginasio", "entrada ginasio",
+      "min esportes", "min. esportes", "ministerio esportes", "ministério esportes",
     ];
     for (const a of aliases) poiKeys.push(a);
 
@@ -3603,7 +3825,7 @@
         const hits = kk.filter((k) => tt.some((w) => w === k || (k.length >= 5 && w.includes(k)) || (w.length >= 5 && k.includes(w))));
         const need = Math.min(2, kk.length);
         if (hits.length >= need) return true;
-        if (hits.length === 1 && ["jardim", "templo", "capela", "abasc", "kids", "narnia", "toldo", "bercario", "recepcao", "ginasio", "formacao", "sevenpass", "seven", "bazar", "cf"].includes(hits[0])) {
+        if (hits.length === 1 && ["jardim", "templo", "capela", "abasc", "kids", "narnia", "toldo", "bercario", "recepcao", "ginasio", "formacao", "sevenpass", "seven", "bazar", "cf", "esportes"].includes(hits[0])) {
           return true;
         }
       }
@@ -3672,8 +3894,8 @@
         }
         const poi = G.pois.find((p) => p.id === poiId);
         if (!poi || !isSearchablePoi(poi)) return;
-        const lvl = poi.level || "L00";
-        if (lvl !== state.activeLevel) setActiveLevel(lvl, { silent: true });
+        const lvl = poiLevel(poi);
+        if (lvl !== state.activeLevel) setActiveLevel(lvl, { silent: true, keepTrip: true });
         if (!state.origin) setField("origin", poi);
         else setField("dest", poi);
         toast(`${poi.name} selecionado.`);
@@ -3825,7 +4047,7 @@
         B02_sala_0001_sala_11_b02_almoxarifado: "B02_poi_almox",
         B02_sala_0002_sala_10_b02_radio: "B02_poi_0003",
         B02_sala_0003_sala_09_b02_acesso_ao_espaco_servir: "B02_poi_0006",
-        B02_sala_0004_sala_08_b02_comunicacao_rede_super: "B01_poi_0006",
+        B02_sala_0004_sala_08_b02_comunicacao_rede_super: "encomun",
         B02_sala_0005_sala_07_b02_cozinha: "B02_poi_0007",
         B02_sala_0006_sala_06_b02_sala_abert_m: "B02_poi_0004",
         B02_sala_0007_sala_05_b01_estudio_de_video: "B01_poi_0006-2",
@@ -3871,7 +4093,7 @@
     });
 
     bindPOIs(svg);
-    syncFloorPoiIconsFromSvg(svg, iconMaps[levelId] || {});
+    syncFloorPoiIconsFromSvg(svg, iconMaps[levelId] || {}, levelId);
   }
 
   /* ============================================================ DIJKSTRA */
@@ -4228,11 +4450,16 @@
     if (state[which]) return state[which];
     const raw = ((which === "origin" ? el.originInput : el.destInput).value || "").trim();
     if (!raw) return null;
-    const q = norm(raw);
-    const exact = G.pois.find((p) => isSearchablePoi(p) && norm(p.name) === q);
-    if (exact) return exact;
-    const hits = G.pois.filter((p) => isSearchablePoi(p) && (norm(p.name).includes(q) || q.includes(norm(p.name))));
-    return hits.length === 1 ? hits[0] : null;
+    const q = normSearch(raw);
+    const hits = (G.pois || [])
+      .filter((p) => isSearchablePoi(p))
+      .map((p) => ({ poi: p, score: poiSearchScore(p, raw) }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score);
+    if (!hits.length) return null;
+    if (hits[0].score >= 100 || hits.length === 1) return hits[0].poi;
+    if (hits[0].score >= 78 && hits[0].score > hits[1].score) return hits[0].poi;
+    return null;
   }
 
   // até 3 rotas válidas — JSON primeiro; se vazio, malha SVG; se falhar, emergency
@@ -4444,7 +4671,7 @@
         doors.push(r);
         if (doors.length >= 4) break;
       }
-      if (doors.length) return finalizePackedRoutes(doors, globalThis.NavigationRouter);
+      if (doors.length) return finalizePackedRoutes(doors, globalThis.NavigationRouter, origin, dest);
     }
 
     const namedAll = out.filter((r) => r.namedExternal);
@@ -4516,10 +4743,10 @@
         if (next.some((x) => isDuplicateRoute(x, r))) continue;
         next.push(r);
       }
-      return finalizePackedRoutes(next, globalThis.NavigationRouter);
+      return finalizePackedRoutes(next, globalThis.NavigationRouter, origin, dest);
     }
 
-    return finalizePackedRoutes(picked, globalThis.NavigationRouter);
+    return finalizePackedRoutes(picked, globalThis.NavigationRouter, origin, dest);
   }
 
   // geometria real da edge do grafo — NUNCA inventa segmento sem edge
@@ -4878,7 +5105,12 @@
         options = appendNamedExternalOptions(NR, startIds, endIds, state.origin, state.dest, options || []);
       }
     }
-    options = dedupeRouteOptionsStrict(finalizePackedRoutes(options || [], NR), NR);
+    options = dedupeRouteOptionsStrict(
+      finalizePackedRoutes(options || [], NR, state.origin, state.dest),
+      NR,
+      state.origin,
+      state.dest
+    );
     // garantia: só malha (nodes/edges) — nunca linha reta
     if (!options.length) {
       const er = emergencyRoute(state.origin, state.dest);
@@ -4963,7 +5195,7 @@
 
   function renderRouteOptions() {
     const NR = globalThis.NavigationRouter;
-    let options = dedupeRouteOptionsStrict(state.routeOptions || [], NR);
+    let options = dedupeRouteOptionsStrict(state.routeOptions || [], NR, state.origin, state.dest);
     if (options.length !== (state.routeOptions || []).length) {
       state.routeOptions = options;
       if (state.routeIdx >= options.length) state.routeIdx = Math.max(0, options.length - 1);
@@ -5059,8 +5291,8 @@
       drawRoute();
       return;
     }
-    // só troca o mapa ao escolher origem do mesmo fluxo (sem apagar a viagem)
-    if (which === "origin" && poi && poiLevel(poi) !== state.activeLevel) {
+    // troca o mapa ao escolher origem ou destino de outro andar (sem apagar a viagem)
+    if (poi && poiLevel(poi) !== state.activeLevel) {
       setActiveLevel(poiLevel(poi), { silent: true, keepTrip: true });
     }
   }
@@ -5075,9 +5307,9 @@
   }
 
   function filterPoisForSearch(query) {
-    const q = norm(query);
+    const q = normSearch(String(query || "").trim());
     const onCampus = isCampusFloor(state.activeLevel);
-    return (G.pois || []).filter((p) => {
+    const list = (G.pois || []).filter((p) => {
       enrichPoiMeta(p);
       if (!isSearchablePoi(p)) return false;
       const poiLvl = p.level || "L00";
@@ -5094,11 +5326,13 @@
         if ((p.group || searchGroupFromPoi(p.rawId, p.name, p.cat)) !== g) return false;
       }
       if (!q) return true;
-      const hay = norm([
-        p.searchLabel, p.name, p.building, p.level, p.code, p.rawId, CAT_LABEL[p.cat] || "",
-      ].filter(Boolean).join(" "));
-      return hay.includes(q);
+      return poiMatchesSearch(p, query);
     });
+    if (!q) return list;
+    return list
+      .map((p) => ({ p, score: poiSearchScore(p, query) }))
+      .sort((a, b) => b.score - a.score || (a.p.searchLabel || a.p.name).localeCompare(b.p.searchLabel || b.p.name, "pt-BR"))
+      .map((x) => x.p);
   }
 
   function renderSuggest(which, query) {
@@ -5111,11 +5345,16 @@
       html += `<li data-here="1" aria-selected="false"><span class="s-ico"><svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="3" fill="currentColor"/><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span><span><span class="s-name">Estou aqui (marcar no mapa)</span><span class="s-cat">Usar minha posição</span></span></li>`;
     }
     if (!items.length && which !== "origin") {
-      listEl.innerHTML = `<li class="s-empty">Nenhum local neste filtro.</li>`;
+      listEl.innerHTML = normSearch(query)
+        ? `<li class="s-empty">Nenhum local encontrado para “${String(query).trim()}”.</li>`
+        : `<li class="s-empty">Nenhum local neste filtro.</li>`;
       listEl.hidden = false;
       return;
     }
     if (!items.length && which === "origin") {
+      if (normSearch(query)) {
+        html += `<li class="s-empty">Nenhum local encontrado para “${String(query).trim()}”.</li>`;
+      }
       listEl.innerHTML = html || `<li class="s-empty">Nenhum local neste filtro.</li>`;
       listEl.hidden = false;
       const hereOnly = listEl.querySelector("li[data-here]");
@@ -6240,28 +6479,27 @@
       if (state.floorMenuOpen && el.floorPicker && !e.target.closest("#floorPicker")) closeFloorMenu();
     });
     // inputs autocomplete
-    el.originInput.addEventListener("focus", () => {
-      enterMobileSearchMode();
-      renderSuggest("origin", el.originInput.value);
-    });
-    el.originInput.addEventListener("input", () => {
-      state.origin = null;
-      if (state.route) clearRoute(true);
-      else updateNavBtn();
-      renderSuggest("origin", el.originInput.value);
-    });
-    el.destInput.addEventListener("focus", () => {
-      enterMobileSearchMode();
-      renderSuggest("dest", el.destInput.value);
-    });
-    el.destInput.addEventListener("input", () => {
-      state.dest = null;
-      if (state.route) clearRoute(true);
-      else updateNavBtn();
-      renderSuggest("dest", el.destInput.value);
-    });
-    el.originInput.addEventListener("blur", () => scheduleExitMobileSearchMode());
-    el.destInput.addEventListener("blur", () => scheduleExitMobileSearchMode());
+    function initSearchField(input) {
+      if (!input) return;
+      input.setAttribute("dir", "ltr");
+      input.setAttribute("autocorrect", "off");
+      input.setAttribute("autocapitalize", "off");
+      input.setAttribute("spellcheck", "false");
+      input.addEventListener("focus", () => {
+        enterMobileSearchMode();
+        renderSuggest(input.id === "originInput" ? "origin" : "dest", input.value);
+      });
+      input.addEventListener("input", () => {
+        const which = input.id === "originInput" ? "origin" : "dest";
+        state[which] = null;
+        if (state.route) clearRoute(true);
+        else updateNavBtn();
+        renderSuggest(which, input.value);
+      });
+      input.addEventListener("blur", () => scheduleExitMobileSearchMode());
+    }
+    initSearchField(el.originInput);
+    initSearchField(el.destInput);
     document.addEventListener("pointerdown", (e) => {
       if (!e.target.closest(".field") && !e.target.closest(".suggest") && !e.target.closest("#browseBar")) {
         closeSuggest();

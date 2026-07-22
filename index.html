@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=148" />
+  <link rel="stylesheet" href="styles.css?v=156" />
 </head>
 <body>
   <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
@@ -30,7 +30,7 @@
     </defs>
   </svg>
   <div class="app-bg" aria-hidden="true">
-    <img class="app-bg__img" src="assets/background_street_map.svg?v=148" alt="" decoding="async" fetchpriority="low" />
+    <img class="app-bg__img" src="assets/background_street_map.svg?v=156" alt="" decoding="async" fetchpriority="low" />
   </div>
   <div class="app" id="app">
     <!-- ============ PAINEL LATERAL (glass) ============ -->
@@ -41,7 +41,7 @@
       <header class="panel__head">
         <div class="brand">
           <span class="brand__icon" aria-hidden="true">
-            <img class="brand__icon-img" src="assets/brand-map-pin.png?v=148" alt="" width="28" height="28" decoding="async" />
+            <img class="brand__icon-img" src="assets/brand-map-pin.png?v=156" alt="" width="28" height="28" decoding="async" />
           </span>
           <div>
             <h1 class="brand__title">Mapa Interativo</h1>
@@ -103,7 +103,8 @@
               <label class="field__label" for="originInput">Onde estou</label>
               <button type="button" class="gps-orient-btn" id="gpsOrientBtn" data-state="IDLE" title="Orientar pelo GPS">Orientar pelo GPS</button>
             </div>
-            <input class="field__input" id="originInput" type="text" autocomplete="off"
+            <input class="field__input" id="originInput" type="text" dir="ltr" autocomplete="off"
+                   autocorrect="off" autocapitalize="off" spellcheck="false"
                    placeholder="Ponto de partida" role="combobox" aria-expanded="false" aria-controls="originList" />
             <ul class="suggest" id="originList" role="listbox" hidden></ul>
             <p class="gps-accuracy" id="gpsAccuracyHint" hidden></p>
@@ -116,7 +117,8 @@
 
           <div class="field" id="fieldDest">
             <label class="field__label" for="destInput">Para onde vou</label>
-            <input class="field__input" id="destInput" type="text" autocomplete="off"
+            <input class="field__input" id="destInput" type="text" dir="ltr" autocomplete="off"
+                   autocorrect="off" autocapitalize="off" spellcheck="false"
                    placeholder="Destino final" role="combobox" aria-expanded="false" aria-controls="destList" />
             <ul class="suggest" id="destList" role="listbox" hidden></ul>
           </div>
@@ -306,37 +308,37 @@
     </div>
   </div>
 
-  <script src="js/route-animation-config.js?v=148"></script>
-  <script src="js/map-nav-icons.js?v=148"></script>
-  <script src="js/calibration.js?v=148"></script>
-  <script src="js/navigation-router.js?v=148"></script>
-  <script src="js/geo-transform.js?v=148"></script>
-  <script src="js/pib-curitiba-location-config.js?v=148"></script>
-  <script src="js/geofence-service.js?v=148"></script>
-  <script src="js/gps-reading-collector.js?v=148"></script>
-  <script src="js/nearest-graph-point.js?v=148"></script>
-  <script src="js/route-snap-service.js?v=148"></script>
-  <script src="js/route-tracking-service.js?v=148"></script>
-  <script src="js/navigation/live/liveNavigationConfig.js?v=148"></script>
-  <script src="js/navigation/live/polylineGeometry.js?v=148"></script>
-  <script src="js/navigation/live/spatialIndex.js?v=148"></script>
-  <script src="js/navigation/live/edgeCache.js?v=148"></script>
-  <script src="js/navigation/live/mapMatching.js?v=148"></script>
-  <script src="js/navigation/live/virtualNode.js?v=148"></script>
-  <script src="js/navigation/live/positionSmoothing.js?v=148"></script>
-  <script src="js/navigation/live/routeProgress.js?v=148"></script>
-  <script src="js/navigation/live/offRouteDetection.js?v=148"></script>
-  <script src="js/navigation/live/rerouting.js?v=148"></script>
-  <script src="js/navigation/live/coordinateTransform.js?v=148"></script>
-  <script src="js/navigation/live/geolocationService.js?v=148"></script>
-  <script src="js/navigation/live/liveNavigationController.js?v=148"></script>
-  <script src="js/gps-orientation.js?v=148"></script>
-  <script src="js/permission-service.js?v=148"></script>
-  <script src="js/location-service.js?v=148"></script>
-  <script src="js/heading-service.js?v=148"></script>
-  <script src="js/user-location-puck.js?v=148"></script>
-  <script src="js/map-camera-controller.js?v=148"></script>
-  <script src="js/user-location.js?v=148"></script>
-  <script src="app.js?v=148"></script>
+  <script src="js/route-animation-config.js?v=156"></script>
+  <script src="js/map-nav-icons.js?v=156"></script>
+  <script src="js/calibration.js?v=156"></script>
+  <script src="js/navigation-router.js?v=156"></script>
+  <script src="js/geo-transform.js?v=156"></script>
+  <script src="js/pib-curitiba-location-config.js?v=156"></script>
+  <script src="js/geofence-service.js?v=156"></script>
+  <script src="js/gps-reading-collector.js?v=156"></script>
+  <script src="js/nearest-graph-point.js?v=156"></script>
+  <script src="js/route-snap-service.js?v=156"></script>
+  <script src="js/route-tracking-service.js?v=156"></script>
+  <script src="js/navigation/live/liveNavigationConfig.js?v=156"></script>
+  <script src="js/navigation/live/polylineGeometry.js?v=156"></script>
+  <script src="js/navigation/live/spatialIndex.js?v=156"></script>
+  <script src="js/navigation/live/edgeCache.js?v=156"></script>
+  <script src="js/navigation/live/mapMatching.js?v=156"></script>
+  <script src="js/navigation/live/virtualNode.js?v=156"></script>
+  <script src="js/navigation/live/positionSmoothing.js?v=156"></script>
+  <script src="js/navigation/live/routeProgress.js?v=156"></script>
+  <script src="js/navigation/live/offRouteDetection.js?v=156"></script>
+  <script src="js/navigation/live/rerouting.js?v=156"></script>
+  <script src="js/navigation/live/coordinateTransform.js?v=156"></script>
+  <script src="js/navigation/live/geolocationService.js?v=156"></script>
+  <script src="js/navigation/live/liveNavigationController.js?v=156"></script>
+  <script src="js/gps-orientation.js?v=156"></script>
+  <script src="js/permission-service.js?v=156"></script>
+  <script src="js/location-service.js?v=156"></script>
+  <script src="js/heading-service.js?v=156"></script>
+  <script src="js/user-location-puck.js?v=156"></script>
+  <script src="js/map-camera-controller.js?v=156"></script>
+  <script src="js/user-location.js?v=156"></script>
+  <script src="app.js?v=156"></script>
 </body>
 </html>

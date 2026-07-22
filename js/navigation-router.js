@@ -545,7 +545,7 @@
     if (rank === 1) return "Rota 1 — Mais curta";
     if (rank === 2) return "Rota 2 — Alternativa";
     if (rank === 3) return total >= 4 ? "Rota 3 — Alternativa" : "Rota 3 — Alternativa mais longa";
-    if (rank === 4) return "Rota 4 — Pela escada lateral";
+    if (rank === 4) return "Rota 4 — Alternativa";
     return `Rota ${rank}`;
   }
 
