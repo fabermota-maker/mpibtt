@@ -566,6 +566,19 @@
       return puck?.isVisible?.() || targetSvg.x != null;
     }
 
+    /** Atualiza puck com posição já ajustada ao grafo (navegação ao vivo). */
+    function updateTrackedPosition(svgX, svgY, accuracyMeters) {
+      if (!isFinite(svgX) || !isFinite(svgY)) return false;
+      ensureServices();
+      targetSvg.x = svgX;
+      targetSvg.y = svgY;
+      displaySvg.x = svgX;
+      displaySvg.y = svgY;
+      puck?.setPosition(svgX, svgY, accuracyMeters, metersToSvgUnits);
+      puck?.show();
+      return true;
+    }
+
     async function onLocBtnClick() {
       // 1) ainda não iniciou → feedback imediato + permissão/GPS
       if (!started) {
@@ -657,6 +670,7 @@
       updateLocBtn,
       onLocBtnClick,
       showAtLatLng,
+      updateTrackedPosition,
       isStarted: () => started,
       setFollowMode: (mode) => {
         camera?.setFollowMode(mode);

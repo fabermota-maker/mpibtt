@@ -54,6 +54,8 @@
       onTrackingSnap,
       onNeedManualEntrance,
       onAmbiguousEntrances,
+      getLiveMapMatchEnhancer,
+      rerouteFromVirtualNode,
     } = ctx;
 
     let buttonState = "IDLE";
@@ -362,28 +364,45 @@
 
     function startRouteTracking(currentRoute, floorId) {
       tracking?.stop();
+      const mapMatchEnhancer = getLiveMapMatchEnhancer?.();
       tracking = global.RouteTrackingService.create({
         latLngToSvg: (lat, lng) => geo?.latLngToSvg(lat, lng),
         getNavGraph: () => getState().navGraph,
         getMetersPerUnit,
         geofenceContains: (lat, lng) =>
           global.NearestGraphPoint.checkUserInsideGeofence(lat, lng, geofence),
+        enhancePosition: mapMatchEnhancer || undefined,
         onSnap: (valid, snap) => {
           setAccuracyHint(valid.accuracy);
           onTrackingSnap?.(valid, snap);
         },
-        onOffRouteConfirmed: () => {
+        onOffRouteConfirmed: async (_reading, snap) => {
           toast("Desvio confirmado — recalculando rota…");
           setGpsButtonState("ROUTING");
-          // recálculo: origem permanece o último nó válido / here
-          drawRoute();
+          const match = validOrSnapMatch(snap);
+          let ok = false;
+          if (match && rerouteFromVirtualNode) {
+            ok = await rerouteFromVirtualNode(match);
+          }
+          if (!ok) drawRoute();
           tracking?.updateRoute(getState().route, getState().activeLevel || floorId);
           setGpsButtonState("ACTIVE");
         },
         onOutside: () => toast(MESSAGES.OUTSIDE_SHORT),
-        onLowAccuracy: (r) => setAccuracyHint(r.accuracy, `Precisão baixa: ±${Math.round(r.accuracy)} m`),
+        onLowAccuracy: (r) =>
+          setAccuracyHint(
+            r.accuracy,
+            `Precisão reduzida · ±${Math.round(r.accuracy)} m`,
+          ),
       });
       tracking.start(currentRoute, floorId);
+    }
+
+    function validOrSnapMatch(snap) {
+      if (snap?.mapMatch?.matchedEdgeId) return snap.mapMatch;
+      const last = tracking?.getLastValid?.();
+      if (last?.mapMatch?.matchedEdgeId) return last.mapMatch;
+      return null;
     }
 
     function cancelOrientation() {

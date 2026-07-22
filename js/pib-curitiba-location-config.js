@@ -224,7 +224,7 @@
       type: "GPS_REFERENCE",
       category: "DESTINATION",
       floorId: "L00",
-      navNodeId: null,
+      navNodeId: "L00_N0020_intersection_sevenpass_estaionamento",
       useForGpsSync: true,
     },
     {

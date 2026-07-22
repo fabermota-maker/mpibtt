@@ -1,26 +1,13 @@
 /**
- * Marcador visual de posição do usuário (ponto azul + cone + precisão).
- * Estilo Google Maps: círculo azul, borda branca, cone de heading.
+ * Marcador visual de posição do usuário — seta de navegação + círculo de precisão.
  */
 (function (global) {
   "use strict";
 
   const GT = () => (typeof GeoTransform !== "undefined" ? GeoTransform : null);
-
-  function buildConePath(openingDeg, radius) {
-    const half = (openingDeg * Math.PI) / 360;
-    const r = radius;
-    const x1 = Math.sin(-half) * -r;
-    const y1 = Math.cos(-half) * -r;
-    const x2 = Math.sin(half) * -r;
-    const y2 = Math.cos(half) * -r;
-    return `M0,0 L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 0 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`;
-  }
+  const Icons = () => global.MapNavIcons;
 
   function createUserLocationPuck(overlayEl, opts = {}) {
-    const openingDeg = opts.coneOpeningDeg ?? 56;
-    const coneRadius = opts.coneRadius ?? 48;
-
     const root = document.createElementNS("http://www.w3.org/2000/svg", "g");
     root.setAttribute("id", "userLocationPuck");
     root.setAttribute("class", "user-location-puck");
@@ -37,22 +24,27 @@
     const body = document.createElementNS("http://www.w3.org/2000/svg", "g");
     body.setAttribute("class", "ulp-body");
 
-    const cone = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    cone.setAttribute("class", "ulp-cone");
-    cone.setAttribute("d", buildConePath(openingDeg, coneRadius));
-    // Cone sempre no DOM (sem atributo HTML hidden — CSS do overlay escondia o cone)
+    const arrowHost = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    arrowHost.setAttribute("class", "ulp-arrow");
+    const puckScale = opts.markerScale ?? (Icons()?.puckScaleForViewBox?.(1011, 862) ?? 0.037);
+    arrowHost.setAttribute("transform", `scale(${puckScale})`);
+    if (Icons()?.appendInnerArrow) {
+      Icons().appendInnerArrow(arrowHost, {
+        className: "ulp-arrow-icon",
+        pathClass: "ulp-arrow__shape",
+      });
+    } else {
+      const inner = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      inner.setAttribute("transform", "translate(-12 -12)");
+      const fallback = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      fallback.setAttribute("class", "ulp-arrow__shape");
+      fallback.setAttribute("d", "M11 4h2v7h3.2L12 18 7.8 11H11V4z");
+      fallback.setAttribute("fill", "#0f3054");
+      inner.appendChild(fallback);
+      arrowHost.appendChild(inner);
+    }
 
-    const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    ring.setAttribute("class", "ulp-ring");
-    ring.setAttribute("r", "10");
-
-    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    dot.setAttribute("class", "ulp-dot");
-    dot.setAttribute("r", "7");
-
-    body.appendChild(cone);
-    body.appendChild(ring);
-    body.appendChild(dot);
+    body.appendChild(arrowHost);
     root.appendChild(accuracy);
     root.appendChild(body);
     if (overlayEl) overlayEl.appendChild(root);
@@ -61,7 +53,6 @@
     let x = 0;
     let y = 0;
     let displayHeading = 0;
-    let coneVisible = true;
 
     function ensureInOverlay(host) {
       const parent = host || overlayEl;
@@ -71,13 +62,10 @@
 
     function show() {
       visible = true;
-      coneVisible = true;
       root.setAttribute("data-visible", "true");
       root.setAttribute("visibility", "visible");
       root.style.removeProperty("display");
       root.removeAttribute("hidden");
-      cone.style.removeProperty("display");
-      cone.removeAttribute("hidden");
       ensureInOverlay();
     }
 
@@ -124,9 +112,6 @@
       const cam = cameraBearing || 0;
       const heading =
         mapHeading == null || !isFinite(mapHeading) ? 0 : mapHeading;
-      coneVisible = true;
-      cone.style.removeProperty("display");
-      cone.removeAttribute("hidden");
       displayHeading = GT()?.normalizeAngle(heading - cam) ?? ((heading - cam) % 360 + 360) % 360;
       body.setAttribute("transform", `translate(${x} ${y}) rotate(${displayHeading})`);
       if (visible) {
@@ -146,9 +131,9 @@
       ensureInOverlay,
       getPosition: () => ({ x, y }),
       isVisible: () => visible,
-      hasCone: () => coneVisible,
+      hasCone: () => true,
     };
   }
 
-  global.UserLocationPuck = { create: createUserLocationPuck, buildConePath };
+  global.UserLocationPuck = { create: createUserLocationPuck };
 })(typeof window !== "undefined" ? window : globalThis);

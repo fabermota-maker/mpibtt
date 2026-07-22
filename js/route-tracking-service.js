@@ -34,6 +34,9 @@
       onOffRouteConfirmed,
       onOutside,
       onLowAccuracy,
+      /** Opcional: map matching antes do snap à rota (LiveNavigation). */
+      enhancePosition,
+      onMapMatched,
     } = opts;
 
     function emit(evt) {
@@ -81,8 +84,25 @@
         return;
       }
 
-      const svgRaw = latLngToSvg?.(reading.latitude, reading.longitude);
+      let svgRaw = latLngToSvg?.(reading.latitude, reading.longitude);
       if (!svgRaw) return;
+
+      let mapMatch = null;
+      if (typeof enhancePosition === "function") {
+        const enhanced = enhancePosition(reading, svgRaw, {
+          floorId,
+          route,
+          navGraph: getNavGraph?.(),
+        });
+        if (enhanced?.held) {
+          onLowAccuracy?.(reading);
+          emit({ type: "LOW_ACCURACY", reading, position: lastValid, held: true });
+          return;
+        }
+        if (enhanced?.svg) svgRaw = enhanced.svg;
+        mapMatch = enhanced?.matchResult || null;
+        if (mapMatch) onMapMatched?.(mapMatch, reading);
+      }
 
       if (impossibleJump(svgRaw, reading.timestamp)) {
         emit({ type: "JUMP_REJECTED", reading, position: lastValid });
@@ -102,8 +122,8 @@
       if (!snap?.snappedPosition) {
         offRouteCount += 1;
         if (offRouteCount >= rules.offRouteReadingsRequired) {
-          onOffRouteConfirmed?.(reading, snap);
-          emit({ type: "OFF_ROUTE", reading, snap });
+          onOffRouteConfirmed?.(reading, { ...snap, mapMatch });
+          emit({ type: "OFF_ROUTE", reading, snap, mapMatch });
           offRouteCount = 0;
         }
         return;
@@ -112,11 +132,11 @@
       if (snap.offRoute) {
         offRouteCount += 1;
         if (rules.keepLastValidPosition && lastValid) {
-          onSnap?.(lastValid, { ...snap, held: true });
+          onSnap?.(lastValid, { ...snap, held: true, mapMatch });
         }
         if (offRouteCount >= rules.offRouteReadingsRequired) {
-          onOffRouteConfirmed?.(reading, snap);
-          emit({ type: "OFF_ROUTE", reading, snap });
+          onOffRouteConfirmed?.(reading, { ...snap, mapMatch });
+          emit({ type: "OFF_ROUTE", reading, snap, mapMatch });
           offRouteCount = 0;
         }
         return;
@@ -126,13 +146,14 @@
       lastValid = {
         ...reading,
         svg: snap.snappedPosition,
-        edgeId: snap.edgeId,
+        edgeId: mapMatch?.matchedEdgeId || snap.edgeId,
         routeProgress: snap.routeProgress,
+        mapMatch,
       };
       lastSvg = snap.snappedPosition;
       lastAt = reading.timestamp;
-      onSnap?.(lastValid, snap);
-      emit({ type: "SNAP", reading: lastValid, snap });
+      onSnap?.(lastValid, { ...snap, mapMatch });
+      emit({ type: "SNAP", reading: lastValid, snap, mapMatch });
     }
 
     function onError(err) {

@@ -9,11 +9,28 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=128" />
+  <link rel="stylesheet" href="styles.css?v=143" />
 </head>
 <body>
+  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+    <defs>
+      <symbol id="pibNavArrow" viewBox="0 0 146.19 177.68">
+        <path fill="#000c2d" d="M1.1,155.91L57.03,10.44c5.33-13.86,25.46-13.95,30.92-.13l57.09,144.6c5.39,13.65-9.24,26.63-22.73,20.19l-43.34-20.71c-4.83-2.31-10.52-2.19-15.25.33l-39.2,20.92c-13.44,7.17-28.81-5.76-23.44-19.72Z"/>
+        <path fill="#243354" d="M134.01,134.75L85.68,8.96c-2.23-5.81-7.36-8.78-12.58-8.96v132.92c1.71.15,3.4.6,4.98,1.38l36.69,18.02c11.42,5.61,23.8-5.69,19.24-17.56Z"/>
+        <path fill="#000c2d" d="M73.1,75.57v36.89c10.19,0,18.44-8.26,18.44-18.44s-8.26-18.44-18.44-18.44Z"/>
+        <path fill="#243354" d="M73.1,112.45v-36.89c-10.19,0-18.44,8.26-18.44,18.44s8.26,18.44,18.44,18.44Z"/>
+      </symbol>
+      <symbol id="pibMapPin" viewBox="0 0 120.86 179.52">
+        <path fill="#000c2d" d="M60.43,42.32v36.89c10.19,0,18.44-8.26,18.44-18.44s-8.26-18.44-18.44-18.44Z"/>
+        <path fill="#243354" d="M60.43,79.21v-36.89c-10.19,0-18.44,8.26-18.44,18.44s8.26,18.44,18.44,18.44Z"/>
+        <path fill="#000c2d" d="M70.57,162.65c-4.79,7.2-15.34,7.31-20.27.21l-1.92-2.76C29.05,132.27,9.42,102.52,1.52,69.03-7.66,30.13,26.18-1.11,61.82.03c38.29,1.23,69.24,36.53,55.87,75.66-10.91,31.94-28.18,58.49-47.12,86.97ZM53.84,34.33c-16.27,4.45-24.71,20.07-19.04,36.36,4.21,12.09,19.62,21.27,35.91,16.08,11.65-3.71,20.19-20.39,16.06-33.49-4.46-14.13-17.37-23.2-32.92-18.94Z"/>
+        <path fill="#243354" d="M114.84,75.69C128.37,36.09,99.36.4,60.43,0v33.3c12.54-.48,22.53,7.89,26.34,19.97,4.13,13.1-4.41,29.78-16.06,33.49-3.5,1.12-6.96,1.56-10.28,1.47v70.45c0,5.65,7.35,7.84,10.44,3.11,13.96-21.42,35.11-60.18,43.97-86.11Z"/>
+        <path fill="#000c2d" d="M58.86,179.52c-8.57,0-24.76-.89-24.76-4.26s16.2-4.26,24.76-4.26,24.76.89,24.76,4.26-16.2,4.26-24.76,4.26ZM58.86,172.31c-14.8,0-22.88,1.95-22.88,2.95s8.08,2.95,22.88,2.95,22.88-1.95,22.88-2.95-8.08-2.95-22.88-2.95Z"/>
+      </symbol>
+    </defs>
+  </svg>
   <div class="app-bg" aria-hidden="true">
-    <img class="app-bg__img" src="assets/background_street_map.svg?v=128" alt="" decoding="async" fetchpriority="low" />
+    <img class="app-bg__img" src="assets/background_street_map.svg?v=143" alt="" decoding="async" fetchpriority="low" />
   </div>
   <div class="app" id="app">
     <!-- ============ PAINEL LATERAL (glass) ============ -->
@@ -24,7 +41,7 @@
       <header class="panel__head">
         <div class="brand">
           <span class="brand__icon" aria-hidden="true">
-            <img class="brand__icon-img" src="assets/brand-map-pin.png?v=128" alt="" width="28" height="28" decoding="async" />
+            <img class="brand__icon-img" src="assets/brand-map-pin.png?v=143" alt="" width="28" height="28" decoding="async" />
           </span>
           <div>
             <h1 class="brand__title">Mapa Interativo</h1>
@@ -187,17 +204,20 @@
             <polyline id="routeGlow" class="route-glow" points="" />
             <polyline id="routeCasing" class="route-casing" points="" />
             <polyline id="routeLine" class="route-line" points="" />
-            <polyline id="routeFlow" class="route-flow" points="" />
-            <g id="routeStart" class="route-pin route-pin--start" hidden visibility="hidden">
-              <circle class="pin-halo" r="12" />
-              <circle class="pin-dot" r="4" />
+            <g id="routeStart" class="route-marker route-marker--start" hidden visibility="hidden">
+              <g class="nav-marker__gfx nav-marker__gfx--arrow" transform="translate(-73.1 -94.015)">
+                <use href="#pibNavArrow"/>
+              </g>
             </g>
-            <g id="routeEnd" class="route-pin route-pin--end" hidden visibility="hidden">
-              <circle class="pin-ring" r="7.5" />
-              <circle class="pin-dot" r="4" />
+            <g id="routeEnd" class="route-marker route-marker--end" hidden visibility="hidden">
+              <g class="nav-marker__gfx nav-marker__gfx--pin" transform="translate(-60.43 -163)">
+                <use href="#pibMapPin"/>
+              </g>
             </g>
             <g id="hereMarker" class="here-marker" hidden visibility="hidden">
-              <circle class="here-core" r="7" />
+              <g class="nav-marker__gfx nav-marker__gfx--arrow" transform="translate(-73.1 -94.015)">
+                <use href="#pibNavArrow"/>
+              </g>
             </g>
           </svg>
         </div>
@@ -225,8 +245,8 @@
             <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".45"/>
           </svg>
           <!-- Seguir + direção -->
-          <svg class="loc-icon loc-icon--heading" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-            <path d="M12 4.2 L17.2 18.2 L12 14.6 L6.8 18.2 Z" fill="currentColor"/>
+          <svg class="loc-icon loc-icon--heading" viewBox="0 0 146.19 177.68" width="20" height="24" aria-hidden="true">
+            <use href="#pibNavArrow"/>
           </svg>
         </button>
       </div>
@@ -235,19 +255,8 @@
       <div class="gps-compass" id="gpsCompass" hidden aria-hidden="true" title="Direção do aparelho">
         <span class="gps-compass__n">N</span>
         <div class="gps-compass__arrow" id="gpsCompassArrow">
-          <svg viewBox="0 0 100 100" width="44" height="44" aria-hidden="true">
-            <defs>
-              <radialGradient id="gpsArrowGlow" cx="50%" cy="35%" r="55%">
-                <stop offset="0" stop-color="#93c5fd" stop-opacity=".9"/>
-                <stop offset="1" stop-color="#2563eb" stop-opacity="0"/>
-              </radialGradient>
-              <linearGradient id="gpsArrowFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#60a5fa"/>
-                <stop offset="1" stop-color="#1d4ed8"/>
-              </linearGradient>
-            </defs>
-            <ellipse cx="50" cy="42" rx="22" ry="28" fill="url(#gpsArrowGlow)"/>
-            <path d="M50 12 L72 78 L50 62 L28 78 Z" fill="url(#gpsArrowFill)"/>
+          <svg viewBox="0 0 146.19 177.68" width="44" height="54" aria-hidden="true">
+            <use href="#pibNavArrow"/>
           </svg>
         </div>
       </div>
@@ -268,14 +277,8 @@
       <div class="compass__ring">
         <span class="compass__n">N</span>
         <div class="compass__arrow" id="compassArrow">
-          <svg viewBox="0 0 100 100" width="90" height="90" aria-hidden="true">
-            <defs>
-              <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#3b82f6"/>
-                <stop offset="1" stop-color="#1e40af"/>
-              </linearGradient>
-            </defs>
-            <path d="M50 8 L74 78 L50 62 L26 78 Z" fill="url(#grad)"/>
+          <svg viewBox="0 0 146.19 177.68" width="90" height="110" aria-hidden="true">
+            <use href="#pibNavArrow"/>
           </svg>
         </div>
       </div>
@@ -302,22 +305,36 @@
     </div>
   </div>
 
-  <script src="js/calibration.js?v=128"></script>
-  <script src="js/navigation-router.js?v=128"></script>
-  <script src="js/geo-transform.js?v=128"></script>
-  <script src="js/pib-curitiba-location-config.js?v=128"></script>
-  <script src="js/geofence-service.js?v=128"></script>
-  <script src="js/gps-reading-collector.js?v=128"></script>
-  <script src="js/nearest-graph-point.js?v=128"></script>
-  <script src="js/route-snap-service.js?v=128"></script>
-  <script src="js/route-tracking-service.js?v=128"></script>
-  <script src="js/gps-orientation.js?v=128"></script>
-  <script src="js/permission-service.js?v=128"></script>
-  <script src="js/location-service.js?v=128"></script>
-  <script src="js/heading-service.js?v=128"></script>
-  <script src="js/user-location-puck.js?v=128"></script>
-  <script src="js/map-camera-controller.js?v=128"></script>
-  <script src="js/user-location.js?v=128"></script>
-  <script src="app.js?v=128"></script>
+  <script src="js/map-nav-icons.js?v=143"></script>
+  <script src="js/calibration.js?v=143"></script>
+  <script src="js/navigation-router.js?v=143"></script>
+  <script src="js/geo-transform.js?v=143"></script>
+  <script src="js/pib-curitiba-location-config.js?v=143"></script>
+  <script src="js/geofence-service.js?v=143"></script>
+  <script src="js/gps-reading-collector.js?v=143"></script>
+  <script src="js/nearest-graph-point.js?v=143"></script>
+  <script src="js/route-snap-service.js?v=143"></script>
+  <script src="js/route-tracking-service.js?v=143"></script>
+  <script src="js/navigation/live/liveNavigationConfig.js?v=143"></script>
+  <script src="js/navigation/live/polylineGeometry.js?v=143"></script>
+  <script src="js/navigation/live/spatialIndex.js?v=143"></script>
+  <script src="js/navigation/live/edgeCache.js?v=143"></script>
+  <script src="js/navigation/live/mapMatching.js?v=143"></script>
+  <script src="js/navigation/live/virtualNode.js?v=143"></script>
+  <script src="js/navigation/live/positionSmoothing.js?v=143"></script>
+  <script src="js/navigation/live/routeProgress.js?v=143"></script>
+  <script src="js/navigation/live/offRouteDetection.js?v=143"></script>
+  <script src="js/navigation/live/rerouting.js?v=143"></script>
+  <script src="js/navigation/live/coordinateTransform.js?v=143"></script>
+  <script src="js/navigation/live/geolocationService.js?v=143"></script>
+  <script src="js/navigation/live/liveNavigationController.js?v=143"></script>
+  <script src="js/gps-orientation.js?v=143"></script>
+  <script src="js/permission-service.js?v=143"></script>
+  <script src="js/location-service.js?v=143"></script>
+  <script src="js/heading-service.js?v=143"></script>
+  <script src="js/user-location-puck.js?v=143"></script>
+  <script src="js/map-camera-controller.js?v=143"></script>
+  <script src="js/user-location.js?v=143"></script>
+  <script src="app.js?v=143"></script>
 </body>
 </html>
