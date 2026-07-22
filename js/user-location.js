@@ -136,10 +136,19 @@
       const active = started && (nav.gpsAvailable || nav.headingAvailable);
       showGpsCompass(active);
       if (!active || !gpsCompassArrow) return;
-      // seta aponta para a direção do aparelho (0 = Norte no anel)
       const h = nav.deviceHeading;
       if (h == null || !isFinite(h)) return;
       gpsCompassArrow.style.transform = `rotate(${h}deg)`;
+    }
+
+    function syncPuckCompassMeta() {
+      if (!puck?.root) return;
+      const nav = getState().userNav || {};
+      puck.root.setAttribute("data-camera-bearing", String(nav.cameraBearing || 0));
+      const northOffset = geo?.transform?.mapNorthOffset;
+      if (isFinite(northOffset)) {
+        puck.root.setAttribute("data-map-north-offset", String(northOffset));
+      }
     }
 
     function animateFrame() {
@@ -155,21 +164,8 @@
         }
       }
 
-      const nav = getState().userNav || {};
       if (puck && (targetSvg.x != null || puck.isVisible())) {
-        // Cone sempre visível com GPS ativo: heading do aparelho ou norte do mapa
-        let mapHeading = 0;
-        if (nav.deviceHeading != null && isFinite(nav.deviceHeading)) {
-          mapHeading = geo?.gpsBearingToMapHeading
-            ? geo.gpsBearingToMapHeading(nav.deviceHeading)
-            : nav.deviceHeading;
-          if (nav.locationBearing != null && (nav.speed || 0) > 1.5) {
-            mapHeading = GT()?.interpolateAngle(mapHeading, nav.locationBearing, 0.25) ?? mapHeading;
-          }
-        } else if (nav.locationBearing != null && isFinite(nav.locationBearing)) {
-          mapHeading = nav.locationBearing;
-        }
-        puck.setHeading(mapHeading, nav.cameraBearing || 0);
+        syncPuckCompassMeta();
       }
       updateGpsCompass();
 
@@ -393,13 +389,14 @@
         return { ok: false };
       }
 
-      // Bússola em paralelo — não atrasa o puck
-      permissions.requestOrientationPermission().then((ori) => {
-        patchNav({ orientationStatus: ori.status });
-        if (!ori.ok) {
-          toast("Bússola indisponível — exibindo o ponto azul com cone fixo.");
-        }
-      }).catch(() => {});
+      // Bússola — permissão só após gesto do usuário (clique no botão GPS)
+      const compassGranted = await global.GpsCompass?.requestCompassPermission?.();
+      patchNav({ orientationStatus: compassGranted ? "granted" : "denied" });
+      if (compassGranted) {
+        global.GpsCompass?.startCompassTracking?.();
+      } else {
+        global.GpsCompass?.updateGpsIconRotation?.(0);
+      }
 
       return { ok: true, position: loc.position || null };
     }
@@ -449,6 +446,7 @@
       if (!puck) {
         puck = global.UserLocationPuck?.create?.(host, {
           getMapScale: () => (typeof getMapScale === "function" ? getMapScale() : getState()?.scale) || 1,
+          getViewBox: () => getViewBox?.() || { w: 1011, h: 862 },
           maxAccuracyRadiusSvg: () => Math.min(vb.w || 1011, vb.h || 862) * 0.08,
           markerScale: global.MapNavIcons?.puckScaleForViewBox?.(vb.w, vb.h),
         });
@@ -643,8 +641,15 @@
     }
 
     function onVisibility() {
-      if (document.hidden) heading?.pause();
-      else heading?.resume();
+      if (document.hidden) {
+        heading?.pause();
+        global.GpsCompass?.stopCompassTracking?.();
+      } else {
+        heading?.resume();
+        if (getState().userNav?.orientationStatus === "granted") {
+          global.GpsCompass?.startCompassTracking?.();
+        }
+      }
     }
 
     function onMapDragged() {
@@ -655,6 +660,7 @@
     function stop() {
       location?.stop();
       heading?.stop();
+      global.GpsCompass?.stopCompassTracking?.();
       if (animId) cancelAnimationFrame(animId);
       animId = null;
       document.removeEventListener("visibilitychange", onVisibility);

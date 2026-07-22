@@ -409,6 +409,8 @@ body {
 .suggest .s-ico { width: 32px; height: 32px; border-radius: 12px; background: var(--glass-soft); display: grid; place-items: center; color: var(--brand); flex: none; }
 .suggest .s-name { font-weight: 600; line-height: 1.25; }
 .suggest .s-cat { display: block; font-size: 12px; color: var(--ink-soft); font-weight: 500; margin-top: 2px; }
+.suggest .s-hint { padding: 10px 12px 4px; list-style: none; pointer-events: none; }
+.suggest .s-hint .s-cat { color: var(--accent, #6b4fd9); }
 .suggest .s-empty { padding: 12px; color: var(--ink-soft); font-size: 14px; }
 
 .trip__actions {
@@ -774,6 +776,10 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
 .user-location-puck .ulp-arrow,
 .user-location-puck .nav-marker__gfx {
   filter: drop-shadow(0 1px 3px rgba(0, 12, 45, .32));
+}
+.user-location-puck .ulp-arrow-rotate {
+  transform-box: fill-box;
+  transform-origin: center;
 }
 .user-location-puck .ulp-body {
   transition: transform .08s linear;

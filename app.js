@@ -139,12 +139,13 @@
     // rótulos oficiais na busca (podem diferir do ícone no mapa)
     poiDisplayNames: {
       P005_centro_de_formacao: "Centro de Formação CF",
-      encomun: "Encomun · Comunicação",
+      min_esportes: "Min. esportes",
+      encomun: "Encomun",
     },
     // atalhos de busca → rawId do POI
     poiSearchAliases: {
       P005_centro_de_formacao: ["cf", "centro de formacao cf", "centro formacao cf", "formacao cf"],
-      P004_sala_de_oracao_RGO: ["rgo", "sala rgo", "sala de oracao rgo"],
+      P004_sala_de_oracao_RGO: ["rgo", "sala rgo", "sala de oracao rgo", "oracao", "oração"],
       min_esportes: ["min esportes", "ministerio esportes", "ministerio de esportes", "esportes"],
       encomun: ["encomun", "comunicacao", "comunicação", "rede super", "sala 08", "sala 08 b02"],
       sala_albert: ["sala albert", "albert", "sala abert", "sala 06", "sala 06 b02"],
@@ -511,6 +512,121 @@
   const norm = (s = "") => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   /** Normaliza texto de busca (sem acentos, pontuação vira espaço). */
   const normSearch = (s = "") => norm(s).replace(/[.\-_/]+/g, " ").replace(/\s+/g, " ").trim();
+
+  /** Correções ortográficas comuns (chave sem acento → forma correta). */
+  const PT_SPELLING = {
+    oracao: "oração",
+    formacao: "formação",
+    comunicacao: "comunicação",
+    transmicao: "transmissão",
+    transmissao: "transmissão",
+    ministerio: "ministério",
+    espaco: "espaço",
+    recepcao: "recepção",
+    refeitorio: "refeitório",
+    ginasio: "ginásio",
+    auditorio: "auditório",
+    banisterio: "batistério",
+    batisterio: "batistério",
+    conexao: "conexão",
+    elevacao: "elevação",
+    estacao: "estação",
+    acolher: "acolher",
+    jardim: "jardim",
+    capela: "capela",
+    templo: "templo",
+    esportes: "esportes",
+    albert: "Albert",
+    encomun: "Encomun",
+  };
+
+  const POI_ACRONYMS = new Set(["cf", "rgo", "abasc", "wc", "ti", "rh", "adm"]);
+
+  const PT_LOWER_WORDS = new Set([
+    "de", "da", "do", "das", "dos", "e", "em", "na", "no", "nas", "nos",
+    "a", "o", "as", "os", "por", "com", "sem",
+  ]);
+
+  function editDistance(a, b) {
+    if (a === b) return 0;
+    if (!a?.length) return b?.length || 0;
+    if (!b?.length) return a.length;
+    let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) {
+      const cur = [i];
+      for (let j = 1; j <= b.length; j++) {
+        cur[j] = a[i - 1] === b[j - 1]
+          ? prev[j - 1]
+          : 1 + Math.min(prev[j], cur[j - 1], prev[j - 1]);
+      }
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+
+  function formatPoiWord(word, isFirst) {
+    if (word === "·" || word === "|") return word;
+    const bare = word.replace(/([.,;:!?]+)$/, "");
+    const punct = word.slice(bare.length);
+    const lower = bare.toLowerCase();
+    if (POI_ACRONYMS.has(lower)) return lower.toUpperCase() + punct;
+    if (PT_SPELLING[lower]) {
+      const fixed = PT_SPELLING[lower];
+      if (isFirst) return fixed.charAt(0).toUpperCase() + fixed.slice(1) + punct;
+      return fixed + punct;
+    }
+    if (!isFirst && PT_LOWER_WORDS.has(lower)) return lower + punct;
+    if (/^[A-ZÁÉÍÓÚÂÊÔÃÕÇ]{2,}$/.test(bare) && !POI_ACRONYMS.has(lower)) {
+      const cased = lower.charAt(0).toUpperCase() + lower.slice(1);
+      return (isFirst ? cased : lower) + punct;
+    }
+    if (!isFirst) return lower + punct;
+    return lower.charAt(0).toUpperCase() + lower.slice(1) + punct;
+  }
+
+  function formatPoiDisplayName(text) {
+    if (!text) return text;
+    const parts = String(text).trim().split(/\s+/).filter(Boolean);
+    return parts.map((w, i) => formatPoiWord(w, i === 0)).join(" ");
+  }
+
+  function fixPortugueseAccents(text) {
+    if (!text) return text;
+    return String(text).replace(/\b([A-Za-zÀ-ÿ]+)\b/g, (word) => {
+      const key = norm(word);
+      const fix = PT_SPELLING[key];
+      if (!fix) return word;
+      if (word === word.toUpperCase() && word.length > 2) {
+        return fix.charAt(0).toUpperCase() + fix.slice(1);
+      }
+      if (word[0] === word[0].toUpperCase()) {
+        return fix.charAt(0).toUpperCase() + fix.slice(1);
+      }
+      return fix;
+    });
+  }
+
+  function searchQueryCorrection(query) {
+    const q = normSearch(query);
+    if (q.length < 3) return null;
+    let best = null;
+    let bestDist = Infinity;
+    for (const [key, value] of Object.entries(PT_SPELLING)) {
+      if (key === q) return value;
+      const d = editDistance(q, key);
+      const maxLen = Math.max(q.length, key.length);
+      if (maxLen < 4) continue;
+      if (d <= 1 && d < bestDist) {
+        bestDist = d;
+        best = value;
+      } else if (d <= 2 && maxLen >= 6 && d / maxLen <= 0.34 && d < bestDist) {
+        bestDist = d;
+        best = value;
+      }
+    }
+    return best;
+  }
+
   const Cal = () => (typeof MapCalibration !== "undefined" ? MapCalibration : null);
 
   function poiSearchHaystacks(poi) {
@@ -543,6 +659,15 @@
       else if (h.split(/\s+/).some((w) => w === q)) best = Math.max(best, 78);
       else if (h.split(/\s+/).some((w) => w.startsWith(q))) best = Math.max(best, 68);
       else if (h.includes(q)) best = Math.max(best, 50);
+      else {
+        for (const w of h.split(/\s+/)) {
+          if (w.length < 3 || q.length < 3) continue;
+          const d = editDistance(q, w);
+          const maxLen = Math.max(q.length, w.length);
+          if (d <= 1 && q.length >= 4) best = Math.max(best, 72);
+          else if (d <= 2 && q.length >= 5 && d / maxLen <= 0.35) best = Math.max(best, 58);
+        }
+      }
     }
     return best;
   }
@@ -557,6 +682,7 @@
     const display = (CONFIG.poiDisplayNames || {})[raw]
       || (CONFIG.poiDisplayNames || {})[poi.rawId];
     if (display) poi.name = display;
+    poi.name = fixPortugueseAccents(formatPoiDisplayName(poi.name || ""));
     return poi;
   }
 
@@ -1330,10 +1456,15 @@
   }
 
   const MAX_ROUTE_OPTIONS = 4;
+  const DEFAULT_ROUTE_OPTIONS = 3;
+
+  function normRouteLabel(label) {
+    return normSearch(String(label || "").replace(/^rota\s+\d+\s*[—–-]\s*/i, ""));
+  }
+
   /** Máx. rotas exibidas para um par (CONFIG.routeOptionCaps). */
   function maxRouteOptionsForPair(origin, dest) {
     const specs = CONFIG.routeOptionCaps || [];
-    if (!specs.length) return MAX_ROUTE_OPTIONS;
     const a = poiRawKey(origin);
     const b = poiRawKey(dest);
     const matchSide = (spec, key) => {
@@ -1349,10 +1480,11 @@
     for (const spec of specs) {
       if ((matchSide(spec.a, a) && matchSide(spec.b, b))
         || (matchSide(spec.a, b) && matchSide(spec.b, a))) {
-        return Math.max(1, Math.min(MAX_ROUTE_OPTIONS, spec.max || MAX_ROUTE_OPTIONS));
+        return Math.max(1, Math.min(MAX_ROUTE_OPTIONS, spec.max || DEFAULT_ROUTE_OPTIONS));
       }
     }
-    return MAX_ROUTE_OPTIONS;
+    if (isTemplePoi(origin) || isTemplePoi(dest)) return MAX_ROUTE_OPTIONS;
+    return DEFAULT_ROUTE_OPTIONS;
   }
 
   /** Remove alternativas absurdamente longas no mesmo andar (ex.: desvio pelo jardim). */
@@ -1464,6 +1596,13 @@
   /** Rotas visualmente iguais ou quase iguais (edgeIds diferentes mas mesmo caminho). */
   function isDuplicateRoute(a, b) {
     if (!a || !b || a === b) return !!a && a === b;
+    const la = normRouteLabel(a.label);
+    const lb = normRouteLabel(b.label);
+    if (la && lb && la === lb && la.length > 4) return true;
+    if (a.entranceId && b.entranceId && a.entranceId === b.entranceId) return true;
+    const sigA = (a.edgeIds || []).join(">");
+    const sigB = (b.edgeIds || []).join(">");
+    if (sigA && sigA === sigB) return true;
     const NR = globalThis.NavigationRouter;
     if (NR?.isTooSimilarRoute?.(a, b)) return true;
     const nodeA = (a.nodeIds || []).join(">");
@@ -3218,20 +3357,8 @@
     return snapToEntrance(p);
   }
 
-  const PT_LOWER_WORDS = new Set([
-    "de", "da", "do", "das", "dos", "e", "em", "na", "no", "nas", "nos",
-    "a", "o", "as", "os", "por", "com", "sem",
-  ]);
-
   function titleCasePoiWords(text) {
-    const words = String(text || "").trim().split(/\s+/).filter(Boolean);
-    return words.map((word, i) => {
-      if (/^[A-Z0-9]{2,}$/.test(word)) return word;
-      const lower = word.toLowerCase();
-      if (i > 0 && PT_LOWER_WORDS.has(lower)) return lower;
-      if (word.length <= 2 && /^[a-zA-Z]+$/.test(word)) return word.toUpperCase();
-      return lower.charAt(0).toUpperCase() + lower.slice(1);
-    }).join(" ");
+    return formatPoiDisplayName(String(text || "").trim());
   }
 
   function applySlugAcronyms(text, rawId) {
@@ -3248,15 +3375,18 @@
 
   // decodifica id: P002_capela / P002_x5F_capela -> "Capela"
   function decodePoiName(rawId, dataName) {
+    let base;
     if (dataName && dataName.trim() && !/^P\d+/i.test(dataName) && !/^B\d+/i.test(dataName)) {
-      return applySlugAcronyms(titleCasePoiWords(dataName.trim()), rawId);
+      base = applySlugAcronyms(formatPoiDisplayName(dataName.trim()), rawId);
+    } else {
+      let s = dataName || rawId || "";
+      s = s.replace(/_x5F_/g, "_").replace(/_x([0-9a-fA-F]{2})_/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+      s = s.replace(/^P\d+[_-]?/i, "").replace(/^B\d+[_-]?/i, "");
+      s = s.replace(/[_-]+/g, " ").trim();
+      if (!s) return rawId;
+      base = applySlugAcronyms(formatPoiDisplayName(s), rawId);
     }
-    let s = dataName || rawId || "";
-    s = s.replace(/_x5F_/g, "_").replace(/_x([0-9a-fA-F]{2})_/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
-    s = s.replace(/^P\d+[_-]?/i, "").replace(/^B\d+[_-]?/i, "");
-    s = s.replace(/[_-]+/g, " ").trim();
-    if (!s) return rawId;
-    return applySlugAcronyms(titleCasePoiWords(s), rawId);
+    return fixPortugueseAccents(base);
   }
 
   function guessCat(name) {
@@ -4049,7 +4179,7 @@
         B02_sala_0003_sala_09_b02_acesso_ao_espaco_servir: "B02_poi_0006",
         B02_sala_0004_sala_08_b02_comunicacao_rede_super: "encomun",
         B02_sala_0005_sala_07_b02_cozinha: "B02_poi_0007",
-        B02_sala_0006_sala_06_b02_sala_abert_m: "B02_poi_0004",
+        B02_sala_0006_sala_06_b02_sala_abert_m: "sala_albert",
         B02_sala_0007_sala_05_b01_estudio_de_video: "B01_poi_0006-2",
         B02_sala_0008_sala_04_b02_sala_de_vidro: "B02_poi_0013",
         B02_sala_0009_sala_03_b02_engenharia_ao_vivo: "B02_poi_eng_vivo",
@@ -4675,7 +4805,7 @@
     }
 
     const namedAll = out.filter((r) => r.namedExternal);
-    const maxPick = MAX_ROUTE_OPTIONS;
+    const maxPick = maxRouteOptionsForPair(origin, dest);
 
     // garante no máximo uma de cada perfil + a melhor sempre em 1º
     const picked = [];
@@ -5307,7 +5437,12 @@
   }
 
   function filterPoisForSearch(query) {
-    const q = normSearch(String(query || "").trim());
+    const rawQ = String(query || "").trim();
+    const correction = searchQueryCorrection(rawQ);
+    const effectiveQuery = (correction && normSearch(rawQ) !== normSearch(correction))
+      ? correction
+      : rawQ;
+    const q = normSearch(effectiveQuery);
     const onCampus = isCampusFloor(state.activeLevel);
     const list = (G.pois || []).filter((p) => {
       enrichPoiMeta(p);
@@ -5326,11 +5461,11 @@
         if ((p.group || searchGroupFromPoi(p.rawId, p.name, p.cat)) !== g) return false;
       }
       if (!q) return true;
-      return poiMatchesSearch(p, query);
+      return poiMatchesSearch(p, effectiveQuery);
     });
     if (!q) return list;
     return list
-      .map((p) => ({ p, score: poiSearchScore(p, query) }))
+      .map((p) => ({ p, score: poiSearchScore(p, effectiveQuery) }))
       .sort((a, b) => b.score - a.score || (a.p.searchLabel || a.p.name).localeCompare(b.p.searchLabel || b.p.name, "pt-BR"))
       .map((x) => x.p);
   }
@@ -5339,8 +5474,15 @@
     state.activeField = which;
     const listEl = which === "origin" ? el.originList : el.destList;
     const items = filterPoisForSearch(query);
+    const correction = searchQueryCorrection(query);
+    const showCorrection = correction
+      && normSearch(query)
+      && normSearch(query) !== normSearch(correction);
 
     let html = "";
+    if (showCorrection) {
+      html += `<li class="s-hint" role="presentation"><span class="s-cat">Você quis dizer: <strong>${correction}</strong>?</span></li>`;
+    }
     if (which === "origin") {
       html += `<li data-here="1" aria-selected="false"><span class="s-ico"><svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="3" fill="currentColor"/><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span><span><span class="s-name">Estou aqui (marcar no mapa)</span><span class="s-cat">Usar minha posição</span></span></li>`;
     }

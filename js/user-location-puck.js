@@ -4,7 +4,6 @@
 (function (global) {
   "use strict";
 
-  const GT = () => (typeof GeoTransform !== "undefined" ? GeoTransform : null);
   const Icons = () => global.MapNavIcons;
 
   function createUserLocationPuck(overlayEl, opts = {}) {
@@ -26,10 +25,16 @@
 
     const arrowHost = document.createElementNS("http://www.w3.org/2000/svg", "g");
     arrowHost.setAttribute("class", "ulp-arrow");
-    const puckScale = opts.markerScale ?? (Icons()?.puckScaleForViewBox?.(1011, 862) ?? 0.037);
-    arrowHost.setAttribute("transform", `scale(${puckScale})`);
+
+    const arrowRotate = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    arrowRotate.setAttribute("class", "ulp-arrow-rotate");
+    arrowRotate.setAttribute("transform", "rotate(0)");
+
+    const arrowScale = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    arrowScale.setAttribute("class", "ulp-arrow-scale");
+
     if (Icons()?.appendInnerArrow) {
-      Icons().appendInnerArrow(arrowHost, {
+      Icons().appendInnerArrow(arrowScale, {
         className: "ulp-arrow-icon",
         pathClass: "ulp-arrow__shape",
       });
@@ -41,9 +46,11 @@
       fallback.setAttribute("d", "M11 4h2v7h3.2L12 18 7.8 11H11V4z");
       fallback.setAttribute("fill", "#0f3054");
       inner.appendChild(fallback);
-      arrowHost.appendChild(inner);
+      arrowScale.appendChild(inner);
     }
 
+    arrowRotate.appendChild(arrowScale);
+    arrowHost.appendChild(arrowRotate);
     body.appendChild(arrowHost);
     root.appendChild(accuracy);
     root.appendChild(body);
@@ -52,7 +59,14 @@
     let visible = false;
     let x = 0;
     let y = 0;
-    let displayHeading = 0;
+
+    function bodyTransform() {
+      return `translate(${x} ${y})`;
+    }
+
+    function applyBodyTransform() {
+      body.setAttribute("transform", bodyTransform());
+    }
 
     function ensureInOverlay(host) {
       const parent = host || overlayEl;
@@ -89,15 +103,25 @@
       accuracy.setAttribute("cx", String(svgX));
       accuracy.setAttribute("cy", String(svgY));
       accuracy.setAttribute("r", "0");
-      body.setAttribute("transform", `translate(${svgX} ${svgY}) rotate(${displayHeading})`);
+      body.setAttribute("transform", bodyTransform());
       updateArrowScale();
       show();
     }
 
-    function updateArrowScale() {
+    function resolveArrowScale() {
       const mapScale = typeof opts.getMapScale === "function" ? opts.getMapScale() : 1;
-      const compensated = puckScale / Math.max(0.08, mapScale || 1);
-      arrowHost.setAttribute("transform", `scale(${compensated.toFixed(5)})`);
+      const vb = typeof opts.getViewBox === "function" ? opts.getViewBox() : { w: 1011, h: 862 };
+      const icons = Icons();
+      if (icons?.puckScreenFixedScale) {
+        return icons.puckScreenFixedScale(mapScale, vb.w, vb.h);
+      }
+      const base = opts.markerScale ?? icons?.puckScaleForViewBox?.(vb.w, vb.h) ?? 0.037;
+      return base / Math.max(0.08, mapScale || 1);
+    }
+
+    function updateArrowScale() {
+      const compensated = resolveArrowScale();
+      arrowScale.setAttribute("transform", `scale(${compensated.toFixed(5)})`);
     }
 
     function setPosition(svgX, svgY, accuracyMeters, metersToSvgUnits) {
@@ -107,7 +131,7 @@
       y = svgY;
       accuracy.setAttribute("cx", String(svgX));
       accuracy.setAttribute("cy", String(svgY));
-      body.setAttribute("transform", `translate(${svgX} ${svgY}) rotate(${displayHeading})`);
+      applyBodyTransform();
       updateArrowScale();
       if (isFinite(accuracyMeters) && accuracyMeters > 0 && typeof metersToSvgUnits === "function") {
         const raw = metersToSvgUnits(accuracyMeters);
@@ -122,12 +146,10 @@
       show();
     }
 
-    function setHeading(mapHeading, cameraBearing) {
-      const cam = cameraBearing || 0;
-      const heading =
-        mapHeading == null || !isFinite(mapHeading) ? 0 : mapHeading;
-      displayHeading = GT()?.normalizeAngle(heading - cam) ?? ((heading - cam) % 360 + 360) % 360;
-      body.setAttribute("transform", `translate(${x} ${y}) rotate(${displayHeading})`);
+    /** Mantido para compatibilidade — rotação real fica em GpsCompass.updateGpsIconRotation. */
+    function setHeading(_mapHeading, _cameraBearing) {
+      applyBodyTransform();
+      if (visible) updateArrowScale();
       if (visible) {
         root.setAttribute("data-visible", "true");
         root.setAttribute("visibility", "visible");
@@ -137,6 +159,7 @@
 
     return {
       root,
+      arrowRotate,
       show,
       hide,
       setPosition,

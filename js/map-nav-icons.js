@@ -79,8 +79,16 @@
     return (markerTargetSize(vbW, vbH) / ARROW.height) * MARKER_SIZE_FACTOR;
   }
 
+  /** Puck GPS ativo — 70% maior que o marcador de referência (tamanho alvo do viewBox). */
+  const PUCK_SIZE_FACTOR = 1.7;
+
   function puckScaleForViewBox(vbW, vbH) {
-    return markerScaleForViewBox(vbW, vbH) * 1.05;
+    return (markerTargetSize(vbW, vbH) / ARROW.height) * PUCK_SIZE_FACTOR;
+  }
+
+  /** Escala do puck compensada pelo zoom — tamanho visual fixo na tela. */
+  function puckScreenFixedScale(mapScale, vbW, vbH) {
+    return puckScaleForViewBox(vbW, vbH) / Math.max(0.08, mapScale || 1);
   }
 
   function bearingDeg(from, to) {
@@ -150,6 +158,7 @@
     MARKER_SIZE_FACTOR,
     markerScaleForViewBox,
     puckScaleForViewBox,
+    puckScreenFixedScale,
     bearingDeg,
     createNavigationArrow,
     createMapPin,
