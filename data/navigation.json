@@ -12182,7 +12182,7 @@
     {
       "id": "L00_P_P000_templo",
       "rawId": "P000_templo",
-      "name": "Templo",
+      "name": "TEMPLO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12198,7 +12198,7 @@
     {
       "id": "L00_P_P001_entrada_principal_toldo",
       "rawId": "P001_entrada_principal_toldo",
-      "name": "Entrada Principal Toldo",
+      "name": "Entrada Principal TOLDO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12210,7 +12210,7 @@
     {
       "id": "L00_P_P002_capela",
       "rawId": "P002_capela",
-      "name": "Capela",
+      "name": "CAPELA",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12234,7 +12234,7 @@
     {
       "id": "L00_P_P004_sala_de_oracao_RGO",
       "rawId": "P004_sala_de_oracao_RGO",
-      "name": "Sala DE Oracao RGO",
+      "name": "Sala de Oracao RGO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12246,7 +12246,7 @@
     {
       "id": "L00_P_P005_centro_de_formacao",
       "rawId": "P005_centro_de_formacao",
-      "name": "Centro DE Formacao",
+      "name": "Centro de FORMACAO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12270,7 +12270,7 @@
     {
       "id": "L00_P_P007_area_kids",
       "rawId": "P007_area_kids",
-      "name": "Area Kids",
+      "name": "Area KIDS",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12282,7 +12282,7 @@
     {
       "id": "L00_P_P008_refeitorio_externo",
       "rawId": "P008_refeitorio_externo",
-      "name": "Refeitorio Externo",
+      "name": "Refeitorio EXTERNO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12294,7 +12294,7 @@
     {
       "id": "L00_P_P009_livraria_evangelica",
       "rawId": "P009_livraria_evangelica",
-      "name": "Livraria Evangelica",
+      "name": "Livraria EVANGELICA",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12306,7 +12306,7 @@
     {
       "id": "L00_P_P010_espaco_conexao",
       "rawId": "P010_espaco_conexao",
-      "name": "Espaco Conexao",
+      "name": "Espaco CONEXAO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12318,7 +12318,7 @@
     {
       "id": "L00_P_P011_bercario",
       "rawId": "P011_bercario",
-      "name": "Bercario",
+      "name": "BERCARIO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12330,7 +12330,7 @@
     {
       "id": "L00_P_P012_sala_de_oracao_cleusa",
       "rawId": "P012_sala_de_oracao_cleusa",
-      "name": "Sala DE Oracao Cleusa",
+      "name": "Sala de Oracao CLEUSA",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12342,7 +12342,7 @@
     {
       "id": "L00_P_P013_recepcao",
       "rawId": "P013_recepcao",
-      "name": "Recepcao",
+      "name": "RECEPCAO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12354,7 +12354,7 @@
     {
       "id": "L00_P_P014_seven_pass",
       "rawId": "P014_seven_pass",
-      "name": "Seven Pass",
+      "name": "Seven PASS",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12366,7 +12366,7 @@
     {
       "id": "L00_P_P015_bazar_abasc",
       "rawId": "P015_bazar_abasc",
-      "name": "Bazar Abasc",
+      "name": "Bazar ABASC",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12378,7 +12378,7 @@
     {
       "id": "L00_P_P016_jardim",
       "rawId": "P016_jardim",
-      "name": "Jardim",
+      "name": "JARDIM",
       "level": "L00",
       "mapLevel": "L00",
       "building": "Jardim",
@@ -12391,7 +12391,7 @@
     {
       "id": "L00_P_P017_espaco_acolher_ceara",
       "rawId": "P017_espaco_acolher_ceara",
-      "name": "Espaco Acolher Ceara",
+      "name": "Espaco Acolher CEARA",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12403,7 +12403,7 @@
     {
       "id": "L00_P_P018_abasc",
       "rawId": "P018_abasc",
-      "name": "Abasc",
+      "name": "ABASC",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12415,7 +12415,7 @@
     {
       "id": "L00_P_P019_banheiro_familia",
       "rawId": "P019_banheiro_familia",
-      "name": "Banheiro Familia",
+      "name": "Banheiro FAMILIA",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12441,7 +12441,7 @@
     {
       "id": "L00_P_P021_banheiro_feminino_ginasio",
       "rawId": "P021_banheiro_feminino_ginasio",
-      "name": "Banheiro Feminino Ginasio",
+      "name": "Banheiro Feminino GINASIO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12453,7 +12453,7 @@
     {
       "id": "L00_P_P022_banheiro_masculino_ginasio",
       "rawId": "P022_banheiro_masculino_ginasio",
-      "name": "Banheiro Masculino Ginasio",
+      "name": "Banheiro Masculino GINASIO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12465,7 +12465,7 @@
     {
       "id": "L00_P_P023_banheiro_feminino",
       "rawId": "P023_banheiro_feminino",
-      "name": "Banheiro Feminino",
+      "name": "Banheiro FEMININO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12477,7 +12477,7 @@
     {
       "id": "L00_P_P024_banheiro_masculino",
       "rawId": "P024_banheiro_masculino",
-      "name": "Banheiro Masculino",
+      "name": "Banheiro MASCULINO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12489,7 +12489,7 @@
     {
       "id": "L00_P_P025_banheiro_masculino_feminino",
       "rawId": "P025_banheiro_masculino_feminino",
-      "name": "Banheiro Masculino Feminino",
+      "name": "Banheiro Masculino FEMININO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12501,7 +12501,7 @@
     {
       "id": "L00_P_P026_elevador_ginasio",
       "rawId": "P026_elevador_ginasio",
-      "name": "Elevador Ginasio",
+      "name": "Elevador GINASIO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12513,7 +12513,7 @@
     {
       "id": "L00_P_P027_elevador_templo",
       "rawId": "P027_elevador_templo",
-      "name": "Elevador Templo",
+      "name": "Elevador TEMPLO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12525,7 +12525,7 @@
     {
       "id": "L00_P_P028_estacionamento_moto",
       "rawId": "P028_estacionamento_moto",
-      "name": "Estacionamento Moto",
+      "name": "Estacionamento MOTO",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12537,7 +12537,7 @@
     {
       "id": "B02_entrada_narnia",
       "rawId": "B02_entrada_narnia",
-      "name": "Entrada de Narnia",
+      "name": "Entrada de NARNIA",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12549,7 +12549,7 @@
     {
       "id": "L00_P_P029_entrada_pedestre_02_batel",
       "rawId": "P029_entrada_pedestre_02_batel",
-      "name": "Entrada 02. Pedestre Av. Batel",
+      "name": "Entrada 02. Pedestre Av. BATEL",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12561,7 +12561,7 @@
     {
       "id": "L00_P_P030_entrada_estacionamento_av_batel",
       "rawId": "P030_entrada_estacionamento_av_batel",
-      "name": "Entrada estacionamento Av. Batel",
+      "name": "Entrada Estacionamento Av. BATEL",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -12573,7 +12573,7 @@
     {
       "id": "L00_P_P031_entrada_estacionamento_bento_viana",
       "rawId": "P031_entrada_estacionamento_bento_viana",
-      "name": "Entrada estacionamento Bento Viana",
+      "name": "Entrada Estacionamento Bento VIANA",
       "level": "L00",
       "mapLevel": "L00",
       "nodeIds": [
@@ -15026,7 +15026,7 @@
       "inject": true
     }
   ],
-  "generatedAt": "2026-07-22T10:37:42.452Z",
+  "generatedAt": "2026-07-22T12:22:15.035Z",
   "source": {
     "nodes": "assets/mapa-nodes.svg",
     "edgesIndoor": "assets/mapa-edge-indoor.svg",

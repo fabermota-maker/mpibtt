@@ -79,16 +79,25 @@
     function setSearching(svgX, svgY, radiusSvg) {
       if (svgX == null || svgY == null) {
         root.removeAttribute("data-searching");
+        accuracy.setAttribute("r", "0");
         return;
       }
       root.setAttribute("data-searching", "true");
       x = svgX;
       y = svgY;
+      // Sem círculo azul de precisão durante a busca — só o ícone de seta
       accuracy.setAttribute("cx", String(svgX));
       accuracy.setAttribute("cy", String(svgY));
-      accuracy.setAttribute("r", String(Math.max(12, radiusSvg || 24)));
+      accuracy.setAttribute("r", "0");
       body.setAttribute("transform", `translate(${svgX} ${svgY}) rotate(${displayHeading})`);
+      updateArrowScale();
       show();
+    }
+
+    function updateArrowScale() {
+      const mapScale = typeof opts.getMapScale === "function" ? opts.getMapScale() : 1;
+      const compensated = puckScale / Math.max(0.08, mapScale || 1);
+      arrowHost.setAttribute("transform", `scale(${compensated.toFixed(5)})`);
     }
 
     function setPosition(svgX, svgY, accuracyMeters, metersToSvgUnits) {
@@ -99,8 +108,13 @@
       accuracy.setAttribute("cx", String(svgX));
       accuracy.setAttribute("cy", String(svgY));
       body.setAttribute("transform", `translate(${svgX} ${svgY}) rotate(${displayHeading})`);
+      updateArrowScale();
       if (isFinite(accuracyMeters) && accuracyMeters > 0 && typeof metersToSvgUnits === "function") {
-        const r = Math.max(6, metersToSvgUnits(accuracyMeters));
+        const raw = metersToSvgUnits(accuracyMeters);
+        const maxR = typeof opts.maxAccuracyRadiusSvg === "function"
+          ? opts.maxAccuracyRadiusSvg()
+          : 36;
+        const r = Math.min(maxR, Math.max(6, raw));
         accuracy.setAttribute("r", String(r));
       } else {
         accuracy.setAttribute("r", "0");
@@ -128,6 +142,7 @@
       setPosition,
       setSearching,
       setHeading,
+      updateArrowScale,
       ensureInOverlay,
       getPosition: () => ({ x, y }),
       isVisible: () => visible,

@@ -37,6 +37,7 @@
       clamp,
       getViewBox,
       getMetersPerUnit,
+      getMapScale,
       toast,
       ensureCampusView,
       getOverlay,
@@ -89,9 +90,13 @@
     }
 
     function metersToSvgUnits(meters) {
-      const mpu = getMetersPerUnit?.() || 0.01;
-      if (geo?.metersToSvgUnits) return geo.metersToSvgUnits(meters);
-      return meters / mpu;
+      const mpu = getMetersPerUnit?.() || 0.35;
+      let units;
+      if (geo?.metersToSvgUnits) units = geo.metersToSvgUnits(meters);
+      else units = meters / mpu;
+      const vb = getViewBox?.() || {};
+      const maxSpan = Math.min(vb.w || 1011, vb.h || 862) * 0.08;
+      return Math.min(units, maxSpan);
     }
 
     function updateLocBtn() {
@@ -144,6 +149,7 @@
         displaySvg.y += (targetSvg.y - displaySvg.y) * f;
         const nav = getState().userNav || {};
         puck?.setPosition(displaySvg.x, displaySvg.y, nav.accuracy, metersToSvgUnits);
+        puck?.updateArrowScale?.();
         if (nav.isFollowingLocation) {
           camera?.centerOnPoint(displaySvg.x, displaySvg.y);
         }
@@ -221,7 +227,7 @@
       }
       targetSvg = { ...pt };
       displaySvg = { ...pt };
-      puck?.setSearching?.(pt.x, pt.y, metersToSvgUnits(40));
+      puck?.setSearching?.(pt.x, pt.y, 0);
       puck?.setHeading?.(0, getState().userNav?.cameraBearing || 0);
       puck?.show?.();
       showGpsCompass(true);
@@ -439,8 +445,14 @@
 
     function ensureServices() {
       const host = resolveOverlay();
-      if (!puck) puck = global.UserLocationPuck?.create?.(host);
-      else puck.ensureInOverlay?.(host);
+      const vb = getViewBox?.() || {};
+      if (!puck) {
+        puck = global.UserLocationPuck?.create?.(host, {
+          getMapScale: () => (typeof getMapScale === "function" ? getMapScale() : getState()?.scale) || 1,
+          maxAccuracyRadiusSvg: () => Math.min(vb.w || 1011, vb.h || 862) * 0.08,
+          markerScale: global.MapNavIcons?.puckScaleForViewBox?.(vb.w, vb.h),
+        });
+      } else puck.ensureInOverlay?.(host);
       if (!camera) {
         camera = global.MapCameraController?.create?.({
           viewport,
@@ -671,6 +683,7 @@
       onLocBtnClick,
       showAtLatLng,
       updateTrackedPosition,
+      refreshPuckScale: () => puck?.updateArrowScale?.(),
       isStarted: () => started,
       setFollowMode: (mode) => {
         camera?.setFollowMode(mode);

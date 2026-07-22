@@ -229,7 +229,34 @@
           "L00_N0081",
         ],
         endNodes: ["L00_N0084", "L00_N0068"],
-        label: "Por fora · Av. Batel",
+        label: "Entrada/saída · Av. Batel",
+        avoidParking: false,
+        allowParking: true,
+        slot: 4,
+      },
+      // Estacionamento conveniado → Templo: lateral Av. Batel (sem desvio pelo CF)
+      {
+        a: ["P003_estacionamento_01"],
+        b: [
+          "P000_templo",
+          "P027_elevador_templo",
+          "escada_mesanino_01",
+          "escada_mesanino_02",
+          "L01_node_0001_elevador",
+          "L02_node_0001_elevador",
+          "L03_node_0001",
+          "L04_node_0001_elevador",
+          "L05_node_0001_elevador",
+          "L06_node_0033_elevador",
+        ],
+        via: [
+          "L00_N0093_entrada_estacionamento_av_batel",
+          "L00_N0083",
+          "L00_N0082",
+          "L00_N0081",
+        ],
+        endNodes: ["L00_N0084", "L00_N0068"],
+        label: "Entrada/saída · Av. Batel",
         avoidParking: false,
         allowParking: true,
         slot: 4,
@@ -335,8 +362,9 @@
     calibCancel: $("calibCancel"), calibSave: $("calibSave"),
     stage: $("stage"), viewport: $("viewport"), canvas: $("canvas"),
     svgHost: $("svgHost"), overlay: $("overlay"),
-    routeGlow: $("routeGlow"), routeCasing: $("routeCasing"),
-    routeLine: $("routeLine"),
+    routeLayer: $("routeLayer"),
+    routePathBase: $("routePathBase"),
+    routePathGlow: $("routePathGlow"),
     routeStart: $("routeStart"), routeEnd: $("routeEnd"), hereMarker: $("hereMarker"),
     zoomIn: $("zoomIn"), zoomOut: $("zoomOut"), fitBtn: $("fitBtn"), locBtn: $("locBtn"),
     gpsOrientBtn: $("gpsOrientBtn"), gpsOrientCancel: $("gpsOrientCancel"),
@@ -2230,6 +2258,7 @@
       clamp,
       getViewBox: () => ({ w: G.vbW, h: G.vbH }),
       getMetersPerUnit,
+      getMapScale: () => state.scale || 1,
       toast,
       ensureCampusView: () => {
         if (state.activeLevel === "L00") return;
@@ -2971,17 +3000,45 @@
     return snapToEntrance(p);
   }
 
+  const PT_LOWER_WORDS = new Set([
+    "de", "da", "do", "das", "dos", "e", "em", "na", "no", "nas", "nos",
+    "a", "o", "as", "os", "por", "com", "sem",
+  ]);
+
+  function titleCasePoiWords(text) {
+    const words = String(text || "").trim().split(/\s+/).filter(Boolean);
+    return words.map((word, i) => {
+      if (/^[A-Z0-9]{2,}$/.test(word)) return word;
+      const lower = word.toLowerCase();
+      if (i > 0 && PT_LOWER_WORDS.has(lower)) return lower;
+      if (word.length <= 2 && /^[a-zA-Z]+$/.test(word)) return word.toUpperCase();
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    }).join(" ");
+  }
+
+  function applySlugAcronyms(text, rawId) {
+    const m = String(rawId || "").match(/_([A-Z0-9]{2,})$/i);
+    if (!m) return text;
+    const ac = m[1].toUpperCase();
+    const words = String(text || "").split(/\s+/);
+    if (words.length && words[words.length - 1].toLowerCase() === ac.toLowerCase()) {
+      words[words.length - 1] = ac;
+      return words.join(" ");
+    }
+    return text;
+  }
+
   // decodifica id: P002_capela / P002_x5F_capela -> "Capela"
   function decodePoiName(rawId, dataName) {
     if (dataName && dataName.trim() && !/^P\d+/i.test(dataName) && !/^B\d+/i.test(dataName)) {
-      return dataName.trim();
+      return applySlugAcronyms(titleCasePoiWords(dataName.trim()), rawId);
     }
     let s = dataName || rawId || "";
     s = s.replace(/_x5F_/g, "_").replace(/_x([0-9a-fA-F]{2})_/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
     s = s.replace(/^P\d+[_-]?/i, "").replace(/^B\d+[_-]?/i, "");
     s = s.replace(/[_-]+/g, " ").trim();
     if (!s) return rawId;
-    return s.replace(/\S+/g, (w) => (w.length <= 2 ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)));
+    return applySlugAcronyms(titleCasePoiWords(s), rawId);
   }
 
   function guessCat(name) {
@@ -3050,6 +3107,9 @@
   }
 
   function enrichPoiMeta(poi) {
+    if (poi.rawId || poi.id) {
+      poi.name = decodePoiName(poi.rawId || poi.id, poi.name);
+    }
     const ov = poiLevelOverride(poi.rawId || poi.id);
     const level = ov?.level || poi.level || levelFromId(poi.rawId) || "L00";
     const mapLevel = ov?.mapLevel || poi.mapLevel || (level.startsWith("B") ? "L00" : level);
@@ -3366,45 +3426,66 @@
 
 
   function ensureRouteLayer(svg) {
-    let layer = svg.getElementById("routeLayer");
-    if (layer) {
-      svg.appendChild(layer); // sempre no topo
-      return layer;
+    let layer = svg.getElementById("mapRouteLayer");
+    if (!layer) {
+      layer = document.createElementNS(NS, "g");
+      layer.setAttribute("id", "mapRouteLayer");
+      svg.appendChild(layer);
     }
-    layer = document.createElementNS(NS, "g");
-    layer.setAttribute("id", "routeLayer");
+    upgradeMapRouteLayer(layer);
+    svg.appendChild(layer);
+    globalThis.RouteAnimation?.applyRouteAnimationVars?.(layer);
+    return layer;
+  }
+
+  function upgradeMapRouteLayer(layer) {
+    layer.setAttribute("class", "route-layer");
     layer.setAttribute("pointer-events", "none");
-    const mkPath = (id, attrs) => {
-      const p = document.createElementNS(NS, "path");
-      p.setAttribute("id", id);
-      p.setAttribute("fill", "none");
-      p.setAttribute("d", "");
-      p.setAttribute("vector-effect", "non-scaling-stroke");
-      Object.entries(attrs).forEach(([k, v]) => p.setAttribute(k, v));
-      layer.appendChild(p);
+    ["mapRouteGlow", "mapRouteCasing", "mapRouteLine"].forEach((id) => {
+      const old = layer.querySelector(`#${id}`);
+      if (old) old.remove();
+    });
+    const mkPath = (id, className) => {
+      let p = layer.querySelector(`#${id}`);
+      if (!p) {
+        p = document.createElementNS(NS, "path");
+        p.setAttribute("id", id);
+        p.setAttribute("fill", "none");
+        p.setAttribute("d", "");
+        p.setAttribute("vector-effect", "non-scaling-stroke");
+        layer.insertBefore(p, layer.firstChild);
+      }
+      p.setAttribute("class", className);
       return p;
     };
-    mkPath("mapRouteGlow", { stroke: "#00AEEF", "stroke-opacity": "0.22", "stroke-width": "7", "stroke-linecap": "round", "stroke-linejoin": "round" });
-    mkPath("mapRouteCasing", { stroke: "#ffffff", "stroke-opacity": "0.92", "stroke-width": "3.5", "stroke-linecap": "round", "stroke-linejoin": "round" });
-    mkPath("mapRouteLine", { stroke: "#00AEEF", "stroke-width": "2.4", "stroke-linecap": "round", "stroke-linejoin": "round", "stroke-dasharray": "5 4" });
-    const pin = (id, kind) => {
-      const g = document.createElementNS(NS, "g");
-      g.setAttribute("id", id);
-      g.setAttribute("class", `route-marker route-marker--${kind}`);
-      g.setAttribute("visibility", "hidden");
-      const Icons = globalThis.MapNavIcons;
-      if (kind === "start" && Icons?.appendInnerArrow) {
-        Icons.appendInnerArrow(g);
-      } else if (kind === "end" && Icons?.appendInnerPin) {
-        Icons.appendInnerPin(g);
-      }
-      layer.appendChild(g);
-      return g;
-    };
-    pin("mapRouteStart", "start");
-    pin("mapRouteEnd", "end");
-    svg.appendChild(layer);
-    return layer;
+    mkPath("mapRoutePathBase", "route-path route-path-base");
+    mkPath("mapRoutePathGlow", "route-path route-path-glow");
+    if (!layer.querySelector("#mapRouteStart")) {
+      const pin = (id, kind) => {
+        const g = document.createElementNS(NS, "g");
+        g.setAttribute("id", id);
+        g.setAttribute("class", `route-marker route-marker--${kind}`);
+        g.setAttribute("visibility", "hidden");
+        const Icons = globalThis.MapNavIcons;
+        if (kind === "start" && Icons?.appendInnerArrow) Icons.appendInnerArrow(g);
+        else if (kind === "end" && Icons?.appendInnerPin) Icons.appendInnerPin(g);
+        layer.appendChild(g);
+      };
+      pin("mapRouteStart", "start");
+      pin("mapRouteEnd", "end");
+    }
+  }
+
+  function initRouteAnimationLayers() {
+    if (el.routeLayer) globalThis.RouteAnimation?.applyRouteAnimationVars?.(el.routeLayer);
+  }
+
+  function setRouteVisualCompleted(completed) {
+    state.routeVisualCompleted = !!completed;
+    globalThis.RouteAnimation?.setRouteCompleted?.(el.routeLayer, completed);
+    const mapSvg = el.svgHost.querySelector("#mapaSVG") || el.svgHost.querySelector("svg");
+    const mapLayer = mapSvg?.getElementById?.("mapRouteLayer");
+    if (mapLayer) globalThis.RouteAnimation?.setRouteCompleted?.(mapLayer, completed);
   }
 
   function pointsToPathD(points) {
@@ -4627,10 +4708,21 @@
 
   function routeMarkerScale() {
     const Icons = globalThis.MapNavIcons;
+    let base;
     if (Icons?.markerScaleForViewBox) {
-      return Icons.markerScaleForViewBox(G.vbW, G.vbH);
+      base = Icons.markerScaleForViewBox(G.vbW, G.vbH);
+    } else {
+      base = Math.max(0.105, Math.min(0.18, Math.min(G.vbW || 1011, G.vbH || 862) * 0.0001375));
     }
-    return Math.max(0.105, Math.min(0.18, Math.min(G.vbW || 1011, G.vbH || 862) * 0.0001375));
+    // Compensa o zoom do SVG (width/height) — ícone mantém tamanho visual na tela
+    return base / Math.max(0.08, state.scale || 1);
+  }
+
+  function refreshRouteMarkerScales() {
+    const c = state._routeMarkerCache;
+    if (!c || el.routeStart?.hasAttribute("hidden")) return;
+    paintRouteMarker(el.routeStart, "start", c.start, c.bearing);
+    paintRouteMarker(el.routeEnd, "end", c.end);
   }
 
   function paintRouteMarker(node, kind, pt, bearing) {
@@ -4655,19 +4747,11 @@
     })).filter((p) => isFinite(p.x) && isFinite(p.y));
     if (pts.length < 2) return;
     const d = pointsToPathD(pts);
-    const safePtsStr = pts.map((p) => `${p.x},${p.y}`).join(" ");
+    const RA = globalThis.RouteAnimation;
 
-    // overlay HTML (polyline) — fallback visual acima do mapa
-    el.routeGlow.setAttribute("points", safePtsStr);
-    el.routeCasing.setAttribute("points", safePtsStr);
-    el.routeLine.setAttribute("points", safePtsStr);
-    ["routeGlow", "routeCasing", "routeLine"].forEach((key) => {
-      const node = el[key];
-      if (!node) return;
-      node.setAttribute("vector-effect", "non-scaling-stroke");
-      node.style.display = "block";
-      node.removeAttribute("hidden");
-    });
+    RA?.applyRouteAnimationVars?.(el.routeLayer);
+    RA?.paintRoutePaths?.(el.routeLayer, el.routePathBase, el.routePathGlow, d);
+    RA?.setRouteCompleted?.(el.routeLayer, !!state.routeVisualCompleted);
 
     const Icons = globalThis.MapNavIcons;
     const startBearing = Icons?.bearingDeg
@@ -4684,24 +4768,16 @@
     el.routeEnd.style.display = "";
     paintRouteMarker(el.routeEnd, "end", b);
 
+    state._routeMarkerCache = { start: a, end: b, bearing: startBearing };
+
     // camada vetorial DENTRO do mapa (sempre no topo + path)
     const svg = el.svgHost.querySelector("#mapaSVG") || el.svgHost.querySelector("svg");
     if (!svg) return;
     const layer = ensureRouteLayer(svg);
-    layer.style.display = "";
-    layer.setAttribute("visibility", "visible");
-    layer.removeAttribute("hidden");
-    const setD = (id) => {
-      const n = svg.getElementById(id);
-      if (n) {
-        n.setAttribute("d", d);
-        n.style.display = "";
-        n.setAttribute("visibility", "visible");
-      }
-    };
-    setD("mapRouteGlow");
-    setD("mapRouteCasing");
-    setD("mapRouteLine");
+    const base = svg.getElementById("mapRoutePathBase");
+    const glow = svg.getElementById("mapRoutePathGlow");
+    RA?.paintRoutePaths?.(layer, base, glow, d);
+    RA?.setRouteCompleted?.(layer, !!state.routeVisualCompleted);
     // Marcadores só no overlay (evita duplicar ícones gigantes dentro do SVG do mapa)
     ["mapRouteStart", "mapRouteEnd"].forEach((id) => {
       const n = svg.getElementById(id);
@@ -4710,21 +4786,24 @@
   }
 
   function clearRoutePaint() {
-    el.routeGlow.setAttribute("points", "");
-    el.routeCasing.setAttribute("points", "");
-    el.routeLine.setAttribute("points", "");
+    const RA = globalThis.RouteAnimation;
+    RA?.clearRoutePaths?.(el.routeLayer, el.routePathBase, el.routePathGlow);
+    state.routeVisualCompleted = false;
     el.routeStart.setAttribute("hidden", "");
     el.routeStart.setAttribute("visibility", "hidden");
     el.routeStart.style.display = "none";
     el.routeEnd.setAttribute("hidden", "");
     el.routeEnd.setAttribute("visibility", "hidden");
     el.routeEnd.style.display = "none";
+    state._routeMarkerCache = null;
     const svg = el.svgHost.querySelector("#mapaSVG") || el.svgHost.querySelector("svg");
+    if (svg) {
+      const layer = svg.getElementById("mapRouteLayer");
+      const base = svg.getElementById("mapRoutePathBase");
+      const glow = svg.getElementById("mapRoutePathGlow");
+      RA?.clearRoutePaths?.(layer, base, glow);
+    }
     if (!svg) return;
-    ["mapRouteGlow", "mapRouteCasing", "mapRouteLine"].forEach((id) => {
-      const n = svg.getElementById(id);
-      if (n) n.setAttribute("d", "");
-    });
     ["mapRouteStart", "mapRouteEnd"].forEach((id) => {
       const n = svg.getElementById(id);
       if (n) n.setAttribute("visibility", "hidden");
@@ -4834,6 +4913,7 @@
     const route = options[idx];
     state.route = route;
     route.legs = routeLegsFromGraph(route);
+    setRouteVisualCompleted(false);
 
     const oLvl = poiLevel(state.origin);
     const dLvl = poiLevel(state.dest);
@@ -4858,7 +4938,10 @@
       state.navIdx = 0;
       updateNavBtn();
       if (doFit) {
-        fitSoon(() => fitRouteInView(route, { navMode: false, preferActiveLeg: true }));
+        fitSoon(() => {
+          paintActiveRouteLeg();
+          fitRouteInView(route, { navMode: false, preferActiveLeg: true });
+        });
       }
       if (multi) {
         if (routeUsesLateralStairs(route)) {
@@ -5341,6 +5424,8 @@
       el.canvas.style.transformOrigin = "";
       el.canvas.style.transform = `translate(${state.panX}px, ${state.panY}px)`;
     }
+    refreshRouteMarkerScales();
+    state.userLocation?.refreshPuckScale?.();
   }
   function clamp() {
     const r = el.viewport.getBoundingClientRect();
@@ -5443,7 +5528,12 @@
   /** Enquadra a rota (preferência: trecho do andar ativo). */
   function fitRouteInView(route, opts = {}) {
     let pts = [];
-    if (opts.preferActiveLeg !== false) {
+    const legs = route?.legs || [];
+    const activeLeg = legs.find((l) => l.level === state.activeLevel);
+    if (activeLeg?.points?.length >= 2) {
+      pts = activeLeg.points.filter((p) => p && isFinite(p.x) && isFinite(p.y));
+    }
+    if (pts.length < 2 && opts.preferActiveLeg !== false) {
       pts = activeLegPoints(route);
     }
     if (pts.length < 2) {
@@ -5553,6 +5643,8 @@
     const total = navSegments();
     if (total < 1) { exitNav("Rota inválida."); return; }
     if (state.navIdx >= total - 1) {
+      setRouteVisualCompleted(true);
+      paintActiveRouteLeg();
       exitNav("Você chegou ao destino!");
       return;
     }
@@ -5799,8 +5891,26 @@
     });
 
     bindFloorPois(svg, floor.id);
+    applyBasementFloorBackground(svg, floor.id);
 
     return svg;
+  }
+
+  /** B01/B02: fundo branco opaco (evita transparência sobre o mapa de rua). */
+  function applyBasementFloorBackground(svg, floorId) {
+    if (floorId !== "B01" && floorId !== "B02") return;
+    const fill = "#ffffff";
+    svg.querySelectorAll(
+      "[data-floor-bg], .b01-bg, .b02-bg, #B01_map_background > rect, #B02_map_background > rect",
+    ).forEach((node) => {
+      node.setAttribute("fill", fill);
+    });
+    const styleEl = svg.querySelector("defs style");
+    if (styleEl?.textContent) {
+      styleEl.textContent = styleEl.textContent
+        .replace(/\.b01-bg\s*\{[^}]*\}/g, `.b01-bg { fill: ${fill}; }`)
+        .replace(/\.b02-bg\s*\{[^}]*\}/g, `.b02-bg { fill: ${fill}; }`);
+    }
   }
 
   async function showFloorMap(levelId) {
@@ -6108,6 +6218,7 @@
 
   /* ============================================================ EVENTOS */
   function bind() {
+    initRouteAnimationLayers();
     syncMapToolsPlacement();
     if (el.themeBtn) el.themeBtn.addEventListener("click", (e) => { e.preventDefault(); toggleTheme(); });
     if (el.areaBtn) {
