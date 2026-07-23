@@ -606,6 +606,10 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
 .stage__viewport.dragging { cursor: grabbing; }
 .stage__canvas { position: absolute; top: 0; left: 0; transform-origin: 0 0; will-change: transform; }
 .svg-host {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
   display: block; line-height: 0;
   border-radius: 18px; overflow: hidden;
   background: #fff;
@@ -617,6 +621,45 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
 .svg-host--floor[data-level="B01"],
 .svg-host--floor[data-level="B02"] {
   background: #ffffff;
+}
+
+.svg-host--floor[data-level="B01"] #mapRoutePathBase,
+.svg-host--floor[data-level="B02"] #mapRoutePathBase {
+  stroke: #00aeef !important;
+  stroke-width: 10 !important;
+  vector-effect: none;
+  opacity: 1 !important;
+}
+
+.svg-host--floor[data-level="B01"] #mapRoutePathGlow,
+.svg-host--floor[data-level="B02"] #mapRoutePathGlow {
+  stroke-width: var(--route-glow-width, 5) !important;
+  vector-effect: none;
+}
+
+.svg-host--floor[data-level^="L0"] #mapRoutePathBase,
+.svg-host--floor[data-level^="L1"] #mapRoutePathBase,
+.svg-host--floor[data-level^="L2"] #mapRoutePathBase,
+.svg-host--floor[data-level="L01"] #mapRoutePathBase,
+.svg-host--floor[data-level="L02"] #mapRoutePathBase,
+.svg-host--floor[data-level="L03"] #mapRoutePathBase,
+.svg-host--floor[data-level="L04"] #mapRoutePathBase,
+.svg-host--floor[data-level="L05"] #mapRoutePathBase,
+.svg-host--floor[data-level="L06"] #mapRoutePathBase {
+  stroke: #00aeef !important;
+  stroke-width: 10 !important;
+  vector-effect: none;
+  opacity: 1 !important;
+}
+
+.svg-host--floor[data-level="L01"] #mapRoutePathGlow,
+.svg-host--floor[data-level="L02"] #mapRoutePathGlow,
+.svg-host--floor[data-level="L03"] #mapRoutePathGlow,
+.svg-host--floor[data-level="L04"] #mapRoutePathGlow,
+.svg-host--floor[data-level="L05"] #mapRoutePathGlow,
+.svg-host--floor[data-level="L06"] #mapRoutePathGlow {
+  stroke-width: var(--route-glow-width, 5) !important;
+  vector-effect: none;
 }
 .svg-host svg {
   display: block; max-width: none;
@@ -682,27 +725,64 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
 }
 
 .route-layer .route-path {
-  fill: none;
+  fill: none !important;
   stroke-linecap: round;
   stroke-linejoin: round;
   pointer-events: none;
   vector-effect: non-scaling-stroke;
 }
 
+.mapRouteLayer,
+#mapRouteLayer {
+  pointer-events: none;
+}
+
+.svg-host--floor #mapRouteLayer {
+  isolation: isolate;
+}
+
+.svg-host--floor #mapRoutePathBase,
+.svg-host--floor #mapRoutePathGlow {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+#routePathBase,
+#mapRoutePathBase,
 .route-path-base {
-  stroke: var(--route-color, var(--route));
+  stroke: var(--route-color, #00aeef) !important;
   stroke-width: var(--route-base-width, 8);
-  opacity: var(--route-base-opacity, 0.85);
+  opacity: var(--route-base-opacity, 0.88);
+}
+
+#routePathGlow,
+#mapRoutePathGlow,
+.route-path-glow {
+  stroke: var(--route-glow-color, rgba(255, 255, 255, 0.95)) !important;
+  stroke-width: var(--route-glow-width, 5);
+  stroke-dasharray: var(--route-glow-length, 28) var(--route-gap-length, 110);
+  stroke-dashoffset: 0;
+  opacity: var(--route-glow-opacity, 0.92);
+  animation: routeGlowMove var(--route-glow-duration, 2.8s) linear infinite;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.45));
+  mix-blend-mode: screen;
+}
+
+.route-path-base {
+  stroke: var(--route-color, #00aeef) !important;
+  stroke-width: var(--route-base-width, 8);
+  opacity: var(--route-base-opacity, 0.88);
 }
 
 .route-path-glow {
-  stroke: rgba(255, 255, 255, 0.88);
-  stroke-width: var(--route-glow-width, 4);
-  stroke-dasharray: var(--route-glow-length, 18) var(--route-gap-length, 120);
+  stroke: var(--route-glow-color, rgba(255, 255, 255, 0.95)) !important;
+  stroke-width: var(--route-glow-width, 5);
+  stroke-dasharray: var(--route-glow-length, 28) var(--route-gap-length, 110);
   stroke-dashoffset: 0;
-  opacity: var(--route-glow-opacity, 0.75);
-  animation: routeGlowMove var(--route-glow-duration, 3s) linear infinite;
-  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.32));
+  opacity: var(--route-glow-opacity, 0.92);
+  animation: routeGlowMove var(--route-glow-duration, 2.8s) linear infinite;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.45));
+  mix-blend-mode: screen;
 }
 
 .route-layer.route-animation-off .route-path-glow {
@@ -723,11 +803,11 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
 
 @keyframes routeGlowMove {
   from {
-    stroke-dashoffset: var(--route-glow-dash-total, 138);
+    stroke-dashoffset: 0;
   }
 
   to {
-    stroke-dashoffset: 0;
+    stroke-dashoffset: calc(-1 * var(--route-glow-dash-total, 138));
   }
 }
 
@@ -973,6 +1053,11 @@ body.is-navigating .route-pick__count {
   border-color: rgba(15,23,42,.12);
 }
 :root[data-theme="light"] .gps-compass__n { color: var(--pib-navy); }
+body.is-navigating .user-location-puck {
+  visibility: hidden !important;
+  display: none !important;
+}
+
 body.is-navigating .gps-compass {
   display: none !important;
 }

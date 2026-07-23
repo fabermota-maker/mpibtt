@@ -70,6 +70,7 @@
     searchLevel: "all", // padrão: todos os níveis
     floorViews: {}, // { L00: SVGElement, L01: SVGElement, ... }
     floorMeta: {},  // { L00: { vbW, vbH }, ... }
+    floorWalls: {}, // { B01: [poly[]], B02: [poly[]], L01: ... }
     userNav: null,
     userLocation: null,
     gpsOrientation: null,
@@ -927,9 +928,23 @@
     const nearHub = dist(tip, hubPt) <= 48 || dist(tip, g) <= 48;
     if (!nearHub) return out;
     if (dist(tip, g) <= 1.5) return out;
-    if (dist(tip, g) > 28 && crossesWall(tip, g)) return out;
+    if (dist(tip, g) > 28 && crossesWall(tip, g, levelId)) return out;
     out[idx] = g;
     return out;
+  }
+
+  function basementExitLegEnd(levelId, oLvl, dLvl) {
+    if (!isBasementFloor(oLvl) || isBasementFloor(dLvl)) return false;
+    if (levelId === oLvl) return true;
+    if (oLvl === "B02" && levelId === "B01") return true;
+    return false;
+  }
+
+  function basementEntryLegStart(levelId, oLvl, dLvl) {
+    if (!isBasementFloor(dLvl) || isBasementFloor(oLvl)) return false;
+    if (levelId === dLvl) return true;
+    if (dLvl === "B02" && levelId === "B01" && oLvl !== "B01") return true;
+    return false;
   }
 
   function shouldRefineNarniaAtBasementGate(levelId, oLvl, dLvl, which) {
@@ -939,10 +954,414 @@
       if (which === "start") return isBasementFloor(oLvl) && !isBasementFloor(dLvl);
     }
     if (isBasementFloor(levelId)) {
-      if (which === "start") return levelId === oLvl && isBasementFloor(dLvl);
-      if (which === "end") return levelId === dLvl && isBasementFloor(oLvl);
+      if (which === "end") return basementExitLegEnd(levelId, oLvl, dLvl);
+      if (which === "start") return basementEntryLegStart(levelId, oLvl, dLvl);
     }
     return false;
+  }
+
+  function isCrossFloorTrip(oLvl, dLvl) {
+    return !!(oLvl && dLvl && oLvl !== dLvl);
+  }
+
+  /** Nó do elevador ou escada lateral no andar, conforme a rota escolhida. */
+  function verticalHubNodeForLevel(levelId, route = state.route) {
+    if (!levelId) return null;
+    const useStairs = !!(route?.viaStairs || route?.kind === "stairs");
+    const cfg = useStairs ? stairHub(levelId) : elevatorHub(levelId);
+    const id = cfg?.nodeId;
+    return id && state.navGraph?.nodesById?.has(id) ? id : null;
+  }
+
+  function crossFloorExitLeg(levelId, oLvl, dLvl) {
+    return isCrossFloorTrip(oLvl, dLvl) && levelId === oLvl && !routeInvolvesBasementTransfer(oLvl, dLvl);
+  }
+
+  function crossFloorEntryLeg(levelId, oLvl, dLvl) {
+    return isCrossFloorTrip(oLvl, dLvl) && levelId === dLvl && !routeInvolvesBasementTransfer(oLvl, dLvl);
+  }
+
+  function crossFloorTransitLeg(levelId, oLvl, dLvl) {
+    if (!isCrossFloorTrip(oLvl, dLvl) || routeInvolvesBasementTransfer(oLvl, dLvl)) return false;
+    if (levelId === oLvl || levelId === dLvl) return false;
+    return isAdmFloor(levelId) || levelId === "L00";
+  }
+
+  function refineVerticalHubEndpoint(pts, levelId, route, which) {
+    const hubId = verticalHubNodeForLevel(levelId, route);
+    if (!hubId || !pts?.length || !state.navGraph) return pts;
+    const n = state.navGraph.nodesById.get(hubId);
+    if (!n) return pts;
+    const out = pts.map((p) => ({ x: p.x, y: p.y }));
+    const hubPt = { x: n.x, y: n.y };
+    const idx = which === "start" ? 0 : out.length - 1;
+    if (dist(out[idx], hubPt) <= 55) out[idx] = hubPt;
+    return out;
+  }
+
+  /** Trecho de saída do subsolo: só ajusta o fim ao lampião da Porta de Nárnia (sem spur da origem). */
+  function finalizeBasementExitLegPoints(pts, levelId) {
+    let out = (pts || []).map((p) => ({ x: p.x, y: p.y }));
+    if (out.length < 2) return out;
+    out = refineNarniaEndpoint(out, levelId, "end");
+    const gate = narniaGateIcon(levelId);
+    if (gate && out.length >= 1) {
+      const tip = out[out.length - 1];
+      const g = { x: gate.x, y: gate.y };
+      if (dist(tip, g) > 1.5 && dist(tip, g) <= 55 && !crossesWall(tip, g, levelId)) {
+        out[out.length - 1] = g;
+      }
+    }
+    return out;
+  }
+
+  function isBasementExitActiveLeg(levelId, oLvl, dLvl) {
+    return isBasementFloor(oLvl) && !isBasementFloor(dLvl) && basementExitLegEnd(levelId, oLvl, dLvl);
+  }
+
+  /** Reconstrói polyline do trecho no andar quando legs/points falham (lazy load, etc.). */
+  function buildFloorLegFallbackPoints(levelId, origin, dest) {
+    const NR = globalThis.NavigationRouter;
+    if (!NR || !state.navGraph || !origin || !dest) return null;
+    const oLvl = poiLevel(origin);
+    const dLvl = poiLevel(dest);
+    const opts = { blockedEdges: narniaForbiddenEdgeSet() };
+
+    const astarLeg = (startId, endId) => {
+      if (!startId || !endId || !state.navGraph.nodesById.has(startId) || !state.navGraph.nodesById.has(endId)) {
+        return null;
+      }
+      const leg = NR.astar(startId, [endId], state.navGraph, opts);
+      if (!leg?.points?.length) return null;
+      return {
+        points: leg.points.map((p) => ({ x: p.x, y: p.y })),
+        edgeIds: leg.edgeIds || [],
+        nodeIds: leg.nodeIds || [],
+      };
+    };
+
+    if (isBasementExitActiveLeg(levelId, oLvl, dLvl)) {
+      const hub = narniaHubNode(levelId);
+      const startIds = resolveNavNodeIds(origin, "origin");
+      const mesh = hub && startIds[0] ? astarLeg(startIds[0], hub) : null;
+      if (mesh?.points?.length >= 2) {
+        return { ...mesh, points: finalizeBasementExitLegPoints(mesh.points, levelId) };
+      }
+    }
+
+    if (isBasementFloor(dLvl) && !isBasementFloor(oLvl) && basementEntryLegStart(levelId, oLvl, dLvl)) {
+      const hub = narniaHubNode(levelId);
+      const endIds = resolveNavNodeIds(dest, "dest");
+      const mesh = hub && endIds[0] ? astarLeg(hub, endIds[0]) : null;
+      if (mesh?.points?.length >= 2) return mesh;
+    }
+
+    if (levelId === "L00" && routeInvolvesBasementTransfer(oLvl, dLvl)) {
+      const hub = narniaHubNode("L00");
+      if (isBasementFloor(oLvl) && !isBasementFloor(dLvl) && hub) {
+        const endIds = resolveNavNodeIds(dest, "dest");
+        const mesh = endIds[0] ? astarLeg(hub, endIds[0]) : null;
+        if (mesh?.points?.length >= 2) {
+          return { ...mesh, points: refineNarniaEndpoint(mesh.points, "L00", "start") };
+        }
+      }
+      if (isBasementFloor(dLvl) && !isBasementFloor(oLvl) && hub) {
+        const startIds = resolveNavNodeIds(origin, "origin");
+        const mesh = startIds[0] ? astarLeg(startIds[0], hub) : null;
+        if (mesh?.points?.length >= 2) {
+          return { ...mesh, points: refineNarniaEndpoint(mesh.points, "L00", "end") };
+        }
+      }
+    }
+
+    if (levelId === oLvl && oLvl === dLvl) {
+      const startIds = resolveNavNodeIds(origin, "origin");
+      const endIds = resolveNavNodeIds(dest, "dest");
+      return astarLeg(startIds[0], endIds[0]);
+    }
+
+    if (crossFloorExitLeg(levelId, oLvl, dLvl)) {
+      const hubId = verticalHubNodeForLevel(levelId, state.route);
+      const startIds = resolveNavNodeIds(origin, "origin");
+      const mesh = hubId && startIds[0] ? astarLeg(startIds[0], hubId) : null;
+      if (mesh?.points?.length >= 2) return mesh;
+    }
+
+    if (crossFloorEntryLeg(levelId, oLvl, dLvl)) {
+      const hubId = verticalHubNodeForLevel(levelId, state.route);
+      const endIds = resolveNavNodeIds(dest, "dest");
+      const mesh = hubId && endIds[0] ? astarLeg(hubId, endIds[0]) : null;
+      if (mesh?.points?.length >= 2) return mesh;
+    }
+
+    if (crossFloorTransitLeg(levelId, oLvl, dLvl)) {
+      const hubId = verticalHubNodeForLevel(levelId, state.route);
+      const n = hubId && state.navGraph?.nodesById?.get(hubId);
+      if (n) {
+        return {
+          points: [{ x: n.x, y: n.y }, { x: n.x + 0.8, y: n.y + 0.4 }],
+          nodeIds: [hubId],
+          edgeIds: [],
+        };
+      }
+    }
+
+    return null;
+  }
+
+  /** Ponto no grafo ou ícone do POI para desenhar rota. */
+  function poiGraphPoint(poi) {
+    if (!poi) return null;
+    const ids = resolveNavNodeIds(poi, "origin");
+    if (ids[0] && state.navGraph?.nodesById?.has(ids[0])) {
+      const n = state.navGraph.nodesById.get(ids[0]);
+      return { x: n.x, y: n.y };
+    }
+    const icon = poiIcon(poi) || poi.snap;
+    if (icon && isFinite(icon.x) && isFinite(icon.y)) return { x: icon.x, y: icon.y };
+    if (isFinite(poi.x) && isFinite(poi.y)) return { x: poi.x, y: poi.y };
+    return null;
+  }
+
+  function syncMapViewBeforeRoutePaint() {
+    const lvl = state.activeLevel || "L00";
+    const meta = state.floorMeta[lvl] || state.floorMeta.L00;
+    const svg = el.svgHost?.querySelector("svg");
+    if (svg) {
+      const vb = (svg.getAttribute("viewBox") || "").split(/[\s,]+/).map(Number);
+      if (vb.length >= 4 && vb[2] > 0 && vb[3] > 0) {
+        setMapViewBox(vb[2], vb[3], vb[0] || 0, vb[1] || 0);
+        apply();
+        return;
+      }
+    }
+    if (meta?.vbW) {
+      setMapViewBox(meta.vbW, meta.vbH, meta.vbX || 0, meta.vbY || 0);
+    }
+    apply();
+  }
+
+  /** Paths da rota dentro do SVG do andar — sempre escopados ao #mapRouteLayer. */
+  function resolveMapRoutePaintTargets(svg) {
+    if (!svg) return { layer: null, base: null, glow: null };
+    const layer = ensureRouteLayer(svg);
+    return {
+      layer,
+      base: layer.querySelector("#mapRoutePathBase"),
+      glow: layer.querySelector("#mapRoutePathGlow"),
+    };
+  }
+
+  /** Reidrata pernas vazias (lazy load / legs obsoletos) antes de pintar. */
+  function hydrateRouteLegPoints(route, levelId) {
+    if (!route?.nodeIds?.length || !state.navGraph) return route?.legs || [];
+    let legs = route.legs;
+    const stale = !legs?.length || legs.some((l) =>
+      l.level === levelId
+      && (l.edgeIds?.length || 0) >= 1
+      && (l.points?.length || 0) < 2,
+    );
+    if (stale) {
+      route.legs = routeLegsFromGraph(route);
+      patchBasementLegPoints(route);
+      patchCrossFloorLegPoints(route);
+      legs = route.legs;
+    }
+    for (const leg of legs || []) {
+      if ((leg.points?.length || 0) >= 2 || !(leg.edgeIds?.length || 0)) continue;
+      const stitched = stitchEdgePaths(leg.edgeIds);
+      if (stitched?.length >= 2) leg.points = stitched;
+    }
+    return legs;
+  }
+
+  /** Trecho de saída/entrada entre andares: liga ícone do POI ao hub vertical. */
+  function extendCrossFloorLegPoints(pts, levelId, oLvl, dLvl, route = state.route) {
+    let out = (pts || []).map((p) => ({ x: p.x, y: p.y }));
+    if (out.length < 2) return out;
+
+    if (crossFloorExitLeg(levelId, oLvl, dLvl)) {
+      out = refineVerticalHubEndpoint(out, levelId, route, "end");
+      const o = poiIcon(state.origin);
+      const maxSpur = tol("spurTol", poiToleranceZone(state.origin));
+      if (o && dist(o, out[0]) > 0.8 && dist(o, out[0]) <= maxSpur && !crossesWall(o, out[0], levelId)) {
+        out.unshift({ x: o.x, y: o.y });
+      }
+      return out;
+    }
+
+    if (crossFloorEntryLeg(levelId, oLvl, dLvl)) {
+      out = refineVerticalHubEndpoint(out, levelId, route, "start");
+      const d = poiIcon(state.dest);
+      const maxSpur = tol("spurTol", poiToleranceZone(state.dest));
+      const tip = out[out.length - 1];
+      if (d && dist(tip, d) > 0.8 && dist(tip, d) <= maxSpur && !crossesWall(tip, d, levelId)) {
+        out.push({ x: d.x, y: d.y });
+      }
+      return out;
+    }
+
+    return out;
+  }
+
+  function wallsForLevel(levelId) {
+    if (levelId && state.floorWalls?.[levelId]?.length) return state.floorWalls[levelId];
+    return G.walls || [];
+  }
+
+  function routePolylineCrossesWall(pts, levelId) {
+    if (!pts || pts.length < 2) return false;
+    for (let i = 1; i < pts.length; i++) {
+      if (crossesWall(pts[i - 1], pts[i], levelId)) return true;
+    }
+    return false;
+  }
+
+  /** Spur sintético: 2 pontos longos sem nenhuma edge do grafo. */
+  function isSyntheticStraightSpur(pts, leg, route) {
+    if (!pts || pts.length !== 2) return false;
+    const edges = (leg?.edgeIds?.length || 0) + (route?.edgeIds?.length || 0);
+    if (edges >= 1) return false;
+    return dist(pts[0], pts[1]) > 25;
+  }
+
+  /** Monta polyline só pelos paths oficiais das edges (sem linha reta inventada). */
+  function stitchEdgePaths(edgeIds) {
+    if (!edgeIds?.length || !state.navGraph) return null;
+    const stitched = [];
+    for (const eid of edgeIds) {
+      const edge = state.navGraph.edgesById.get(eid);
+      for (const p of edge?.path || []) {
+        const pt = { x: p.x, y: p.y };
+        const last = stitched[stitched.length - 1];
+        if (!last || dist(last, pt) > 0.05) stitched.push(pt);
+      }
+    }
+    return stitched.length >= 2 ? stitched : null;
+  }
+
+  /** Pontos do trecho no andar — prioriza malha (edges/nodes), nunca diagonal artificial. */
+  function routePointsForLevel(route, levelId) {
+    if (!route) return { leg: null, points: [] };
+
+    const legs = hydrateRouteLegPoints(route, levelId);
+
+    let leg = pickBestRouteLeg(legs.filter((l) => l.level === levelId));
+    if (!leg && legs.length === 1 && legs[0]?.level === levelId) leg = legs[0];
+
+    let points = (leg?.points || [])
+      .map((p) => ({ x: p.x, y: p.y }))
+      .filter((p) => isFinite(p.x) && isFinite(p.y));
+
+    if (points.length < 2) {
+      const sliced = sliceRoutePointsForLevel(route, levelId);
+      if (sliced?.length >= 2) points = sliced;
+    }
+
+    if (points.length < 2 && leg?.edgeIds?.length >= 1) {
+      const stitched = stitchEdgePaths(leg.edgeIds);
+      if (stitched) {
+        points = stitched;
+        leg.points = stitched.map((p) => ({ x: p.x, y: p.y }));
+      }
+    }
+
+    const oLvl = poiLevel(state.origin);
+    const dLvl = poiLevel(state.dest);
+    if (points.length < 2 && oLvl !== dLvl && (levelId === oLvl || levelId === dLvl)) {
+      const fb = buildFloorLegFallbackPoints(levelId, state.origin, state.dest);
+      if (fb?.points?.length >= 2) {
+        points = fb.points.map((p) => ({ x: p.x, y: p.y }));
+        if (!leg) {
+          leg = {
+            level: levelId,
+            nodeIds: fb.nodeIds || [],
+            edgeIds: fb.edgeIds || [],
+            points,
+          };
+        } else {
+          leg.points = points.map((p) => ({ x: p.x, y: p.y }));
+          if (fb.edgeIds?.length) leg.edgeIds = fb.edgeIds.slice();
+          if (fb.nodeIds?.length) leg.nodeIds = fb.nodeIds.slice();
+        }
+      }
+    }
+    if (points.length < 2 && oLvl === dLvl && oLvl === levelId && route.points?.length >= 2) {
+      points = route.points
+        .map((p) => ({ x: p.x, y: p.y }))
+        .filter((p) => isFinite(p.x) && isFinite(p.y));
+    }
+
+    if (points.length < 2 && state.origin && state.dest) {
+      const fb = buildFloorLegFallbackPoints(levelId, state.origin, state.dest);
+      if (fb?.points?.length >= 2) {
+        points = fb.points.map((p) => ({ x: p.x, y: p.y }));
+        if (!leg) {
+          leg = {
+            level: levelId,
+            nodeIds: fb.nodeIds || [],
+            edgeIds: fb.edgeIds || [],
+            points,
+          };
+        } else {
+          if (fb.edgeIds?.length) leg.edgeIds = fb.edgeIds.slice();
+          if (fb.nodeIds?.length) leg.nodeIds = fb.nodeIds.slice();
+        }
+      }
+    }
+
+    if (points.length < 2 && route.nodeIds?.length >= 2 && state.navGraph) {
+      let start = -1;
+      let end = -1;
+      for (let i = 0; i < route.nodeIds.length; i++) {
+        const lvl = state.navGraph.nodesById.get(route.nodeIds[i])?.level;
+        if (lvl !== levelId) continue;
+        if (start < 0) start = i;
+        end = i;
+      }
+      if (start >= 0 && end > start) {
+        const stitched = stitchEdgePaths((route.edgeIds || []).slice(start, end));
+        if (stitched) points = stitched;
+      }
+    }
+
+    return { leg, points };
+  }
+
+  /** Pontos do trecho no andar ativo. */
+  function ensureActiveFloorRoutePoints() {
+    if (!state.route || !state.origin || !state.dest) return [];
+    const { points } = routePointsForLevel(state.route, state.activeLevel);
+    return points.length >= 2 ? points : [];
+  }
+
+  function patchCrossFloorLegPoints(route) {
+    if (!route?.legs?.length || !state.origin || !state.dest) return;
+    const oLvl = poiLevel(state.origin);
+    const dLvl = poiLevel(state.dest);
+    if (!isCrossFloorTrip(oLvl, dLvl)) return;
+    for (const leg of route.legs) {
+      if ((leg.points?.length || 0) >= 2) continue;
+      const fb = buildFloorLegFallbackPoints(leg.level, state.origin, state.dest);
+      if (!fb?.points?.length || fb.points.length < 2) continue;
+      if (isSyntheticStraightSpur(fb.points, fb, route)) continue;
+      leg.points = fb.points.map((p) => ({ x: p.x, y: p.y }));
+      if (fb.edgeIds?.length) leg.edgeIds = fb.edgeIds.slice();
+      if (fb.nodeIds?.length) leg.nodeIds = fb.nodeIds.slice();
+    }
+  }
+
+  function patchBasementLegPoints(route) {
+    if (!route?.legs?.length || !state.origin || !state.dest) return;
+    for (const leg of route.legs) {
+      if ((leg.points?.length || 0) >= 2 && (leg.edgeIds?.length || 0) >= 1) continue;
+      const fb = buildFloorLegFallbackPoints(leg.level, state.origin, state.dest);
+      if (!fb?.points?.length || fb.points.length < 2) continue;
+      if (isSyntheticStraightSpur(fb.points, fb, route)) continue;
+      leg.points = fb.points.map((p) => ({ x: p.x, y: p.y }));
+      if (fb.edgeIds?.length) leg.edgeIds = fb.edgeIds.slice();
+      if (fb.nodeIds?.length) leg.nodeIds = fb.nodeIds.slice();
+    }
   }
 
   function mergeWaypointIds(...chains) {
@@ -1112,6 +1531,8 @@
   function rebuildRouteLegs(route = state.route) {
     if (!route?.nodeIds?.length || !state.navGraph) return route?.legs || [];
     route.legs = routeLegsFromGraph(route);
+    patchBasementLegPoints(route);
+    patchCrossFloorLegPoints(route);
     return route.legs;
   }
 
@@ -1143,14 +1564,8 @@
   /** Pontos da rota visíveis no andar atual — evita misturar coordenadas B01/B02/L00. */
   function navViewPoints(route = state.route) {
     if (!route) return [];
-    const { points } = resolveRouteLegForView(route, state.activeLevel);
-    if (points.length >= 2) return points;
-    const oLvl = poiLevel(state.origin);
-    const dLvl = poiLevel(state.dest);
-    if (oLvl === dLvl && oLvl === state.activeLevel && route.points?.length >= 2) {
-      return route.points;
-    }
-    return points;
+    const { points } = routePointsForLevel(route, state.activeLevel);
+    return points.length >= 2 ? points : [];
   }
 
   function navLegIndex(route = state.route) {
@@ -1904,13 +2319,14 @@
     const d = poiIcon(dest);
     const oLvl = origin?.level || poiLevel(origin);
     const dLvl = dest?.level || poiLevel(dest);
+    const sameFloor = oLvl && dLvl && oLvl === dLvl;
 
     if (isNarniaEntrancePoi(origin)) {
       const gateLvl = isBasementFloor(narniaLevelForPoi(origin) || oLvl) ? (narniaLevelForPoi(origin) || oLvl) : "L00";
       let out = refineNarniaEndpoint(pts, gateLvl, "start");
-      if (d && oLvl === dLvl && !isNarniaEntrancePoi(dest)) {
+      if (sameFloor && d && !isNarniaEntrancePoi(dest)) {
         const tip = out[out.length - 1];
-        if (dist(tip, d) > 0.8 && dist(tip, d) <= maxSpurD && !crossesWall(tip, d)) {
+        if (dist(tip, d) > 0.8 && dist(tip, d) <= maxSpurD && !crossesWall(tip, d, dLvl)) {
           out.push({ x: d.x, y: d.y });
         }
       }
@@ -1919,19 +2335,19 @@
     if (isNarniaEntrancePoi(dest)) {
       const gateLvl = isBasementFloor(narniaLevelForPoi(dest) || dLvl) ? (narniaLevelForPoi(dest) || dLvl) : "L00";
       let out = pts;
-      if (o && dist(o, out[0]) > 0.8 && dist(o, out[0]) <= maxSpurO && !crossesWall(o, out[0])) {
+      if (sameFloor && o && dist(o, out[0]) > 0.8 && dist(o, out[0]) <= maxSpurO && !crossesWall(o, out[0], oLvl)) {
         out = [{ x: o.x, y: o.y }, ...out];
       }
       return refineNarniaEndpoint(out, gateLvl, "end");
     }
 
-    if (o && dist(o, pts[0]) > 0.8 && dist(o, pts[0]) <= maxSpurO) {
-      if (!crossesWall(o, pts[0])) pts.unshift({ x: o.x, y: o.y });
+    if (sameFloor && o && dist(o, pts[0]) > 0.8 && dist(o, pts[0]) <= maxSpurO) {
+      if (!crossesWall(o, pts[0], oLvl)) pts.unshift({ x: o.x, y: o.y });
     }
-    if (d && oLvl === dLvl && dist(pts[pts.length - 1], d) > 0.8) {
+    if (sameFloor && d && dist(pts[pts.length - 1], d) > 0.8) {
       if (isTemplePoi(dest)) return pts;
       const tip = pts[pts.length - 1];
-      if (dist(tip, d) <= maxSpurD && !crossesWall(tip, d)) {
+      if (dist(tip, d) <= maxSpurD && !crossesWall(tip, d, dLvl)) {
         pts.push({ x: d.x, y: d.y });
       }
     }
@@ -1981,18 +2397,20 @@
     legs.push({ level: curLevel, nodeIds: legNodes.slice(), edgeIds: legEdges.slice() });
 
     for (const leg of legs) {
-      if (leg.edgeIds.length >= 1 && leg.nodeIds.length >= 2) {
+      leg.points = [];
+      if (leg.edgeIds.length >= 1 && leg.nodeIds.length >= 2 && NR?.buildRoutePoints) {
         try {
-          leg.points = NR.buildRoutePoints(leg.edgeIds, leg.nodeIds, state.navGraph.edgesById);
-        } catch {
-          leg.points = leg.nodeIds.map((id) => {
-            const n = state.navGraph.nodesById.get(id);
-            return n ? { x: n.x, y: n.y } : null;
-          }).filter(Boolean);
+          const built = NR.buildRoutePoints(leg.edgeIds, leg.nodeIds, state.navGraph.edgesById);
+          if (built?.length >= 2) leg.points = built;
+        } catch { /* tenta montar pelos paths das edges */ }
+        if ((leg.points?.length || 0) < 2) {
+          const stitched = stitchEdgePaths(leg.edgeIds);
+          if (stitched) leg.points = stitched;
         }
-      } else {
-        const n = state.navGraph.nodesById.get(leg.nodeIds[0]);
-        leg.points = n ? [{ x: n.x, y: n.y }] : [];
+      }
+      if ((leg.points?.length || 0) < 2) {
+        const sliced = sliceRoutePointsForLevel(route, leg.level);
+        if (sliced?.length >= 2) leg.points = sliced;
       }
     }
     return legs;
@@ -2017,21 +2435,24 @@
       try {
         const built = NR.buildRoutePoints(edgeIds, nodeIds, state.navGraph.edgesById);
         if (built?.length >= 2) return built;
-      } catch { /* fallback abaixo */ }
+      } catch { /* tenta montar pelos paths das edges */ }
+      const stitched = stitchEdgePaths(edgeIds);
+      if (stitched) return stitched;
     }
-    return nodeIds.map((id) => {
-      const n = state.navGraph.nodesById.get(id);
-      return n ? { x: n.x, y: n.y } : null;
-    }).filter((p) => p && isFinite(p.x) && isFinite(p.y));
+    return null;
   }
 
   function pickBestRouteLeg(candidates) {
     if (!candidates?.length) return null;
-    return candidates.slice().sort((a, b) => {
+    const drawable = candidates.filter((l) => (l.points?.length || 0) >= 2 || (l.edgeIds?.length || 0) > 0);
+    const pool = drawable.length ? drawable : candidates;
+    return pool.slice().sort((a, b) => {
+      const ap = a.points?.length || 0;
+      const bp = b.points?.length || 0;
+      if (bp !== ap) return bp - ap;
       const ae = a.edgeIds?.length || 0;
       const be = b.edgeIds?.length || 0;
-      if (be !== ae) return be - ae;
-      return (b.points?.length || 0) - (a.points?.length || 0);
+      return be - ae;
     })[0];
   }
 
@@ -2039,37 +2460,10 @@
   function resolveRouteLegForView(route, activeLevel) {
     if (!route) return { leg: null, points: [] };
 
-    const buildView = () => {
-      const legs = route.legs || routeLegsFromGraph(route);
-      route.legs = legs;
-
-      let leg = pickBestRouteLeg(legs.filter((l) => l.level === activeLevel));
-      if (!leg && legs.length === 1) leg = legs[0];
-
-      let points = (leg?.points || [])
-        .map((p) => ({ x: p.x, y: p.y }))
-        .filter((p) => isFinite(p.x) && isFinite(p.y));
-
-      if (points.length < 2) {
-        const sliced = sliceRoutePointsForLevel(route, activeLevel);
-        if (sliced?.length >= 2) points = sliced;
-      }
-
-      const oLvl = poiLevel(state.origin);
-      const dLvl = poiLevel(state.dest);
-      if (points.length < 2 && oLvl === dLvl && oLvl === activeLevel && route.points?.length >= 2) {
-        points = route.points
-          .map((p) => ({ x: p.x, y: p.y }))
-          .filter((p) => isFinite(p.x) && isFinite(p.y));
-      }
-
-      return { leg, points };
-    };
-
-    let view = buildView();
+    let view = routePointsForLevel(route, activeLevel);
     if (view.points.length < 2 && route.nodeIds?.length >= 2 && state.navGraph) {
       rebuildRouteLegs(route);
-      view = buildView();
+      view = routePointsForLevel(route, activeLevel);
     }
     return view;
   }
@@ -2079,24 +2473,36 @@
       clearRoutePaint();
       return;
     }
-    const { points: rawPts } = resolveRouteLegForView(state.route, state.activeLevel);
-    if (!rawPts?.length) {
-      clearRoutePaint();
-      return;
-    }
-    let pts = rawPts.slice();
-    if (pts.length === 1) {
-      pts = [pts[0], { x: pts[0].x + 0.5, y: pts[0].y }];
-    }
+    syncMapViewBeforeRoutePaint();
     const oLvl = poiLevel(state.origin);
     const dLvl = poiLevel(state.dest);
     const lvl = state.activeLevel;
-    const { leg } = resolveRouteLegForView(state.route, lvl);
 
-    if (oLvl === lvl || (isNarniaEntrancePoi(state.origin) && narniaLevelForPoi(state.origin) === lvl)) {
+    let { leg, points: pts } = routePointsForLevel(state.route, lvl);
+    if (!pts?.length || pts.length < 2) {
+      rebuildRouteLegs(state.route);
+      ({ leg, points: pts } = routePointsForLevel(state.route, lvl));
+    }
+    if (!pts?.length || pts.length < 2) {
+      const fb = buildFloorLegFallbackPoints(lvl, state.origin, state.dest);
+      if (fb?.points?.length >= 2) pts = fb.points.map((p) => ({ x: p.x, y: p.y }));
+    }
+    if (!pts?.length || pts.length < 2) {
+      clearRoutePaint();
+      return;
+    }
+    if (pts.length === 1) {
+      pts = [pts[0], { x: pts[0].x + 0.5, y: pts[0].y }];
+    }
+
+    if (isBasementExitActiveLeg(lvl, oLvl, dLvl)) {
+      pts = finalizeBasementExitLegPoints(pts, lvl);
+    } else if (crossFloorExitLeg(lvl, oLvl, dLvl) || crossFloorEntryLeg(lvl, oLvl, dLvl)) {
+      pts = extendCrossFloorLegPoints(pts, lvl, oLvl, dLvl, state.route);
+    } else if (oLvl === lvl || (isNarniaEntrancePoi(state.origin) && narniaLevelForPoi(state.origin) === lvl)) {
       pts = appendPoiEndpoints(pts, state.origin, {
         ...state.dest,
-        level: lvl,
+        level: dLvl,
         iconX: undefined,
         iconY: undefined,
         x: pts[pts.length - 1].x,
@@ -2131,9 +2537,15 @@
       pts = refineNarniaEndpoint(pts, gateLvl, "end");
     }
 
+    if (isSyntheticStraightSpur(pts, leg, state.route) && (leg?.edgeIds?.length || 0) === 0 && (state.route?.edgeIds?.length || 0) === 0) {
+      clearRoutePaint();
+      return;
+    }
+
     const a = pts[0];
     const b = pts[pts.length - 1];
     paintRouteOnMap(pts.map((p) => `${p.x},${p.y}`).join(" "), a, b, pts);
+    apply();
   }
 
   function templeEntranceList() {
@@ -3178,6 +3590,41 @@
     });
   }
 
+  function collectWallPolysFromNode(node, svg, out) {
+    if (!node) return;
+    const tag = node.tagName?.toLowerCase();
+    if (tag === "use") {
+      const href = node.getAttribute("href")
+        || node.getAttributeNS("http://www.w3.org/1999/xlink", "href")
+        || "";
+      const refId = href.replace(/^#/, "");
+      if (!refId) return;
+      const ref = svg.getElementById(refId);
+      if (!ref) return;
+      ref.querySelectorAll("rect, polygon, polyline, path, line").forEach((el) => {
+        wallPolysFromEl(el).forEach((poly) => {
+          if (poly.length >= 2) out.push(poly);
+        });
+      });
+      return;
+    }
+    wallPolysFromEl(node).forEach((poly) => {
+      if (poly.length >= 2) out.push(poly);
+    });
+  }
+
+  function parseFloorWalls(svg, levelId) {
+    const walls = [];
+    const root = svg.getElementById(`${levelId}_WALL`);
+    if (root) {
+      root.querySelectorAll("rect, polygon, polyline, path, line, use").forEach((el) => {
+        collectWallPolysFromNode(el, svg, walls);
+      });
+    }
+    state.floorWalls[levelId] = walls;
+    return walls;
+  }
+
   function orient(a, b, c) {
     const v = (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y);
     if (Math.abs(v) < 1e-9) return 0;
@@ -3220,18 +3667,19 @@
     return dist(p, { x: a.x + t * dx, y: a.y + t * dy });
   }
 
-  function crossesWall(a, b) {
-    if (!a || !b || !G.walls.length) return false;
+  function crossesWall(a, b, levelId) {
+    const walls = wallsForLevel(levelId);
+    if (!a || !b || !walls.length) return false;
     // amostras ao longo do segmento (pega atravessamento de paredes finas)
     const samples = 9;
     for (let s = 1; s < samples; s++) {
       const t = s / samples;
       const pt = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
-      for (const poly of G.walls) {
+      for (const poly of walls) {
         if (poly.length >= 3 && pointInPoly(pt, poly)) return true;
       }
     }
-    for (const poly of G.walls) {
+    for (const poly of walls) {
       const n = poly.length;
       for (let i = 0; i < n; i++) {
         const p = poly[i], q = poly[(i + 1) % n];
@@ -3969,13 +4417,14 @@
 
 
   function ensureRouteLayer(svg) {
-    let layer = svg.getElementById("mapRouteLayer");
+    let layer = svg.querySelector("#mapRouteLayer");
     if (!layer) {
       layer = document.createElementNS(NS, "g");
       layer.setAttribute("id", "mapRouteLayer");
       svg.appendChild(layer);
     }
     upgradeMapRouteLayer(layer);
+    layer.setAttribute("data-route-overlay", "true");
     svg.appendChild(layer);
     globalThis.RouteAnimation?.applyRouteAnimationVars?.(layer);
     return layer;
@@ -4027,7 +4476,7 @@
     state.routeVisualCompleted = !!completed;
     globalThis.RouteAnimation?.setRouteCompleted?.(el.routeLayer, completed);
     const mapSvg = el.svgHost.querySelector("#mapaSVG") || el.svgHost.querySelector("svg");
-    const mapLayer = mapSvg?.getElementById?.("mapRouteLayer");
+    const mapLayer = mapSvg?.querySelector?.("#mapRouteLayer");
     if (mapLayer) globalThis.RouteAnimation?.setRouteCompleted?.(mapLayer, completed);
   }
 
@@ -5295,7 +5744,41 @@
     }
   }
 
+  function paintRoutePathNodes(layerEl, baseNode, glowNode, pathD) {
+    const RA = globalThis.RouteAnimation;
+    if (RA?.paintRoutePaths) {
+      RA.applyRouteAnimationVars?.(layerEl);
+      RA.paintRoutePaths(layerEl, baseNode, glowNode, pathD);
+      return;
+    }
+    const stroke = "#00AEEF";
+    if (baseNode) {
+      baseNode.setAttribute("d", pathD);
+      baseNode.setAttribute("fill", "none");
+      baseNode.setAttribute("stroke", stroke);
+      baseNode.setAttribute("stroke-width", "10");
+      baseNode.setAttribute("stroke-linecap", "round");
+      baseNode.setAttribute("stroke-linejoin", "round");
+      baseNode.style.visibility = pathD ? "visible" : "hidden";
+      baseNode.style.display = pathD ? "" : "none";
+    }
+    if (glowNode) {
+      glowNode.setAttribute("d", pathD);
+      glowNode.setAttribute("fill", "none");
+      glowNode.setAttribute("stroke-linecap", "round");
+      glowNode.setAttribute("stroke-linejoin", "round");
+      glowNode.style.visibility = pathD ? "visible" : "hidden";
+      glowNode.style.display = pathD ? "" : "none";
+    }
+    if (layerEl) {
+      layerEl.style.display = pathD ? "" : "none";
+      layerEl.style.visibility = pathD ? "visible" : "hidden";
+      layerEl.removeAttribute("hidden");
+    }
+  }
+
   function paintRouteOnMap(ptsStr, a, b, points) {
+    syncMapViewBeforeRoutePaint();
     const pts = (points || ptsStr.split(/\s+/).map((s) => {
       const [x, y] = s.split(",").map(Number);
       return { x, y };
@@ -5305,7 +5788,11 @@
     const RA = globalThis.RouteAnimation;
 
     RA?.applyRouteAnimationVars?.(el.routeLayer);
-    RA?.paintRoutePaths?.(el.routeLayer, el.routePathBase, el.routePathGlow, d);
+    if (RA?.paintRoutePaths) {
+      RA.paintRoutePaths(el.routeLayer, el.routePathBase, el.routePathGlow, d);
+    } else {
+      paintRoutePathNodes(el.routeLayer, el.routePathBase, el.routePathGlow, d);
+    }
     RA?.setRouteCompleted?.(el.routeLayer, !!state.routeVisualCompleted);
 
     const Icons = globalThis.MapNavIcons;
@@ -5326,12 +5813,15 @@
     state._routeMarkerCache = { start: a, end: b, bearing: startBearing };
 
     // camada vetorial DENTRO do mapa (sempre no topo + path)
-    const svg = el.svgHost.querySelector("#mapaSVG") || el.svgHost.querySelector("svg");
+    const svg = el.svgHost.querySelector("svg");
     if (!svg) return;
-    const layer = ensureRouteLayer(svg);
-    const base = svg.getElementById("mapRoutePathBase");
-    const glow = svg.getElementById("mapRoutePathGlow");
-    RA?.paintRoutePaths?.(layer, base, glow, d);
+    const { layer, base, glow } = resolveMapRoutePaintTargets(svg);
+    RA?.applyRouteAnimationVars?.(layer);
+    if (RA?.paintRoutePaths) {
+      RA.paintRoutePaths(layer, base, glow, d);
+    } else {
+      paintRoutePathNodes(layer, base, glow, d);
+    }
     RA?.setRouteCompleted?.(layer, !!state.routeVisualCompleted);
     // Marcadores só no overlay (evita duplicar ícones gigantes dentro do SVG do mapa)
     ["mapRouteStart", "mapRouteEnd"].forEach((id) => {
@@ -5343,6 +5833,7 @@
   function clearRoutePaint() {
     const RA = globalThis.RouteAnimation;
     RA?.clearRoutePaths?.(el.routeLayer, el.routePathBase, el.routePathGlow);
+    el.routeLayer?.querySelector("#routePolyline")?.setAttribute("points", "");
     state.routeVisualCompleted = false;
     el.routeStart.setAttribute("hidden", "");
     el.routeStart.setAttribute("visibility", "hidden");
@@ -5353,9 +5844,7 @@
     state._routeMarkerCache = null;
     const svg = el.svgHost.querySelector("#mapaSVG") || el.svgHost.querySelector("svg");
     if (svg) {
-      const layer = svg.getElementById("mapRouteLayer");
-      const base = svg.getElementById("mapRoutePathBase");
-      const glow = svg.getElementById("mapRoutePathGlow");
+      const { layer, base, glow } = resolveMapRoutePaintTargets(svg);
       RA?.clearRoutePaths?.(layer, base, glow);
     }
     if (!svg) return;
@@ -5459,7 +5948,7 @@
     state.routePickOpen = true;
     // No celular: fecha o painel antes do zoom para a rota caber no viewport
     if (isMobileLayout()) setPanelOpen(false);
-    selectRoute(0, true);
+    await selectRoute(0, true);
     updateSummaryChrome();
     const n = state.routeOptions.length;
     toast(n > 1
@@ -5467,14 +5956,13 @@
       : "Rota traçada até o destino.");
   }
 
-  function selectRoute(idx, doFit) {
+  async function selectRoute(idx, doFit) {
     const options = state.routeOptions || [];
     if (!options.length) return;
     idx = Math.max(0, Math.min(idx, options.length - 1));
     state.routeIdx = idx;
     const route = options[idx];
     state.route = route;
-    rebuildRouteLegs(route);
     setRouteVisualCompleted(false);
 
     const oLvl = poiLevel(state.origin);
@@ -5482,7 +5970,12 @@
     const multi = oLvl !== dLvl;
     const viewLevel = routeInitialViewLevel(route, oLvl, dLvl);
 
+    await setActiveLevel(viewLevel, { silent: true, keepTrip: true, force: true });
+
     const finish = () => {
+      syncMapViewBeforeRoutePaint();
+      rebuildRouteLegs(route);
+      hydrateRouteLegPoints(route, state.activeLevel);
       paintActiveRouteLeg();
       el.summaryDist.textContent = fmtMeters(route.length);
       if (el.summaryTime) el.summaryTime.textContent = fmtRouteTime(route.length);
@@ -5510,10 +6003,12 @@
       }
       if (multi) {
         if (routeInvolvesBasementTransfer(oLvl, dLvl)) {
-          const startHint = !isBasementFloor(oLvl) && !isAdmFloor(oLvl)
-            ? "Comece pelo mapa do Térreo (L00)."
-            : `Comece pelo mapa de ${floorTitle(oLvl)}.`;
-          toast(`${startHint} Ao entrar na Porta de Nárnia, o mapa muda para o subsolo. Troque o andar para ver cada trecho.`);
+          const startHint = isBasementFloor(oLvl)
+            ? `Comece em ${floorTitle(oLvl)}: siga até a ${narniaGateLabel(oLvl)} (saída do subsolo).`
+            : !isAdmFloor(oLvl)
+              ? "Comece pelo mapa do Térreo (L00)."
+              : `Comece pelo mapa de ${floorTitle(oLvl)}.`;
+          toast(`${startHint} Ao entrar na Porta de Nárnia, o mapa muda de andar. Troque o andar para ver cada trecho.`);
         } else if (routeUsesLateralStairs(route)) {
           const arrive = stairHub(dLvl);
           toast(`Via escada lateral: saia em ${arrive?.label || floorTitle(dLvl)} e siga até ${state.dest.name}. Troque o andar para ver cada trecho.`);
@@ -5524,11 +6019,7 @@
       }
     };
 
-    if (state.activeLevel !== viewLevel) {
-      setActiveLevel(viewLevel, { silent: true, keepTrip: true }).then(finish);
-    } else {
-      finish();
-    }
+    finish();
   }
 
   function renderRouteOptions() {
@@ -6104,32 +6595,23 @@
     apply();
   }
 
-  /** Pontos da rota no andar atual (o que está pintado). */
   function activeLegPoints(route = state.route) {
     if (!route) return [];
-    const { points } = resolveRouteLegForView(route, state.activeLevel);
-    if (points.length >= 2) return points;
-    const oLvl = poiLevel(state.origin);
-    const dLvl = poiLevel(state.dest);
-    if (oLvl === dLvl && oLvl === state.activeLevel) {
-      return (route.points || []).filter((p) => p && isFinite(p.x) && isFinite(p.y));
-    }
-    return points.filter((p) => p && isFinite(p.x) && isFinite(p.y));
+    const { points } = routePointsForLevel(route, state.activeLevel);
+    return points.length >= 2 ? points : [];
   }
 
   /** Enquadra a rota (preferência: trecho do andar ativo). */
   function fitRouteInView(route, opts = {}) {
     const mobile = innerWidth <= 860;
     const fillWidth = opts.fillWidth ?? mobile;
-    let pts = [];
-    const { points: legPts } = resolveRouteLegForView(route, state.activeLevel);
-    if (legPts.length >= 2) {
-      pts = legPts.filter((p) => p && isFinite(p.x) && isFinite(p.y));
-    }
+    let pts = ensureActiveFloorRoutePoints().filter((p) => p && isFinite(p.x) && isFinite(p.y));
     if (pts.length < 2 && opts.preferActiveLeg !== false) {
       pts = activeLegPoints(route);
     }
-    if (pts.length < 2) {
+    const oLvl = poiLevel(state.origin);
+    const dLvl = poiLevel(state.dest);
+    if (pts.length < 2 && oLvl === dLvl && oLvl === state.activeLevel) {
       pts = (route?.points || []).filter((p) => p && isFinite(p.x) && isFinite(p.y));
     }
     if (pts.length >= 1) {
@@ -6532,6 +7014,7 @@
 
     bindFloorPois(svg, floor.id);
     applyBasementFloorBackground(svg, floor.id);
+    parseFloorWalls(svg, floor.id);
 
     return svg;
   }
@@ -6593,11 +7076,18 @@
       const meta = state.floorMeta[floor.id];
       setMapViewBox(meta.vbW, meta.vbH, meta.vbX || 0, meta.vbY || 0);
       if (state.route) {
+        syncMapViewBeforeRoutePaint();
+        rebuildRouteLegs(state.route);
+        hydrateRouteLegPoints(state.route, floor.id);
         paintActiveRouteLeg();
-        fitSoon(() => fitRouteInView(state.route, {
-          navMode: !!document.body.classList.contains("is-navigating"),
-          preferActiveLeg: true,
-        }));
+        fitSoon(() => {
+          syncMapViewBeforeRoutePaint();
+          paintActiveRouteLeg();
+          fitRouteInView(state.route, {
+            navMode: !!document.body.classList.contains("is-navigating"),
+            preferActiveLeg: true,
+          });
+        });
       } else {
         clearRoutePaint();
         fitSoon();

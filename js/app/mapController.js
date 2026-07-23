@@ -8,9 +8,19 @@
     const { state, G, el } = ctx;
 
     function apply() {
+      const svg = el.svgHost?.querySelector("svg");
+      if (svg) {
+        const vb = (svg.getAttribute("viewBox") || "").split(/[\s,]+/).map(Number);
+        if (vb.length >= 4 && vb[2] > 0 && vb[3] > 0) {
+          G.vbW = vb[2];
+          G.vbH = vb[3];
+          G.vbX = vb[0] || 0;
+          G.vbY = vb[1] || 0;
+          el.overlay.setAttribute("viewBox", `${G.vbX} ${G.vbY} ${G.vbW} ${G.vbH}`);
+        }
+      }
       const w = G.vbW * state.scale;
       const h = G.vbH * state.scale;
-      const svg = el.svgHost.querySelector("svg");
       if (svg) {
         svg.setAttribute("width", w);
         svg.setAttribute("height", h);
