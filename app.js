@@ -2449,6 +2449,73 @@
       onAmbiguousEntrances: askAmbiguousEntrances,
       getLiveMapMatchEnhancer: () => state.liveMapMatchEnhancer,
       rerouteFromVirtualNode,
+      getSelectedDestinationNodeId: () => {
+        const ids = resolveNavNodeIds(state.dest, "dest");
+        return ids[0] || null;
+      },
+      convertGpsToMapCoordinates: (latitude, longitude) => {
+        const geoRef = cachedGeo || null;
+        return geoRef?.latLngToSvg?.(latitude, longitude) || null;
+      },
+      updateGpsMarker: (pos) => {
+        if (pos?.latitude != null && pos?.longitude != null) {
+          state.userLocation?.showAtLatLng?.(pos.latitude, pos.longitude, pos.accuracy);
+        } else if (pos?.x != null && pos?.y != null) {
+          state.userLocation?.updateTrackedPosition?.(pos.x, pos.y, pos.accuracy);
+        }
+      },
+      drawCalculatedRoute: async () => {
+        await drawRoute();
+      },
+      applyGpsOrientedRoute: async (result) => {
+        if (!result?.points?.length || !result.nodeIds?.length) return false;
+        const route = {
+          id: `gps-route-${result.destinationNodeId}`,
+          nodeIds: result.nodeIds,
+          edgeIds: result.edgeIds || [],
+          points: result.points,
+          length: result.lengthMeters || 0,
+          label: "Rota 1 — Mais curta",
+          kind: "best",
+          fromJson: true,
+        };
+        route.legs = routeLegsFromGraph(route);
+        state.routeOptions = [route];
+        state.routeIdx = 0;
+        state.route = route;
+        state.routePickOpen = true;
+        selectRoute(0, true);
+        updateSummaryChrome();
+        return !!state.route;
+      },
+      waitForDeviceHeading: (timeout = 1500) =>
+        new Promise((resolve) => {
+          const nav = state.userNav || {};
+          if (nav.deviceHeading != null && isFinite(nav.deviceHeading)) {
+            resolve(nav.deviceHeading);
+            return;
+          }
+          const startedAt = Date.now();
+          const tick = () => {
+            const h = state.userNav?.deviceHeading;
+            if (h != null && isFinite(h)) {
+              resolve(h);
+              return;
+            }
+            if (Date.now() - startedAt >= timeout) {
+              resolve(null);
+              return;
+            }
+            requestAnimationFrame(tick);
+          };
+          tick();
+        }),
+      ensureDeviceOrientation: async () => {
+        await state.userLocation?.startFollowing?.({ silent: true })
+          || state.userLocation?.start?.({ silent: true });
+      },
+      getMapNorthOffsetDeg: () => cachedGeo?.transform?.mapNorthOffset || 0,
+      getActiveLevel: () => state.activeLevel || "L00",
     });
   }
 
@@ -4930,7 +4997,7 @@
     state.routeOptions = options;
     state.routePickOpen = true;
     // No celular: fecha o painel antes do zoom para a rota caber no viewport
-    if (innerWidth <= 860) el.panel.classList.remove("open");
+    if (isMobileLayout()) setPanelOpen(false);
     selectRoute(0, true);
     updateSummaryChrome();
     const n = state.routeOptions.length;
@@ -5389,7 +5456,7 @@
     state.placingHere = true;
     closeSuggest();
     el.viewport.style.cursor = "crosshair";
-    if (innerWidth <= 860) el.panel.classList.remove("open");
+    if (isMobileLayout()) setPanelOpen(false);
     toast("Toque no mapa onde você está.");
   }
 
@@ -6182,6 +6249,7 @@
 
   function setPanelOpen(open) {
     if (!el.panel) return;
+    if (!open) exitMobileSearchMode();
     el.panel.classList.toggle("open", !!open);
     el.panel.style.transform = "";
     el.panel.classList.remove("is-dragging");

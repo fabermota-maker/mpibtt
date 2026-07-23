@@ -572,20 +572,50 @@
     };
   }
 
-  function nearestNodeId(point, graph, { avoidParking = false, level = null } = {}) {
-    let best = null, bestD = Infinity;
+  function nearestNodeId(point, graph, {
+    avoidParking = false,
+    preferOutdoor = false,
+    level = null,
+    maxDistanceSvg = Infinity,
+  } = {}) {
+    function isParkingOnlyNode(id) {
+      if (/estacionamento|escacionamento|_moto|_parking/i.test(String(id))) return true;
+      const adj = graph.adjacency.get(id) || [];
+      if (!adj.length) return false;
+      return adj.every((e) => e.parkingLot);
+    }
+
+    function isOutdoorPoiNode(id) {
+      return /sevenpass|seven_pass|N0047|bazar|N0046|refeitorio|N0025|area_kids|N0051|N0020|N0021|N0023|N0055|N0043|N0044|N0045|N0050|N0056|N0049|ginasio|outdoor|toldo/i.test(
+        String(id),
+      );
+    }
+
+    let best = null;
+    let bestScore = Infinity;
     for (const [id, n] of graph.nodesById) {
       if (!n.active) continue;
       if (level && (n.level || "L00") !== level) continue;
       if (!(graph.adjacency.get(id) || []).length) continue;
-      if (avoidParking) {
-        const touchesParking = (graph.adjacency.get(id) || []).every((e) => e.parkingLot);
-        if (touchesParking && (graph.adjacency.get(id) || []).length) {
-          // só evita se TODAS as edges forem de estacionamento
-        }
-      }
+
       const d = dist(point, n);
-      if (d < bestD) { bestD = d; best = id; }
+      if (d > maxDistanceSvg) continue;
+
+      const parkingOnly = isParkingOnlyNode(id);
+      if (avoidParking && parkingOnly) continue;
+
+      let score = d;
+      if (preferOutdoor) {
+        if (isOutdoorPoiNode(id)) score -= 45;
+        if (parkingOnly) score += 150;
+        if (/^L00_N008[0-9]|^L00_N009[0-3]/.test(id)) score += 100;
+        if (/L00_N0018_estacionamento|L00_N0017_estacionamento/.test(id)) score += 80;
+      }
+
+      if (score < bestScore) {
+        bestScore = score;
+        best = id;
+      }
     }
     return best;
   }

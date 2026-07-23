@@ -56,6 +56,15 @@
       onAmbiguousEntrances,
       getLiveMapMatchEnhancer,
       rerouteFromVirtualNode,
+      getSelectedDestinationNodeId,
+      convertGpsToMapCoordinates,
+      updateGpsMarker,
+      drawCalculatedRoute,
+      applyGpsOrientedRoute,
+      waitForDeviceHeading,
+      ensureDeviceOrientation,
+      getMapNorthOffsetDeg,
+      getActiveLevel,
     } = ctx;
 
     let buttonState = "IDLE";
@@ -279,6 +288,67 @@
       return Promise.resolve(options[0]);
     }
 
+    function buildHerePoiFromGpsMatch(result, position, reference) {
+      const node = getState()?.navGraph?.nodesById?.get?.(result.startNodeId);
+      const areaLabel = reference?.name || null;
+      return {
+        id: "__here__",
+        name: areaLabel ? `Você está aqui · ${areaLabel}` : "Você está aqui (GPS)",
+        searchLabel: areaLabel
+          ? `Você está aqui · ${areaLabel}`
+          : "Você está aqui (GPS)",
+        x: result.snap.x,
+        y: result.snap.y,
+        iconX: result.snap.x,
+        iconY: result.snap.y,
+        anchor: result.startNodeId,
+        snap: { x: result.snap.x, y: result.snap.y },
+        cat: "acesso",
+        level: node?.level || reference?.floorId || "L00",
+        navNodeIds: [result.startNodeId],
+        gps: {
+          source: "GPS",
+          latitude: position.latitude,
+          longitude: position.longitude,
+          accuracy: position.accuracy,
+          floorId: node?.level || reference?.floorId || "L00",
+          navNodeId: result.startNodeId,
+          edgeId: result.mapMatch?.edgeId || null,
+          heading: result.heading,
+          referenceId: reference?.id || null,
+        },
+      };
+    }
+
+    async function tryGpsEdgeOrientedRoute(position, destinationOverride, reference) {
+      const dest = destinationOverride || getState()?.dest;
+      const destNodeId = getSelectedDestinationNodeId?.();
+      if (!dest || !destNodeId || typeof global.GpsRouteOrientation?.calculateGpsOrientedRoute !== "function") {
+        return null;
+      }
+
+      await ensureDeviceOrientation?.();
+      const heading = typeof waitForDeviceHeading === "function"
+        ? await waitForDeviceHeading(1500)
+        : null;
+
+      const mapPoint = convertGpsToMapCoordinates?.(position.latitude, position.longitude)
+        || geo?.latLngToSvg?.(position.latitude, position.longitude);
+      if (!mapPoint) return null;
+
+      const navGraph = getState()?.navGraph;
+      if (!navGraph) return null;
+
+      return global.GpsRouteOrientation.calculateGpsOrientedRoute({
+        navGraph,
+        mapPoint,
+        heading,
+        destinationNodeId: destNodeId,
+        level: getActiveLevel?.() || reference?.floorId || "L00",
+        mapNorthOffsetDeg: getMapNorthOffsetDeg?.() || geo?.transform?.mapNorthOffset || 0,
+      });
+    }
+
     async function finishWithReference(reference, position, destinationOverride) {
       const state = getState();
       const navGraph = state.navGraph;
@@ -286,6 +356,54 @@
         toast(MESSAGES.NO_GRAPH);
         setGpsButtonState("IDLE");
         return;
+      }
+
+      const dest = destinationOverride || state.dest;
+      if (dest) {
+        const gpsRoute = await tryGpsEdgeOrientedRoute(position, dest, reference);
+        if (gpsRoute) {
+          lastUserLocation = {
+            source: "GPS",
+            latitude: position.latitude,
+            longitude: position.longitude,
+            accuracy: position.accuracy,
+            floorId: reference?.floorId || "L00",
+            navNodeId: gpsRoute.startNodeId,
+            edgeId: gpsRoute.mapMatch?.edgeId || null,
+            referenceId: reference?.id || null,
+          };
+
+          updateGpsMarker?.({
+            x: gpsRoute.snap.x,
+            y: gpsRoute.snap.y,
+            latitude: position.latitude,
+            longitude: position.longitude,
+            heading: gpsRoute.heading,
+            accuracy: position.accuracy,
+          });
+
+          const herePoi = buildHerePoiFromGpsMatch(gpsRoute, position, reference);
+          setField("origin", herePoi);
+
+          setGpsButtonState("ROUTING");
+          const routed = await applyGpsOrientedRoute?.(gpsRoute);
+          if (!routed) {
+            drawRoute();
+          }
+
+          if (!getState().route) {
+            toast(MESSAGES.NO_ROUTE);
+            setGpsButtonState("IDLE");
+            return;
+          }
+
+          enterNav?.();
+          ensureUserLocationStarted?.();
+          startRouteTracking(getState().route, reference?.floorId || "L00");
+          setGpsButtonState("ACTIVE");
+          toast("Rota orientada pelo GPS.\nSiga pela rota destacada.");
+          return;
+        }
       }
 
       const svgHint = geo.latLngToSvg(position.latitude, position.longitude)
@@ -334,7 +452,6 @@
       const herePoi = buildHerePoi(startNodeId, node, reference, position);
       setField("origin", herePoi);
 
-      const dest = destinationOverride || state.dest;
       if (!dest) {
         toast(MESSAGES.NO_DEST);
         setGpsButtonState("FOUND");

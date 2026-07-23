@@ -16,6 +16,10 @@
       { id: "D", latitude: -25.44125, longitude: -49.284222, svgX: 100, svgY: 140, weight: 1.1 },
       { id: "J", latitude: -25.442488, longitude: -49.284353, svgX: 739.48, svgY: 513.26, weight: 1.2 },
       { id: "K", latitude: -25.442753, longitude: -49.284258, svgX: 860.56, svgY: 513.26, weight: 1.1 },
+      { id: "Q", latitude: -25.442249, longitude: -49.284654, svgX: 739.93, svgY: 458, weight: 1.35 },
+      { id: "W", latitude: -25.44242, longitude: -49.28448, svgX: 860.72, svgY: 478.86, weight: 1.2 },
+      { id: "V2", latitude: -25.44235, longitude: -49.28455, svgX: 819.49, svgY: 469.98, weight: 1.15 },
+      { id: "X", latitude: -25.442752, longitude: -49.284506, svgX: 914.04, svgY: 479.13, weight: 1.15 },
       { id: "N", latitude: -25.442469, longitude: -49.285246, svgX: 591.08, svgY: 826.85, weight: 1.4 },
       { id: "O", latitude: -25.442106, longitude: -49.285379, svgX: 514.38, svgY: 846.6, weight: 1.3 },
       { id: "M", latitude: -25.443038, longitude: -49.284959, svgX: 940.95, svgY: 830, weight: 1 },
@@ -103,18 +107,26 @@
       if (!locBtn) return;
       const nav = getState().userNav || {};
       const mode = nav.followMode || "free";
-      locBtn.dataset.mode = mode;
-      locBtn.dataset.gps = (started || nav.gpsAvailable || starting) ? "on" : "off";
+      const idle = !started && mode !== "off";
+      locBtn.dataset.mode = idle ? "free" : mode;
+      const gpsOn = started && mode !== "off" && (nav.gpsAvailable || starting);
+      locBtn.dataset.gps = gpsOn ? "on" : "off";
       locBtn.classList.toggle("is-follow", mode === "follow");
       locBtn.classList.toggle("is-follow-heading", mode === "follow-heading");
+      locBtn.classList.toggle("is-gps-off", mode === "off");
       locBtn.classList.toggle("is-busy", !!starting);
       const labels = {
-        free: "Ativar minha localização",
+        idle: "Ativar minha localização",
+        free: "Mapa livre — arraste para navegar (toque p/ desligar GPS)",
         follow: "Seguindo localização (toque p/ seguir direção)",
-        "follow-heading": "Seguindo localização e direção (toque p/ liberar)",
+        "follow-heading": "Seguindo localização e direção (toque p/ mapa livre)",
+        off: "GPS desligado (toque p/ ativar)",
       };
-      locBtn.title = labels[mode] || labels.free;
-      locBtn.setAttribute("aria-pressed", mode !== "free" || started ? "true" : "false");
+      locBtn.title = idle ? labels.idle : (labels[mode] || labels.off);
+      locBtn.setAttribute(
+        "aria-pressed",
+        mode === "follow" || mode === "follow-heading" ? "true" : "false",
+      );
       updateGpsCompass();
     }
 
@@ -136,9 +148,17 @@
       const active = started && (nav.gpsAvailable || nav.headingAvailable);
       showGpsCompass(active);
       if (!active || !gpsCompassArrow) return;
-      const h = nav.deviceHeading;
-      if (h == null || !isFinite(h)) return;
-      gpsCompassArrow.style.transform = `rotate(${h}deg)`;
+
+      const deviceH = heading?.getDisplayHeading?.() ?? nav.deviceHeading;
+      if (deviceH == null || !isFinite(deviceH)) return;
+
+      const mapH = heading?.toMapHeading?.(deviceH, geo?.transform)
+        ?? (geo?.gpsBearingToMapHeading
+          ? geo.gpsBearingToMapHeading(deviceH)
+          : deviceH);
+      if (mapH == null || !isFinite(mapH)) return;
+
+      gpsCompassArrow.style.transform = `rotate(${mapH.toFixed(2)}deg)`;
     }
 
     function syncPuckCompassMeta() {
@@ -185,6 +205,54 @@
      * Prende o puck às áreas caminháveis (NAV_NODES).
      * allowFreeMovementOverSvg: false → nunca posiciona o marcador livre no SVG.
      */
+    function resolveSnapFromGpsArea(pos, graph, level) {
+      const areaHit = geofence?.findGpsArea?.(pos.latitude, pos.longitude);
+      const area = areaHit?.point;
+      if (!area?.navNodeId) return null;
+      const node = graph.nodesById?.get?.(area.navNodeId);
+      if (!node || !isFinite(node.x) || !isFinite(node.y)) return null;
+      if (level && (node.level || "L00") !== level) return null;
+      return { x: node.x, y: node.y };
+    }
+
+    function snapOutdoorPoiBySvg(svgPt, graph) {
+      const poiZones = [
+        { nodeId: "L00_N0047", x: 739.93, y: 458, r: 85 },
+        { nodeId: "L00_N0046", x: 819.49, y: 469.98, r: 70 },
+        { nodeId: "L00_N0025", x: 860.72, y: 478.86, r: 70 },
+        { nodeId: "L00_N0051", x: 914.04, y: 479.13, r: 70 },
+      ];
+      for (const zone of poiZones) {
+        if (Math.hypot(svgPt.x - zone.x, svgPt.y - zone.y) > zone.r) continue;
+        const node = graph.nodesById?.get?.(zone.nodeId);
+        if (node && isFinite(node.x) && isFinite(node.y)) {
+          return { x: node.x, y: node.y };
+        }
+      }
+
+      if (svgPt.x >= 620 && svgPt.x <= 940 && svgPt.y >= 488 && svgPt.y <= 560) {
+        const corridorIds = [
+          "L00_N0020_intersection_sevenpass_estaionamento",
+          "L00_N0021_intersection_refeitorio_externo_kids",
+          "L00_N0023_refeitorio_externo_kids",
+          "L00_N0023_intersection_entrada_toldo",
+          "L00_N0055",
+          "L00_N0044",
+          "L00_N0043",
+          "L00_N0049",
+        ];
+        let best = null;
+        for (const id of corridorIds) {
+          const node = graph.nodesById?.get?.(id);
+          if (!node) continue;
+          const d = Math.hypot(svgPt.x - node.x, svgPt.y - node.y);
+          if (!best || d < best.d) best = { node, d };
+        }
+        if (best && best.d < 120) return { x: best.node.x, y: best.node.y };
+      }
+      return null;
+    }
+
     function snapToWalkableSvg(svgPt, pos) {
       const rules = geofence?.rules || global.PIB_CURITIBA_LOCATION_RULES || {};
       if (rules.allowFreeMovementOverSvg) return svgPt;
@@ -195,9 +263,19 @@
 
       const level = getState()?.activeLevel || "L00";
 
-      // Sempre o nó amarelo (NAV) mais próximo da posição GPS no SVG —
-      // áreas/refs GPS só nomeiam o local (Templo etc.), não forçam entrada fixa.
-      const nid = NR.nearestNodeId(svgPt, graph, { level });
+      if (pos?.latitude != null && pos?.longitude != null) {
+        const fromArea = resolveSnapFromGpsArea(pos, graph, level);
+        if (fromArea) return fromArea;
+      }
+
+      const fromOutdoor = snapOutdoorPoiBySvg(svgPt, graph);
+      if (fromOutdoor) return fromOutdoor;
+
+      const nid = NR.nearestNodeId(svgPt, graph, {
+        level,
+        avoidParking: true,
+        preferOutdoor: true,
+      });
       if (!nid) return svgPt;
       const node = graph.nodesById?.get?.(nid) || graph.nodes?.[nid];
       if (!node || !isFinite(node.x) || !isFinite(node.y)) return svgPt;
@@ -363,16 +441,34 @@
 
     function onHeadingUpdate(h) {
       if (h == null) {
-        patchNav({ headingAvailable: false });
+        patchNav({ headingAvailable: false, mapHeading: null });
+        global.GpsCompass?.updateFromDeviceHeading?.(null, geo?.transform, 0);
         return;
       }
-      patchNav({ deviceHeading: h, headingAvailable: true, orientationStatus: "granted" });
+
+      const mapHeading = heading?.toMapHeading?.(h, geo?.transform)
+        ?? (geo?.gpsBearingToMapHeading ? geo.gpsBearingToMapHeading(h) : h);
+
+      patchNav({
+        deviceHeading: h,
+        mapHeading,
+        headingAvailable: true,
+        orientationStatus: "granted",
+      });
+
+      const cam = getState().userNav?.cameraBearing || 0;
+      global.GpsCompass?.updateFromDeviceHeading?.(h, geo?.transform, cam);
+
       if (getState().userNav?.isFollowingHeading) {
         camera?.updateCameraHeading(h, geo);
+        if (displaySvg.x != null && displaySvg.y != null) {
+          camera?.centerOnPoint(displaySvg.x, displaySvg.y);
+        }
       }
     }
 
     async function ensurePermissions() {
+      ensureServices();
       permissions = permissions || global.PermissionService?.create?.();
       if (!permissions) return { ok: false };
 
@@ -389,10 +485,16 @@
         return { ok: false };
       }
 
-      // Bússola — permissão só após gesto do usuário (clique no botão GPS)
-      const compassGranted = await global.GpsCompass?.requestCompassPermission?.();
+      // Bússola — permissão iOS só após gesto do usuário (clique no botão GPS)
+      let compassGranted = false;
+      if (heading?.requestPermission) {
+        compassGranted = await heading.requestPermission();
+      } else {
+        compassGranted = !!(await global.GpsCompass?.requestCompassPermission?.());
+      }
       patchNav({ orientationStatus: compassGranted ? "granted" : "denied" });
       if (compassGranted) {
+        heading?.start?.();
         global.GpsCompass?.startCompassTracking?.();
       } else {
         global.GpsCompass?.updateGpsIconRotation?.(0);
@@ -532,7 +634,10 @@
           }
 
           location?.start();
-          heading?.start();
+          if (getState().userNav?.orientationStatus === "granted") {
+            heading?.start?.();
+            global.GpsCompass?.startCompassTracking?.();
+          }
 
           document.addEventListener("visibilitychange", onVisibility);
           started = true;
@@ -589,6 +694,34 @@
       return true;
     }
 
+    function deactivateGps() {
+      location?.stop();
+      heading?.stop();
+      global.GpsCompass?.stopCompassTracking?.();
+      puck?.hide();
+      showGpsCompass(false);
+      targetSvg = { x: null, y: null };
+      displaySvg = { x: null, y: null };
+      camera?.setFollowMode("off");
+      patchNav({
+        gpsAvailable: false,
+        headingAvailable: false,
+        deviceHeading: null,
+        mapHeading: null,
+        latitude: null,
+        longitude: null,
+        accuracy: null,
+        speed: null,
+        locationBearing: null,
+        isFollowingLocation: false,
+        isFollowingHeading: false,
+      });
+      started = false;
+      starting = false;
+      startPromise = null;
+      updateLocBtn();
+    }
+
     async function onLocBtnClick() {
       // 1) ainda não iniciou → feedback imediato + permissão/GPS
       if (!started) {
@@ -616,16 +749,30 @@
         return;
       }
 
-      // 3) cicla livre → seguir → seguir+direção
-      camera?.cycleFollowMode();
+      // 3) cicla seguir → seguir+direção → mapa livre → GPS desligado
+      const cycled = camera?.cycleFollowMode?.();
+      if (cycled === "off") {
+        deactivateGps();
+        toast("GPS desligado.");
+        return;
+      }
       updateLocBtn();
       const mode = getState().userNav?.followMode;
       if (mode === "follow") {
         if (displaySvg.x != null) camera?.centerOnPoint(displaySvg.x, displaySvg.y);
         toast("Seguindo sua localização.");
       } else if (mode === "follow-heading") {
+        if (getState().userNav?.orientationStatus !== "granted") {
+          heading?.requestPermission?.().then((ok) => {
+            if (!ok) return;
+            patchNav({ orientationStatus: "granted" });
+            heading?.start?.();
+            global.GpsCompass?.startCompassTracking?.();
+          });
+        }
+        if (displaySvg.x != null) camera?.centerOnPoint(displaySvg.x, displaySvg.y);
         toast("Seguindo localização e direção.");
-      } else {
+      } else if (mode === "free") {
         toast("Mapa livre — arraste para navegar.");
       }
     }

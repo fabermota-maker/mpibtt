@@ -1,64 +1,104 @@
 /**
  * Heading do dispositivo via sensores (DeviceOrientation).
+ * Fonte única para bússola e rotação do puck — suavização em requestAnimationFrame.
  */
 (function (global) {
   "use strict";
 
   const GT = () => (typeof GeoTransform !== "undefined" ? GeoTransform : null);
 
+  function normalizeAngle(deg) {
+    if (deg == null || !isFinite(deg)) return null;
+    if (GT()?.normalizeAngle) return GT().normalizeAngle(deg);
+    return ((deg % 360) + 360) % 360;
+  }
+
+  function interpolateAngle(from, to, t) {
+    if (GT()?.interpolateAngle) return GT().interpolateAngle(from, to, t);
+    let delta = ((to - from + 540) % 360) - 180;
+    return normalizeAngle(from + delta * t);
+  }
+
   function createHeadingService(opts = {}) {
-    const smoothingFactor = opts.smoothingFactor ?? 0.18;
-    const targetHz = opts.targetHz ?? 30;
-    const minInterval = 1000 / targetHz;
+    const smoothingFactor = opts.smoothingFactor ?? 0.12;
+    const minEmitDelta = opts.minEmitDelta ?? 0.15;
 
     let bound = false;
     let active = false;
     let paused = false;
+    let permissionGranted = false;
+    let permissionRequested = false;
     let displayHeading = null;
+    let targetHeading = null;
     let rawHeading = null;
     let hasSensor = false;
-    let lastTick = 0;
+    let lastEmitHeading = null;
     const listeners = new Set();
     let rafId = null;
 
-    function emit() {
+    function emit(force) {
+      if (displayHeading == null) return;
+      if (
+        !force &&
+        lastEmitHeading != null &&
+        Math.abs(((displayHeading - lastEmitHeading + 540) % 360) - 180) < minEmitDelta
+      ) {
+        return;
+      }
+      lastEmitHeading = displayHeading;
       listeners.forEach((fn) => {
-        try { fn(displayHeading, rawHeading); } catch (err) { console.warn("HeadingService listener:", err); }
+        try {
+          fn(displayHeading, rawHeading);
+        } catch (err) {
+          console.warn("HeadingService listener:", err);
+        }
       });
     }
 
     function screenOffset() {
       const angle = screen.orientation?.angle;
       if (isFinite(angle)) return angle;
-      if (isFinite(window.orientation)) return window.orientation;
+      if (isFinite(global.orientation)) return global.orientation;
       return 0;
     }
 
     function readHeading(ev) {
       if (ev.webkitCompassHeading != null && isFinite(ev.webkitCompassHeading)) {
-        return GT()?.normalizeAngle(ev.webkitCompassHeading) ?? ev.webkitCompassHeading;
+        return normalizeAngle(ev.webkitCompassHeading);
       }
-      if (ev.alpha == null || !isFinite(ev.alpha)) return null;
-      let h = 360 - ev.alpha;
-      if (!ev.absolute) h += screenOffset();
-      return GT()?.normalizeAngle(h) ?? ((h % 360) + 360) % 360;
+      if (ev.absolute && ev.alpha != null && isFinite(ev.alpha)) {
+        return normalizeAngle(360 - ev.alpha);
+      }
+      if (ev.alpha != null && isFinite(ev.alpha)) {
+        let h = 360 - ev.alpha + screenOffset();
+        return normalizeAngle(h);
+      }
+      return null;
     }
 
     function handler(ev) {
-      if (paused) return;
-      const now = performance.now();
-      if (now - lastTick < minInterval) return;
-      lastTick = now;
+      if (paused || !permissionGranted) return;
       const h = readHeading(ev);
       if (h == null) return;
       rawHeading = h;
+      targetHeading = h;
       hasSensor = true;
       if (displayHeading == null) {
         displayHeading = h;
-      } else {
-        displayHeading = GT()?.interpolateAngle(displayHeading, h, smoothingFactor) ?? h;
+        emit(true);
       }
-      emit();
+    }
+
+    function tick() {
+      if (active && !paused && targetHeading != null) {
+        if (displayHeading == null) {
+          displayHeading = targetHeading;
+        } else {
+          displayHeading = interpolateAngle(displayHeading, targetHeading, smoothingFactor);
+        }
+        emit(false);
+      }
+      rafId = requestAnimationFrame(tick);
     }
 
     function bindEvents() {
@@ -68,31 +108,77 @@
       addEventListener("deviceorientation", handler, true);
     }
 
+    function unbindEvents() {
+      if (!bound) return;
+      removeEventListener("deviceorientationabsolute", handler, true);
+      removeEventListener("deviceorientation", handler, true);
+      bound = false;
+    }
+
+    async function requestPermission() {
+      if (permissionRequested && permissionGranted) return true;
+      if (typeof DeviceOrientationEvent === "undefined") {
+        permissionGranted = false;
+        permissionRequested = true;
+        return false;
+      }
+      try {
+        if (typeof DeviceOrientationEvent.requestPermission === "function") {
+          const result = await DeviceOrientationEvent.requestPermission();
+          permissionGranted = result === "granted";
+        } else {
+          permissionGranted = true;
+        }
+      } catch (err) {
+        console.warn("HeadingService.requestPermission:", err);
+        permissionGranted = false;
+      }
+      permissionRequested = true;
+      return permissionGranted;
+    }
+
     function start() {
-      if (active) return true;
+      if (active) return permissionGranted;
+      if (
+        !permissionGranted &&
+        typeof DeviceOrientationEvent !== "undefined" &&
+        typeof DeviceOrientationEvent.requestPermission === "function"
+      ) {
+        return false;
+      }
       active = true;
       paused = false;
       bindEvents();
+      if (!rafId) rafId = requestAnimationFrame(tick);
       return true;
     }
 
     function stop() {
       active = false;
-      if (bound) {
-        removeEventListener("deviceorientationabsolute", handler, true);
-        removeEventListener("deviceorientation", handler, true);
-        bound = false;
+      unbindEvents();
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
       }
-      if (rafId) cancelAnimationFrame(rafId);
+      displayHeading = null;
+      targetHeading = null;
+      rawHeading = null;
+      lastEmitHeading = null;
+      hasSensor = false;
     }
 
-    function pause() { paused = true; }
-    function resume() { paused = false; }
+    function pause() {
+      paused = true;
+    }
+
+    function resume() {
+      paused = false;
+    }
 
     function combineWithLocationBearing(locationBearing, speed) {
       if (displayHeading == null) return locationBearing;
       if (locationBearing == null || (speed || 0) < 1.5) return displayHeading;
-      return GT()?.interpolateAngle(displayHeading, locationBearing, 0.25) ?? displayHeading;
+      return interpolateAngle(displayHeading, locationBearing, 0.25);
     }
 
     function subscribe(fn) {
@@ -104,8 +190,20 @@
       return displayHeading;
     }
 
+    function toMapHeading(deviceHeading, geoTransform) {
+      if (deviceHeading == null || !isFinite(deviceHeading)) return null;
+      const mapped = geoTransform?.gpsBearingToMapHeading
+        ? geoTransform.gpsBearingToMapHeading(deviceHeading)
+        : deviceHeading;
+      return normalizeAngle(mapped);
+    }
+
     function sensorAvailable() {
       return hasSensor;
+    }
+
+    function isPermissionGranted() {
+      return permissionGranted;
     }
 
     return {
@@ -114,9 +212,12 @@
       pause,
       resume,
       subscribe,
+      requestPermission,
       combineWithLocationBearing,
       getDisplayHeading,
+      toMapHeading,
       sensorAvailable,
+      isPermissionGranted,
       isActive: () => active,
     };
   }

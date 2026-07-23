@@ -910,6 +910,14 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
 .ctrl--loc[data-mode="follow-heading"] .loc-icon--heading,
 .ctrl--loc.is-follow-heading .loc-icon--heading { display: block; }
 .ctrl--loc.is-follow-heading { color: var(--brand); box-shadow: var(--ring); }
+.ctrl--loc[data-mode="off"] .loc-icon--off,
+.ctrl--loc.is-gps-off .loc-icon--off { display: block; }
+.ctrl--loc[data-mode="off"],
+.ctrl--loc.is-gps-off {
+  color: var(--ink-dim);
+  box-shadow: none;
+  opacity: .72;
+}
 .ctrl--loc.is-busy { opacity: 0.82; cursor: wait; }
 
 /* Bússola flutuante — seta de heading (foto3) */
@@ -942,7 +950,7 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
 .gps-compass__arrow {
   display: grid;
   place-items: center;
-  transition: transform .12s linear;
+  will-change: transform;
   filter: drop-shadow(0 2px 8px rgba(15, 48, 84, .35));
 }
 :root[data-theme="light"] .gps-compass {
@@ -1164,7 +1172,7 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
     pointer-events: none;
     transition: opacity .28s ease;
   }
-  body.panel-drawer-open .stage::before {
+  body.panel-drawer-open:has(.panel.open) .stage::before {
     opacity: 1;
     pointer-events: auto;
   }

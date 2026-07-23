@@ -167,6 +167,7 @@
     const nodeHit = findNearestValidNavNode(svgPt, navGraph, {
       level: "L00",
       preferOutdoor: true,
+      avoidParking: true,
       maxDistanceSvg: (Math.max(20, accuracy || 30) / metersPerUnit) * 1.5,
     });
     if (nodeHit) {
@@ -211,6 +212,13 @@
     return { ambiguous: false, reference: null, needsManual: true };
   }
 
+  function isParkingOnlyNode(id, graph) {
+    if (/estacionamento|escacionamento|_moto|_parking/i.test(String(id))) return true;
+    const adj = graph.adjacency?.get(id) || [];
+    if (!adj.length) return false;
+    return adj.every((e) => e.parkingLot);
+  }
+
   function findNearestValidNavNode(point, graph, opts = {}) {
     if (!graph?.nodesById) return null;
     const level = opts.level || "L00";
@@ -224,6 +232,7 @@
       const adj = graph.adjacency?.get(id) || [];
       if (!adj.length) continue;
       if (opts.preferOutdoor && isInternalOnlyNode(n)) continue;
+      if (opts.avoidParking && isParkingOnlyNode(id, graph)) continue;
 
       const d = Math.hypot(point.x - n.x, point.y - n.y);
       if (d > maxD) continue;
@@ -231,8 +240,9 @@
       if (opts.preferOutdoor) {
         const sample = adj[0];
         const outdoor = isOutdoorNode(n, sample);
-        // ainda aceita internos se nada outdoor estiver perto — mas prioriza outdoor
-        const score = outdoor ? d : d + 40;
+        let score = outdoor ? d : d + 40;
+        if (isParkingOnlyNode(id, graph)) score += 120;
+        if (/^L00_N008[0-9]|^L00_N009[0-3]/.test(id)) score += 80;
         if (score < bestD) {
           bestD = score;
           best = { id, node: n, distanceSvg: d };

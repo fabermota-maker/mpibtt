@@ -23,6 +23,16 @@
     }
 
     function setFollowMode(mode) {
+      if (mode === "off") {
+        patchNav({
+          isFollowingLocation: false,
+          isFollowingHeading: false,
+          followMode: "off",
+          cameraBearing: 0,
+        });
+        apply();
+        return;
+      }
       const free = mode === "free";
       patchNav({
         isFollowingLocation: mode === "follow" || mode === "follow-heading",
@@ -40,9 +50,10 @@
 
     function cycleFollowMode() {
       const cur = getNav().followMode || "free";
-      if (cur === "free") setFollowMode("follow");
-      else if (cur === "follow") setFollowMode("follow-heading");
-      else setFollowMode("free");
+      if (cur === "follow") setFollowMode("follow-heading");
+      else if (cur === "follow-heading") setFollowMode("free");
+      else if (cur === "free") return "off";
+      else setFollowMode("follow");
       return getNav().followMode || "free";
     }
 
@@ -77,7 +88,12 @@
       const mapHeading = geoTransform?.gpsBearingToMapHeading
         ? geoTransform.gpsBearingToMapHeading(deviceHeading)
         : deviceHeading;
-      patchNav({ cameraBearing: mapHeading });
+      const GT = global.GeoTransform;
+      const cur = nav.cameraBearing || 0;
+      const smoothed = GT?.interpolateAngle
+        ? GT.interpolateAngle(cur, mapHeading, 0.14)
+        : mapHeading;
+      patchNav({ cameraBearing: smoothed });
       apply();
     }
 

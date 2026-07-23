@@ -35,6 +35,42 @@
       "weight": 1.2
     },
     {
+      "id": "Q",
+      "label": "Restaurante Seven Pass — entrada",
+      "latitude": -25.442249,
+      "longitude": -49.284654,
+      "svgX": 739.93,
+      "svgY": 458,
+      "weight": 1.35
+    },
+    {
+      "id": "V2",
+      "label": "Bazar Transforma ABASC",
+      "latitude": -25.44235,
+      "longitude": -49.28455,
+      "svgX": 819.49,
+      "svgY": 469.98,
+      "weight": 1.15
+    },
+    {
+      "id": "W",
+      "label": "Refeitório externo",
+      "latitude": -25.44242,
+      "longitude": -49.28448,
+      "svgX": 860.72,
+      "svgY": 478.86,
+      "weight": 1.2
+    },
+    {
+      "id": "X",
+      "label": "Área Kids",
+      "latitude": -25.442752,
+      "longitude": -49.284506,
+      "svgX": 914.04,
+      "svgY": 479.13,
+      "weight": 1.15
+    },
+    {
       "id": "K",
       "label": "Fundo Espaço Kids",
       "latitude": -25.442753,
