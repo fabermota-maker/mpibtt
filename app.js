@@ -1256,10 +1256,9 @@
       baseNode.style.strokeWidth = "10";
       baseNode.style.opacity = "1";
     }
-    /* Brilho animado: CSS controla stroke/dash — só reinicia o fluxo */
+    /* Brilho animado: fluxo origem → destino (WAAPI em route-animation-config.js) */
     if (glowNode) {
-      globalThis.RouteAnimation?.syncGlowDashToPath?.(glowNode);
-      globalThis.RouteAnimation?.restartRouteGlowAnimation?.(glowNode);
+      globalThis.RouteAnimation?.startRouteGlowFlow?.(glowNode);
     }
   }
 
