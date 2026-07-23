@@ -6,14 +6,15 @@
 
   const ROUTE_ANIMATION_CONFIG = {
     enabled: true,
-    durationSeconds: 2.8,
-    glowLength: 28,
-    gapLength: 110,
+    durationSeconds: 3.2,
+    glowLength: 24,
+    gapLength: 120,
     baseWidth: 8,
-    glowWidth: 5,
-    glowOpacity: 0.92,
+    glowWidth: 4.5,
+    glowOpacity: 0.78,
     routeColor: "#00AEEF",
-    glowColor: "rgba(255, 255, 255, 0.95)",
+    /** Brilho claro — legível no campus escuro e nos mapas de andar claros */
+    glowColor: "rgba(175, 238, 255, 0.92)",
     baseOpacity: 0.88,
     completedOpacity: 0.35,
   };
@@ -39,6 +40,23 @@
     layerEl.classList.remove("route-path-completed");
   }
 
+  /** Ajusta o espaçamento do dash conforme o comprimento do path (fluxo contínuo). */
+  function syncGlowDashToPath(glowNode, cfg = ROUTE_ANIMATION_CONFIG) {
+    if (!glowNode || cfg.enabled === false) return;
+    try {
+      const len = glowNode.getTotalLength?.() || 0;
+      if (len < 40) return;
+      const gap = Math.max(cfg.gapLength || 120, Math.round(len * 0.42));
+      const total = (cfg.glowLength || 24) + gap;
+      glowNode.style.setProperty("--route-gap-length", String(gap));
+      glowNode.style.setProperty("--route-glow-dash-total", String(total));
+      if (glowNode.closest?.(".route-layer")) {
+        glowNode.closest(".route-layer").style.setProperty("--route-gap-length", String(gap));
+        glowNode.closest(".route-layer").style.setProperty("--route-glow-dash-total", String(total));
+      }
+    } catch { /* ignore */ }
+  }
+
   /** Reinicia o keyframe do traço luminoso quando a geometria da rota muda. */
   function restartRouteGlowAnimation(glowNode) {
     if (!glowNode || ROUTE_ANIMATION_CONFIG.enabled === false) return;
@@ -49,7 +67,7 @@
     });
   }
 
-  /** Aplica a mesma geometria nos dois paths (base + brilho animado). */
+  /** Aplica geometria na linha base + camada animada (brilho em fluxo via CSS). */
   function paintRoutePaths(layerEl, baseNode, glowNode, pathD) {
     const d = pathD || "";
     const cfg = ROUTE_ANIMATION_CONFIG;
@@ -64,11 +82,11 @@
       baseNode.setAttribute("stroke-linecap", "round");
       baseNode.setAttribute("stroke-linejoin", "round");
       baseNode.style.fill = "none";
+      baseNode.style.stroke = stroke;
+      baseNode.style.strokeWidth = baseW;
+      baseNode.style.opacity = String(cfg.baseOpacity ?? 0.88);
       baseNode.style.visibility = d ? "visible" : "hidden";
       baseNode.style.display = d ? "" : "none";
-      baseNode.style.removeProperty("opacity");
-      baseNode.style.removeProperty("stroke");
-      baseNode.style.removeProperty("stroke-width");
     }
 
     if (glowNode) {
@@ -84,7 +102,10 @@
       glowNode.style.removeProperty("stroke");
       glowNode.style.removeProperty("stroke-width");
       glowNode.style.removeProperty("opacity");
-      if (d) restartRouteGlowAnimation(glowNode);
+      if (d) {
+        syncGlowDashToPath(glowNode, cfg);
+        restartRouteGlowAnimation(glowNode);
+      }
     }
 
     if (!layerEl) return;
@@ -117,6 +138,7 @@
     clearRoutePaths,
     setRouteCompleted,
     restartRouteGlowAnimation,
+    syncGlowDashToPath,
     dashTotal,
   };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -10,6 +10,17 @@
     return meta.floors.filter((f) => f.includes("-") && f.split("-").includes(levelId));
   }
 
+  function connectorEndpoints(connId) {
+    const parts = String(connId || "").split("-");
+    if (parts.length !== 2) return [null, null];
+    return parts;
+  }
+
+  function canLoadConnector(connId, loaded) {
+    const [a, b] = connectorEndpoints(connId);
+    return !!(a && b && loaded.has(a) && loaded.has(b));
+  }
+
   function createGraphLoader(opts = {}) {
     const baseUrl = opts.baseUrl || "data/navigation/";
     const floorCache = new Map();
@@ -42,6 +53,17 @@
       }
       graph = global.NavigationRouter.mergeNavigationLevel(graph, floorData);
       loaded.add(levelId);
+      return graph;
+    }
+
+    async function loadConnectorsFor(levelId) {
+      await loadMeta();
+      for (const conn of connectorLevelsFor(meta, levelId)) {
+        if (loaded.has(conn)) continue;
+        if (!canLoadConnector(conn, loaded)) continue;
+        const floor = await loadFloorFile(conn);
+        mergeFloor(conn, floor);
+      }
       return graph;
     }
 
@@ -94,7 +116,7 @@
     }
 
     async function loadFloorData(levelId, { withConnectors = true } = {}) {
-      if (!levelId) return graph;
+      if (!levelId || String(levelId).includes("-")) return graph;
       await loadMeta();
 
       if (!graph) await loadInitialLevel();
@@ -104,13 +126,7 @@
         mergeFloor(levelId, floor);
       }
 
-      if (withConnectors) {
-        for (const conn of connectorLevelsFor(meta, levelId)) {
-          if (loaded.has(conn)) continue;
-          const floor = await loadFloorFile(conn);
-          mergeFloor(conn, floor);
-        }
-      }
+      if (withConnectors) await loadConnectorsFor(levelId);
 
       return graph;
     }
@@ -119,9 +135,28 @@
       const ids = [...new Set((levelIds || []).filter(Boolean))];
       if (!ids.length) return graph;
       if (!graph) await loadInitialLevel();
+      await loadMeta();
+
+      // 1) Andares completos antes dos conectores verticais
       for (const id of ids) {
-        await loadFloorData(id, { withConnectors: true });
+        if (String(id).includes("-")) continue;
+        if (loaded.has(id)) continue;
+        const floor = await loadFloorFile(id);
+        mergeFloor(id, floor);
       }
+
+      // 2) Conectores só quando os dois andares existem no grafo
+      const connectors = new Set();
+      for (const id of ids) {
+        for (const conn of connectorLevelsFor(meta, id)) connectors.add(conn);
+      }
+      for (const conn of connectors) {
+        if (loaded.has(conn)) continue;
+        if (!canLoadConnector(conn, loaded)) continue;
+        const floor = await loadFloorFile(conn);
+        mergeFloor(conn, floor);
+      }
+
       return graph;
     }
 

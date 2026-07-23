@@ -633,8 +633,14 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
 
 .svg-host--floor[data-level="B01"] #mapRoutePathGlow,
 .svg-host--floor[data-level="B02"] #mapRoutePathGlow {
-  stroke-width: var(--route-glow-width, 5) !important;
+  stroke: var(--route-glow-color, rgba(175, 238, 255, 0.92)) !important;
+  stroke-width: var(--route-glow-width, 4.5) !important;
+  stroke-dasharray: var(--route-glow-length, 24) var(--route-gap-length, 120);
+  animation: routeGlowMove var(--route-glow-duration, 3.2s) linear infinite;
+  opacity: var(--route-glow-opacity, 0.78);
   vector-effect: none;
+  mix-blend-mode: normal;
+  filter: none;
 }
 
 .svg-host--floor[data-level^="L0"] #mapRoutePathBase,
@@ -658,8 +664,14 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
 .svg-host--floor[data-level="L04"] #mapRoutePathGlow,
 .svg-host--floor[data-level="L05"] #mapRoutePathGlow,
 .svg-host--floor[data-level="L06"] #mapRoutePathGlow {
-  stroke-width: var(--route-glow-width, 5) !important;
+  stroke: var(--route-glow-color, rgba(175, 238, 255, 0.92)) !important;
+  stroke-width: var(--route-glow-width, 4.5) !important;
+  stroke-dasharray: var(--route-glow-length, 24) var(--route-gap-length, 120);
+  animation: routeGlowMove var(--route-glow-duration, 3.2s) linear infinite;
+  opacity: var(--route-glow-opacity, 0.78);
   vector-effect: none;
+  mix-blend-mode: normal;
+  filter: none;
 }
 .svg-host svg {
   display: block; max-width: none;
@@ -724,6 +736,38 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
   pointer-events: none;
 }
 
+/* Overlay (L00 campus) — linha azul sempre visível; evita non-scaling-stroke sumir */
+.overlay .route-layer,
+.overlay #routeLayer {
+  z-index: 2;
+  isolation: isolate;
+}
+
+.overlay #routePathBase,
+.overlay .route-path-base {
+  vector-effect: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  stroke: #00aeef !important;
+  stroke-width: 10 !important;
+}
+
+/* Camada animada acima da rota (overlay campus) — brilho em fluxo */
+.overlay #routePathGlow,
+.overlay .route-path-glow {
+  vector-effect: none !important;
+  visibility: visible !important;
+  stroke: var(--route-glow-color, rgba(175, 238, 255, 0.92)) !important;
+  stroke-width: var(--route-glow-width, 4.5) !important;
+  stroke-dasharray: var(--route-glow-length, 24) var(--route-gap-length, 120);
+  stroke-dashoffset: 0;
+  animation: routeGlowMove var(--route-glow-duration, 3.2s) linear infinite;
+  opacity: var(--route-glow-opacity, 0.78);
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 2px rgba(175, 238, 255, 0.35));
+  pointer-events: none;
+}
+
 .route-layer .route-path {
   fill: none !important;
   stroke-linecap: round;
@@ -741,10 +785,37 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
   isolation: isolate;
 }
 
-.svg-host--floor #mapRoutePathBase,
-.svg-host--floor #mapRoutePathGlow {
+.svg-host--floor #mapRoutePathBase {
   opacity: 1 !important;
   visibility: visible !important;
+}
+
+.svg-host--floor #mapRoutePathGlow {
+  visibility: visible !important;
+  opacity: var(--route-glow-opacity, 0.78);
+}
+
+/* Campus L00 (térreo) — rota sempre visível no overlay e no SVG */
+.svg-host:not(.svg-host--floor) #mapRoutePathBase,
+#routePathBase {
+  stroke: #00aeef !important;
+  stroke-width: 10 !important;
+  vector-effect: none;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.svg-host:not(.svg-host--floor) #mapRoutePathGlow,
+#routePathGlow {
+  vector-effect: none;
+  visibility: visible !important;
+  stroke: var(--route-glow-color, rgba(175, 238, 255, 0.92)) !important;
+  stroke-width: var(--route-glow-width, 4.5) !important;
+  stroke-dasharray: var(--route-glow-length, 24) var(--route-gap-length, 120);
+  animation: routeGlowMove var(--route-glow-duration, 3.2s) linear infinite;
+  opacity: var(--route-glow-opacity, 0.78);
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 2px rgba(175, 238, 255, 0.35));
 }
 
 #routePathBase,
@@ -758,31 +829,15 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
 #routePathGlow,
 #mapRoutePathGlow,
 .route-path-glow {
-  stroke: var(--route-glow-color, rgba(255, 255, 255, 0.95)) !important;
-  stroke-width: var(--route-glow-width, 5);
-  stroke-dasharray: var(--route-glow-length, 28) var(--route-gap-length, 110);
+  stroke: var(--route-glow-color, rgba(175, 238, 255, 0.92)) !important;
+  stroke-width: var(--route-glow-width, 4.5);
+  stroke-dasharray: var(--route-glow-length, 24) var(--route-gap-length, 120);
   stroke-dashoffset: 0;
-  opacity: var(--route-glow-opacity, 0.92);
-  animation: routeGlowMove var(--route-glow-duration, 2.8s) linear infinite;
-  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.45));
+  opacity: var(--route-glow-opacity, 0.78);
+  animation: routeGlowMove var(--route-glow-duration, 3.2s) linear infinite;
+  filter: drop-shadow(0 0 2px rgba(175, 238, 255, 0.35));
   mix-blend-mode: screen;
-}
-
-.route-path-base {
-  stroke: var(--route-color, #00aeef) !important;
-  stroke-width: var(--route-base-width, 8);
-  opacity: var(--route-base-opacity, 0.88);
-}
-
-.route-path-glow {
-  stroke: var(--route-glow-color, rgba(255, 255, 255, 0.95)) !important;
-  stroke-width: var(--route-glow-width, 5);
-  stroke-dasharray: var(--route-glow-length, 28) var(--route-gap-length, 110);
-  stroke-dashoffset: 0;
-  opacity: var(--route-glow-opacity, 0.92);
-  animation: routeGlowMove var(--route-glow-duration, 2.8s) linear infinite;
-  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.45));
-  mix-blend-mode: screen;
+  pointer-events: none;
 }
 
 .route-layer.route-animation-off .route-path-glow {

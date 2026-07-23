@@ -45,7 +45,8 @@
     return true;
   }
 
-  function buildAdjacencyList(nodes, edges) {
+  function buildAdjacencyList(nodes, edges, opts = {}) {
+    const skipMissing = !!opts.skipMissingNodes;
     const adjacency = new Map();
     const edgesById = new Map();
     const nodesById = new Map();
@@ -58,10 +59,11 @@
     for (const edge of edges) {
       edgesById.set(edge.id, edge);
       if (!edge.active) continue;
-      if (!adjacency.has(edge.from)) {
-        throw new Error(`Node inexistente: ${edge.from}`);
-      }
-      if (!adjacency.has(edge.to)) {
+      if (!adjacency.has(edge.from) || !adjacency.has(edge.to)) {
+        if (skipMissing) continue;
+        if (!adjacency.has(edge.from)) {
+          throw new Error(`Node inexistente: ${edge.from}`);
+        }
         throw new Error(`Node inexistente: ${edge.to}`);
       }
       adjacency.get(edge.from).push(edge);
@@ -547,10 +549,10 @@
     }
     const edgeIds = new Set(raw.edges.map((e) => e.id));
     for (const e of levelData.edges || []) {
-      if (!edgeIds.has(e.id)) {
-        raw.edges.push(e);
-        edgeIds.add(e.id);
-      }
+      if (edgeIds.has(e.id)) continue;
+      if (!nodeIds.has(e.from) || !nodeIds.has(e.to)) continue;
+      raw.edges.push(e);
+      edgeIds.add(e.id);
     }
     const poiKeys = new Set(raw.pois.map((p) => `${p.id}|${p.level || ""}`));
     for (const p of levelData.pois || []) {
@@ -561,7 +563,7 @@
       }
     }
 
-    const built = buildAdjacencyList(raw.nodes, raw.edges);
+    const built = buildAdjacencyList(raw.nodes, raw.edges, { skipMissingNodes: true });
     return {
       ...built,
       pois: raw.pois,

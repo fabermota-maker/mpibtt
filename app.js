@@ -454,7 +454,8 @@
         state.navGraph = loader.getGraph();
         syncPoisFromNavigation(loader.getMeta()?.poiCatalog || [], { injectAllFloors: true });
       } catch (err) {
-        console.warn("ensureNavGraphFloors:", err);
+        console.error("ensureNavGraphFloors:", err);
+        state.navGraphError = String(err.message || err);
       }
       return state.navGraph;
     }
@@ -771,6 +772,18 @@
 
   function isCrossCampusFloorPair(oLvl, dLvl) {
     return isCampusFloor(oLvl) && isCampusFloor(dLvl) && oLvl !== dLvl;
+  }
+
+  /** Campus L00 mesmo andar: polyline global. Andares ADM/subsolo: sempre malha por edges. */
+  function preferGraphRoutePaint(levelId, oLvl, dLvl) {
+    if (isAdmFloor(levelId) || isBasementFloor(levelId)) return true;
+    if (oLvl !== dLvl) return true;
+    return false;
+  }
+
+  /** Só o campus L00 usa polyline completa de route.points na pintura (malha outdoor). */
+  function shouldUseFullRoutePolyline(levelId, oLvl, dLvl) {
+    return levelId === "L00" && oLvl === dLvl && oLvl === "L00";
   }
 
   /** Nós do elevador ADM entre dois andares (inclui origem e destino). */
@@ -1141,7 +1154,80 @@
     apply();
   }
 
-  /** Paths da rota dentro do SVG do andar — sempre escopados ao #mapRouteLayer. */
+  /** Pontos para pintar — ADM/subsolo/multi-andar: malha; L00 campus: polyline global. */
+  function collectRoutePaintPoints(route, levelId) {
+    if (!route) return { leg: null, points: [] };
+    const oLvl = poiLevel(state.origin);
+    const dLvl = poiLevel(state.dest);
+
+    if (preferGraphRoutePaint(levelId, oLvl, dLvl)) {
+      const view = resolveRoutePaintPoints(route, levelId);
+      if (view.points?.length >= 2) return view;
+    }
+
+    if (shouldUseFullRoutePolyline(levelId, oLvl, dLvl) && route.points?.length >= 2) {
+      const direct = route.points
+        .map((p) => ({ x: p.x, y: p.y }))
+        .filter((p) => isFinite(p.x) && isFinite(p.y));
+      if (direct.length >= 2) return { leg: null, points: direct };
+    }
+
+    return resolveRoutePaintPoints(route, levelId);
+  }
+
+  /** Pontos finais para pintar no andar — nunca aborta se a rota calculada tem geometria. */
+  function resolveRoutePaintPoints(route, levelId) {
+    if (!route) return { leg: null, points: [] };
+
+    let { leg, points: pts } = routePointsForLevel(route, levelId);
+    if (!pts?.length || pts.length < 2) {
+      rebuildRouteLegs(route);
+      hydrateRouteLegPoints(route, levelId);
+      ({ leg, points: pts } = routePointsForLevel(route, levelId));
+    }
+    if (!pts?.length || pts.length < 2) {
+      const fb = buildFloorLegFallbackPoints(levelId, state.origin, state.dest);
+      if (fb?.points?.length >= 2) {
+        pts = fb.points.map((p) => ({ x: p.x, y: p.y }));
+        if (!leg) {
+          leg = {
+            level: levelId,
+            nodeIds: fb.nodeIds || [],
+            edgeIds: fb.edgeIds || [],
+            points: pts,
+          };
+        }
+      }
+    }
+
+    const oLvl = poiLevel(state.origin);
+    const dLvl = poiLevel(state.dest);
+    if ((!pts?.length || pts.length < 2) && route.points?.length >= 2) {
+      const sliced = sliceRoutePointsForLevel(route, levelId);
+      if (sliced?.length >= 2) {
+        pts = sliced.map((p) => ({ x: p.x, y: p.y }));
+      } else if (shouldUseFullRoutePolyline(levelId, oLvl, dLvl)) {
+        pts = route.points
+          .map((p) => ({ x: p.x, y: p.y }))
+          .filter((p) => isFinite(p.x) && isFinite(p.y));
+      }
+    }
+
+    return { leg, points: pts?.length >= 2 ? pts : [] };
+  }
+
+  function getMapRoutePaintTargets(svg) {
+    if (!svg) return { layer: null, base: null, glow: null };
+    const layer = svg.querySelector("#mapRouteLayer");
+    if (!layer) return { layer: null, base: null, glow: null };
+    return {
+      layer,
+      base: layer.querySelector("#mapRoutePathBase"),
+      glow: layer.querySelector("#mapRoutePathGlow"),
+    };
+  }
+
+  /** Garante camada + paths no SVG do mapa (campus L00 ou andar). */
   function resolveMapRoutePaintTargets(svg) {
     if (!svg) return { layer: null, base: null, glow: null };
     const layer = ensureRouteLayer(svg);
@@ -1150,6 +1236,31 @@
       base: layer.querySelector("#mapRoutePathBase"),
       glow: layer.querySelector("#mapRoutePathGlow"),
     };
+  }
+
+  function forceRoutePathVisible(baseNode, glowNode, pathD) {
+    if (!pathD) return;
+    const stroke = "#00AEEF";
+    [baseNode, glowNode].forEach((node) => {
+      if (!node) return;
+      node.setAttribute("fill", "none");
+      node.style.fill = "none";
+      node.style.visibility = "visible";
+      node.style.display = "";
+      node.removeAttribute("hidden");
+    });
+    if (baseNode) {
+      baseNode.setAttribute("stroke", stroke);
+      baseNode.setAttribute("stroke-width", "10");
+      baseNode.style.stroke = stroke;
+      baseNode.style.strokeWidth = "10";
+      baseNode.style.opacity = "1";
+    }
+    /* Brilho animado: CSS controla stroke/dash — só reinicia o fluxo */
+    if (glowNode) {
+      globalThis.RouteAnimation?.syncGlowDashToPath?.(glowNode);
+      globalThis.RouteAnimation?.restartRouteGlowAnimation?.(glowNode);
+    }
   }
 
   /** Reidrata pernas vazias (lazy load / legs obsoletos) antes de pintar. */
@@ -1286,7 +1397,7 @@
         }
       }
     }
-    if (points.length < 2 && oLvl === dLvl && oLvl === levelId && route.points?.length >= 2) {
+    if (points.length < 2 && shouldUseFullRoutePolyline(levelId, oLvl, dLvl) && route.points?.length >= 2) {
       points = route.points
         .map((p) => ({ x: p.x, y: p.y }))
         .filter((p) => isFinite(p.x) && isFinite(p.y));
@@ -1322,6 +1433,17 @@
       if (start >= 0 && end > start) {
         const stitched = stitchEdgePaths((route.edgeIds || []).slice(start, end));
         if (stitched) points = stitched;
+      }
+    }
+
+    if (points.length < 2 && route.points?.length >= 2) {
+      const sliced = sliceRoutePointsForLevel(route, levelId);
+      if (sliced?.length >= 2) {
+        points = sliced.map((p) => ({ x: p.x, y: p.y }));
+      } else if (oLvl === dLvl && oLvl === levelId) {
+        points = route.points
+          .map((p) => ({ x: p.x, y: p.y }))
+          .filter((p) => isFinite(p.x) && isFinite(p.y));
       }
     }
 
@@ -2478,14 +2600,28 @@
     const dLvl = poiLevel(state.dest);
     const lvl = state.activeLevel;
 
-    let { leg, points: pts } = routePointsForLevel(state.route, lvl);
-    if (!pts?.length || pts.length < 2) {
+    let { leg, points: pts } = collectRoutePaintPoints(state.route, lvl);
+
+    if ((!pts?.length || pts.length < 2) && state.route) {
       rebuildRouteLegs(state.route);
+      hydrateRouteLegPoints(state.route, lvl);
       ({ leg, points: pts } = routePointsForLevel(state.route, lvl));
     }
-    if (!pts?.length || pts.length < 2) {
-      const fb = buildFloorLegFallbackPoints(lvl, state.origin, state.dest);
-      if (fb?.points?.length >= 2) pts = fb.points.map((p) => ({ x: p.x, y: p.y }));
+
+    if ((!pts?.length || pts.length < 2) && state.route?.points?.length >= 2) {
+      const sliced = sliceRoutePointsForLevel(state.route, lvl);
+      if (sliced?.length >= 2) {
+        pts = sliced.map((p) => ({ x: p.x, y: p.y }));
+      } else if (shouldUseFullRoutePolyline(lvl, oLvl, dLvl)) {
+        pts = state.route.points
+          .map((p) => ({ x: p.x, y: p.y }))
+          .filter((p) => isFinite(p.x) && isFinite(p.y));
+      } else {
+        const fb = buildFloorLegFallbackPoints(lvl, state.origin, state.dest);
+        if (fb?.points?.length >= 2) {
+          pts = fb.points.map((p) => ({ x: p.x, y: p.y }));
+        }
+      }
     }
     if (!pts?.length || pts.length < 2) {
       clearRoutePaint();
@@ -2535,11 +2671,6 @@
     if (isNarniaEntrancePoi(state.dest) && narniaLevelForPoi(state.dest) === lvl) {
       const gateLvl = isBasementFloor(lvl) ? lvl : "L00";
       pts = refineNarniaEndpoint(pts, gateLvl, "end");
-    }
-
-    if (isSyntheticStraightSpur(pts, leg, state.route) && (leg?.edgeIds?.length || 0) === 0 && (state.route?.edgeIds?.length || 0) === 0) {
-      clearRoutePaint();
-      return;
     }
 
     const a = pts[0];
@@ -4445,13 +4576,17 @@
         p.setAttribute("fill", "none");
         p.setAttribute("d", "");
         p.setAttribute("vector-effect", "non-scaling-stroke");
-        layer.insertBefore(p, layer.firstChild);
+        layer.appendChild(p);
       }
       p.setAttribute("class", className);
       return p;
     };
+    /* Base embaixo, brilho animado por cima (stroke-dashoffset) */
     mkPath("mapRoutePathBase", "route-path route-path-base");
     mkPath("mapRoutePathGlow", "route-path route-path-glow");
+    const base = layer.querySelector("#mapRoutePathBase");
+    const glow = layer.querySelector("#mapRoutePathGlow");
+    if (base && glow) layer.appendChild(glow);
     if (!layer.querySelector("#mapRouteStart")) {
       const pin = (id, kind) => {
         const g = document.createElementNS(NS, "g");
@@ -5793,6 +5928,12 @@
     } else {
       paintRoutePathNodes(el.routeLayer, el.routePathBase, el.routePathGlow, d);
     }
+    forceRoutePathVisible(el.routePathBase, el.routePathGlow, d);
+    if (el.routeLayer && d) {
+      el.routeLayer.style.display = "";
+      el.routeLayer.style.visibility = "visible";
+      el.routeLayer.removeAttribute("hidden");
+    }
     RA?.setRouteCompleted?.(el.routeLayer, !!state.routeVisualCompleted);
 
     const Icons = globalThis.MapNavIcons;
@@ -5812,22 +5953,26 @@
 
     state._routeMarkerCache = { start: a, end: b, bearing: startBearing };
 
-    // camada vetorial DENTRO do mapa (sempre no topo + path)
     const svg = el.svgHost.querySelector("svg");
-    if (!svg) return;
-    const { layer, base, glow } = resolveMapRoutePaintTargets(svg);
-    RA?.applyRouteAnimationVars?.(layer);
-    if (RA?.paintRoutePaths) {
-      RA.paintRoutePaths(layer, base, glow, d);
-    } else {
-      paintRoutePathNodes(layer, base, glow, d);
+    if (svg) {
+      try {
+        const { layer, base, glow } = resolveMapRoutePaintTargets(svg);
+        RA?.applyRouteAnimationVars?.(layer);
+        if (RA?.paintRoutePaths) {
+          RA.paintRoutePaths(layer, base, glow, d);
+        } else {
+          paintRoutePathNodes(layer, base, glow, d);
+        }
+        forceRoutePathVisible(base, glow, d);
+        RA?.setRouteCompleted?.(layer, !!state.routeVisualCompleted);
+        ["mapRouteStart", "mapRouteEnd"].forEach((id) => {
+          const n = svg.getElementById(id);
+          if (n) n.setAttribute("visibility", "hidden");
+        });
+      } catch (err) {
+        console.warn("mapRouteLayer:", err);
+      }
     }
-    RA?.setRouteCompleted?.(layer, !!state.routeVisualCompleted);
-    // Marcadores só no overlay (evita duplicar ícones gigantes dentro do SVG do mapa)
-    ["mapRouteStart", "mapRouteEnd"].forEach((id) => {
-      const n = svg.getElementById(id);
-      if (n) n.setAttribute("visibility", "hidden");
-    });
   }
 
   function clearRoutePaint() {
@@ -5844,8 +5989,8 @@
     state._routeMarkerCache = null;
     const svg = el.svgHost.querySelector("#mapaSVG") || el.svgHost.querySelector("svg");
     if (svg) {
-      const { layer, base, glow } = resolveMapRoutePaintTargets(svg);
-      RA?.clearRoutePaths?.(layer, base, glow);
+      const { layer, base, glow } = getMapRoutePaintTargets(svg);
+      if (layer) RA?.clearRoutePaths?.(layer, base, glow);
     }
     if (!svg) return;
     ["mapRouteStart", "mapRouteEnd"].forEach((id) => {
@@ -5942,7 +6087,10 @@
         options = [er];
       }
     }
-    if (!options.length) return;
+    if (!options.length) {
+      toast("Nenhuma rota disponível entre origem e destino.");
+      return;
+    }
 
     state.routeOptions = options;
     state.routePickOpen = true;
@@ -7053,8 +7201,13 @@
       setMapViewBox(meta.vbW, meta.vbH, meta.vbX || 0, meta.vbY || 0);
       applyFloorVisibility();
       if (state.route) {
+        syncMapViewBeforeRoutePaint();
+        rebuildRouteLegs(state.route);
+        hydrateRouteLegPoints(state.route, "L00");
         paintActiveRouteLeg();
         fitSoon(() => {
+          syncMapViewBeforeRoutePaint();
+          paintActiveRouteLeg();
           if (document.body.classList.contains("is-navigating")) fitNavSegment();
           else fitRouteInView(state.route, { navMode: false, preferActiveLeg: true });
         });
