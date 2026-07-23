@@ -5735,9 +5735,7 @@
       const t = turnLabel(p[i], p[i + 1], p[i + 2] || to);
       el.navStepText.textContent = t.txt;
     }
-    el.navDistText.textContent = isMobileLayout()
-      ? `${fmtMeters(segLen)} até o próximo ponto`
-      : `${fmtMeters(segLen)} · trecho ${i + 1} de ${total}`;
+    el.navDistText.textContent = `${fmtMeters(segLen)} · trecho ${i + 1} de ${total}`;
     if (el.navTimeRemain) el.navTimeRemain.textContent = fmtNavTimeShort(remaining);
     if (el.navDistRemain) el.navDistRemain.textContent = fmtMeters(remaining);
     if (el.navProgressFill) {

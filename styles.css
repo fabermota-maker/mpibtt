@@ -1343,7 +1343,28 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
     margin-top: 4px;
   }
   .nav-overlay .nav-card__row--steps {
-    display: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .nav-overlay .nav-card__row--steps .btn {
+    border-radius: var(--radius-pill);
+    padding: 12px 14px;
+    font-size: 14px;
+    font-weight: 700;
+    min-height: 44px;
+  }
+  .nav-overlay .nav-card__row--steps .btn--ghost {
+    background: var(--field-bg);
+    border: 1px solid var(--line);
+    color: var(--ink);
+  }
+  .nav-overlay .nav-card__row--steps .btn--primary {
+    box-shadow: 0 6px 18px rgba(245, 142, 63, .28);
+  }
+  .nav-overlay .nav-card__exit {
+    margin-top: 2px;
   }
   .nav-overlay .nav-card__hint {
     display: none;
