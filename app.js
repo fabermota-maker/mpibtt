@@ -5724,6 +5724,13 @@
     el.navOverlay.classList.add("is-open");
     el.navOverlay.setAttribute("aria-hidden", "false");
     document.body.classList.add("is-navigating");
+    if (el.routePick) el.routePick.hidden = true;
+    if (el.routeOptions) {
+      el.routeOptions.hidden = true;
+    }
+    if (el.routePickCount) el.routePickCount.hidden = true;
+    state.routePickOpen = false;
+    state.userLocation?.setFollowMode?.("follow");
     updateNavBtn();
     requestOrientation();
     requestAnimationFrame(() => {

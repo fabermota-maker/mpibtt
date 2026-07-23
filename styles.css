@@ -920,6 +920,21 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
 }
 .ctrl--loc.is-busy { opacity: 0.82; cursor: wait; }
 
+/* Navegação: card inferior já mostra a direção — evita bússola duplicada no botão GPS */
+body.is-navigating .ctrl--loc[data-mode="follow-heading"] .loc-icon--heading,
+body.is-navigating .ctrl--loc.is-follow-heading .loc-icon--heading {
+  display: none !important;
+}
+body.is-navigating .ctrl--loc[data-mode="follow-heading"] .loc-icon--follow,
+body.is-navigating .ctrl--loc.is-follow-heading .loc-icon--follow {
+  display: block !important;
+}
+body.is-navigating .route-pick,
+body.is-navigating .route-options,
+body.is-navigating .route-pick__count {
+  display: none !important;
+}
+
 /* Bússola flutuante — seta de heading (foto3) */
 .gps-compass {
   position: absolute;
@@ -958,6 +973,12 @@ body.is-dev .calib-box:not([hidden]) { display: flex; }
   border-color: rgba(15,23,42,.12);
 }
 :root[data-theme="light"] .gps-compass__n { color: var(--pib-navy); }
+body.is-navigating .gps-compass {
+  display: none !important;
+}
+body.is-navigating .nav-overlay .compass {
+  display: none !important;
+}
 .ctrl {
   width: 46px; height: 46px; border-radius: var(--radius-pill); border: 1px solid var(--line);
   background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);

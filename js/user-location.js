@@ -145,7 +145,8 @@
 
     function updateGpsCompass() {
       const nav = getState().userNav || {};
-      const active = started && (nav.gpsAvailable || nav.headingAvailable);
+      const isNavigating = document.body.classList.contains("is-navigating");
+      const active = !isNavigating && started && (nav.gpsAvailable || nav.headingAvailable);
       showGpsCompass(active);
       if (!active || !gpsCompassArrow) return;
 
