@@ -2,14 +2,14 @@
 <html lang="pt-BR" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0a1220" />
   <title>Mapa Interativo — Encontre sua rota</title>
   <meta name="description" content="Mapa interno interativo com rota do ponto de partida ao destino, estilo passo a passo." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=161" />
+  <link rel="stylesheet" href="styles.css?v=166" />
 </head>
 <body>
   <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
@@ -30,7 +30,7 @@
     </defs>
   </svg>
   <div class="app-bg" aria-hidden="true">
-    <img class="app-bg__img" src="assets/background_street_map.svg?v=161" alt="" decoding="async" fetchpriority="low" />
+    <img class="app-bg__img" src="assets/background_street_map.svg?v=166" alt="" decoding="async" fetchpriority="low" />
   </div>
   <div class="app" id="app">
     <!-- ============ PAINEL LATERAL (glass) ============ -->
@@ -41,7 +41,7 @@
       <header class="panel__head">
         <div class="brand">
           <span class="brand__icon" aria-hidden="true">
-            <img class="brand__icon-img" src="assets/brand-map-pin.png?v=161" alt="" width="28" height="28" decoding="async" />
+            <img class="brand__icon-img" src="assets/brand-map-pin.png?v=166" alt="" width="28" height="28" decoding="async" />
           </span>
           <div>
             <h1 class="brand__title">Mapa Interativo</h1>
@@ -287,13 +287,37 @@
       </div>
     </div>
     <div class="nav-card">
-      <p class="nav-card__step" id="navStepText">Siga em frente</p>
-      <p class="nav-card__dist" id="navDistText">—</p>
-      <div class="nav-card__row">
+      <div class="nav-card__head">
+        <div class="nav-card__direction" aria-hidden="true">
+          <div class="nav-card__arrow" id="navDirArrow">
+            <svg viewBox="0 0 146.19 177.68" width="34" height="42" aria-hidden="true">
+              <use href="#pibNavArrow"/>
+            </svg>
+          </div>
+        </div>
+        <div class="nav-card__lead">
+          <p class="nav-card__step" id="navStepText">Siga em frente</p>
+          <p class="nav-card__dist" id="navDistText">—</p>
+        </div>
+      </div>
+      <div class="nav-card__progress" id="navProgressTrack" aria-hidden="true">
+        <span class="nav-card__progress-fill" id="navProgressFill"></span>
+      </div>
+      <div class="nav-card__stats">
+        <div class="nav-card__stat">
+          <span class="nav-card__stat-val" id="navTimeRemain">—</span>
+          <span class="nav-card__stat-label">Tempo restante</span>
+        </div>
+        <div class="nav-card__stat">
+          <span class="nav-card__stat-val" id="navDistRemain">—</span>
+          <span class="nav-card__stat-label">Distância restante</span>
+        </div>
+      </div>
+      <div class="nav-card__row nav-card__row--steps">
         <button type="button" class="btn btn--ghost" id="navPrev">Anterior</button>
         <button type="button" class="btn btn--primary" id="navNext">Próximo</button>
       </div>
-      <button type="button" class="btn btn--ghost btn--block" id="navExit">Sair da navegação</button>
+      <button type="button" class="btn btn--ghost btn--block nav-card__exit" id="navExit">Encerrar navegação</button>
       <p class="nav-card__hint" id="navHint"></p>
     </div>
   </div>
@@ -308,38 +332,31 @@
     </div>
   </div>
 
-  <script src="js/route-animation-config.js?v=161"></script>
-  <script src="js/map-nav-icons.js?v=161"></script>
-  <script src="js/calibration.js?v=161"></script>
-  <script src="js/navigation-router.js?v=161"></script>
-  <script src="js/geo-transform.js?v=161"></script>
-  <script src="js/pib-curitiba-location-config.js?v=161"></script>
-  <script src="js/geofence-service.js?v=161"></script>
-  <script src="js/gps-reading-collector.js?v=161"></script>
-  <script src="js/nearest-graph-point.js?v=161"></script>
-  <script src="js/route-snap-service.js?v=161"></script>
-  <script src="js/route-tracking-service.js?v=161"></script>
-  <script src="js/navigation/live/liveNavigationConfig.js?v=161"></script>
-  <script src="js/navigation/live/polylineGeometry.js?v=161"></script>
-  <script src="js/navigation/live/spatialIndex.js?v=161"></script>
-  <script src="js/navigation/live/edgeCache.js?v=161"></script>
-  <script src="js/navigation/live/mapMatching.js?v=161"></script>
-  <script src="js/navigation/live/virtualNode.js?v=161"></script>
-  <script src="js/navigation/live/positionSmoothing.js?v=161"></script>
-  <script src="js/navigation/live/routeProgress.js?v=161"></script>
-  <script src="js/navigation/live/offRouteDetection.js?v=161"></script>
-  <script src="js/navigation/live/rerouting.js?v=161"></script>
-  <script src="js/navigation/live/coordinateTransform.js?v=161"></script>
-  <script src="js/navigation/live/geolocationService.js?v=161"></script>
-  <script src="js/navigation/live/liveNavigationController.js?v=161"></script>
-  <script src="js/gps-orientation.js?v=161"></script>
-  <script src="js/permission-service.js?v=161"></script>
-  <script src="js/location-service.js?v=161"></script>
-  <script src="js/heading-service.js?v=161"></script>
-  <script src="js/gps-compass.js?v=161"></script>
-  <script src="js/user-location-puck.js?v=161"></script>
-  <script src="js/map-camera-controller.js?v=161"></script>
-  <script src="js/user-location.js?v=161"></script>
-  <script src="app.js?v=161"></script>
+  <script src="js/app/config.js?v=166"></script>
+  <script src="js/app/moduleRegistry.js?v=166"></script>
+  <script src="js/app/deferredLoader.js?v=166"></script>
+  <script src="js/route-animation-config.js?v=166"></script>
+  <script src="js/map-nav-icons.js?v=166"></script>
+  <script src="js/calibration.js?v=166"></script>
+  <script src="js/navigation-router.js?v=166"></script>
+  <script src="js/navigation/graphLoader.js?v=166"></script>
+  <script src="js/navigation/pathfinding.js?v=166"></script>
+  <script src="js/calibration/calibrationController.js?v=166"></script>
+  <script src="js/accessibility/accessibilityController.js?v=166"></script>
+  <script src="js/app/mapController.js?v=166"></script>
+  <script src="js/app/floorController.js?v=166"></script>
+  <script src="js/app/poiController.js?v=166"></script>
+  <script src="js/app/routeController.js?v=166"></script>
+  <script src="js/app/interfaceController.js?v=166"></script>
+  <script src="js/geo-transform.js?v=166"></script>
+  <script src="js/pib-curitiba-location-config.js?v=166"></script>
+  <script src="js/geofence-service.js?v=166"></script>
+  <script src="js/gps-reading-collector.js?v=166"></script>
+  <script src="js/nearest-graph-point.js?v=166"></script>
+  <script src="js/route-snap-service.js?v=166"></script>
+  <script src="js/route-tracking-service.js?v=166"></script>
+  <script src="js/gps-orientation.js?v=166"></script>
+  <!-- GPS ao vivo + puck: carregados sob demanda via PIBMapDeferred.loadGpsStack() -->
+  <script src="app.js?v=166"></script>
 </body>
 </html>

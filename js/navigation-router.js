@@ -523,6 +523,55 @@
     };
   }
 
+  /** Mescla nodes/edges/pois de um andar no grafo existente (lazy load). */
+  function mergeNavigationLevel(graph, levelData) {
+    if (!graph) {
+      return createNavigationGraph({
+        version: "1.0.0",
+        nodes: levelData.nodes || [],
+        edges: levelData.edges || [],
+        pois: levelData.pois || [],
+        metersPerUnit: levelData.metersPerUnit,
+        walkingSpeedMetersPerSecond: levelData.walkingSpeedMetersPerSecond,
+        config: levelData.config || {},
+      });
+    }
+
+    const raw = graph.raw || { nodes: [], edges: [], pois: [] };
+    const nodeIds = new Set(raw.nodes.map((n) => n.id));
+    for (const n of levelData.nodes || []) {
+      if (!nodeIds.has(n.id)) {
+        raw.nodes.push(n);
+        nodeIds.add(n.id);
+      }
+    }
+    const edgeIds = new Set(raw.edges.map((e) => e.id));
+    for (const e of levelData.edges || []) {
+      if (!edgeIds.has(e.id)) {
+        raw.edges.push(e);
+        edgeIds.add(e.id);
+      }
+    }
+    const poiKeys = new Set(raw.pois.map((p) => `${p.id}|${p.level || ""}`));
+    for (const p of levelData.pois || []) {
+      const key = `${p.id}|${p.level || ""}`;
+      if (!poiKeys.has(key)) {
+        raw.pois.push(p);
+        poiKeys.add(key);
+      }
+    }
+
+    const built = buildAdjacencyList(raw.nodes, raw.edges);
+    return {
+      ...built,
+      pois: raw.pois,
+      metersPerUnit: graph.metersPerUnit ?? raw.metersPerUnit,
+      walkingSpeedMps: graph.walkingSpeedMps ?? raw.walkingSpeedMetersPerSecond ?? 1.2,
+      config: graph.config || raw.config || {},
+      raw,
+    };
+  }
+
   function nearestNodeId(point, graph, { avoidParking = false, level = null } = {}) {
     let best = null, bestD = Infinity;
     for (const [id, n] of graph.nodesById) {
@@ -561,6 +610,7 @@
     isTooSimilarRoute,
     validateNavigationGraph,
     createNavigationGraph,
+    mergeNavigationLevel,
     findKShortestRoutes,
     findRoutesForPoiPair,
     astar,

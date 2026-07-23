@@ -1,0 +1,1 @@
+{"level":"B01-L00","nodes":[],"edges":[{"id":"B01_L00_E_escada_narnia","from":"B01_node_0013_entrada_narnia","to":"L00_N0014_entrada_narnia_B02","path":[{"x":456.19,"y":174.68},{"x":237.3,"y":476.98}],"distanceMeters":14,"bidirectional":true,"accessible":false,"active":true,"level":"B01-L00","zone":"vertical","type":"stairs","parkingLot":false}],"pois":[]}

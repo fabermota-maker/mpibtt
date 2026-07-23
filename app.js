@@ -1,435 +1,7 @@
 (() => {
   "use strict";
 
-  /* ============================================================
-     CONFIG — SVG único do Illustrator com todas as camadas.
-     Cada camada é um grupo <g> com o id exportado pelo AI.
-     ============================================================ */
-  const CONFIG = {
-    // UI técnica (calibração / camadas SVG) só com ?calib=1 ou ?dev=1
-    isDev: /(?:\?|&)(?:calib|dev)=1(?:&|$)/.test(location.search),
-    svgFiles: {
-      background: "assets/mapa-background.svg",
-      wall: "assets/mapa-wall.svg",
-      edgeIndoor: "assets/mapa-edge-indoor.svg",
-      edgeOutdoor: "assets/mapa-edge-outdoor.svg",
-      nodes: "assets/mapa-nodes.svg",
-      pois: "assets/mapa-pois.svg",
-      infoTextos: "assets/mapa-info-textos.svg",
-    },
-    layers: {
-      // IDs no SVG composto (nodes/pois atualizados 2026)
-      // edges 2026 limpos: _05_edge_indoor_tech / _06_edge_outdoor-tech
-      nodes: ["_09_nodes_L00"],
-      edges: ["_05_edge_indoor_tech", "_06_edge_outdoor-tech"],
-      edgeZones: ["indoor", "outdoor"],
-      pois: ["_08_pois"],
-      visible: [
-        "_x30_2_x5F_background_x5F_estacionamento_x5F_BG",
-        "_x30_3_x5F_background_x5F_estacionamento_x5F_Map",
-        "_02_background_estacionamento_BG",
-        "_03_background_estacionamento_Map",
-        "_x30_4_x5F__x5F_background_x5F_wall_x5F_paredes_x5F_tech",
-        "_x30_7_x5F_txt_x5F_info",
-        "_07_txt_info",
-        "_08_pois",
-        "_x30_8_x5F_pois",
-      ],
-      technical: [
-        "_05_edge_indoor_tech",
-        "_06_edge_outdoor-tech",
-        "_x30_5_x5F_edge_x5F_indoor_x5F_tech",
-        "_x30_6_x5F_edge_x5F_outdoor-tech",
-        "_09_nodes_L00",
-        "_x30_9_x5F_nodes_x5F_L00",
-      ],
-    },
-    // no background antigo, as camadas ainda têm estes IDs (antes da substituição)
-    replaceTargets: {
-      nodes: "_x30_9_x5F_nodes_x5F_L00",
-      pois: "_x30_8_x5F_pois",
-      wall: "_x30_4_x5F__x5F_background_x5F_wall_x5F_paredes_x5F_tech",
-      infoTextos: "_x30_7_x5F_txt_x5F_info",
-      edgeIndoor: "_x30_5_x5F_edge_x5F_indoor_x5F_tech",
-      edgeOutdoor: "_x30_6_x5F_edge_x5F_outdoor-tech",
-    },
-    metersPerUnit: 0.35, // fallback até calibração do Batistério (6,80 m)
-    walkingSpeedMps: 1.2,
-    calibrationUrl: "data/map-calibration.json",
-    navigationUrl: "data/navigation.json",
-    snapTol: 8,        // encaixe genérico entre nós (~2,8 m com escala 0,35)
-    // Fallback global; preferir toleranceByZone (indoor/outdoor/parking)
-    edgeEndpointTol: 20, // ponta de edge ↔ node oficial
-    spurTol: 55,       // ícone POI ↔ malha (só visualização da rota)
-    edgeSnapTol: 100,  // POI → edge de entrada (fallback)
-    entranceTol: 100,  // node oficial de porta ↔ POI (fallback)
-    bridgeTol: 6,      // micro-folgas da malha oficial
-    componentBridgeTol: 22, // une componentes por folga de exportação (efetivo ≤ bridgeTol×3)
-    // Por zona — validar em paredes finas, salas vizinhas, corredores paralelos, estacionamento e templo
-    toleranceByZone: {
-      indoor: {
-        edgeEndpointTol: 18,
-        entranceTol: 95,
-        edgeSnapTol: 85,
-        spurTol: 48,
-      },
-      outdoor: {
-        edgeEndpointTol: 24,
-        entranceTol: 130,
-        edgeSnapTol: 140,
-        spurTol: 72,
-      },
-      parking: {
-        edgeEndpointTol: 22,
-        entranceTol: 105,
-        edgeSnapTol: 110,
-        spurTol: 62,
-      },
-    },
-    // zonas de estacionamento (bbox em unidades SVG) — evita atravessar o pátio
-    parkingZones: [
-      // pátio principal (vagas ao sul do toldo / templo)
-      { x0: 480, y0: 545, x1: 990, y1: 870 },
-      // estacionamento 02 (pátio ao lado do CF — não inclui o corredor oeste y≈252)
-      { x0: 340, y0: 270, x1: 450, y1: 350 },
-    ],
-    snapLateral: 0.45,
-    // âncora oficial (entrada) por POI — evita misturar locais vizinhos
-    poiAnchors: {
-      P000_templo: "L00_N0013_entrada_lateral_templo_01",
-      P001_entrada_principal_toldo: "L00_N0023_intersection_entrada_toldo",
-      P002_capela: "L00_N0064",
-      P003_estacionamento_01: "L00_N0017_estacionamento",
-      P004_sala_de_oracao_RGO: "L00_N0038",
-      P005_centro_de_formacao: "L00_N0034",
-      P006_estacionamento_02: "L00_N0031",
-      P007_area_kids: "L00_N0051",
-      P008_refeitorio_externo: "L00_N0025",
-      P009_livraria_evangelica: "L00_N0076",
-      P010_espaco_conexao: "L00_N0078",
-      P011_bercario: "L00_N0071",
-      P012_sala_de_oracao_cleusa: "L00_N0059",
-      P013_recepcao: "L00_N0061",
-      P014_seven_pass: "L00_N0047",
-      P015_bazar_abasc: "L00_N0046",
-      P016_jardim: "L00_N0030",
-      P017_espaco_acolher_ceara: "L00_N0072",
-      P018_abasc: "L00_N0057",
-      P019_banheiro_familia: "L00_N0070",
-      P020_espaco_servir: "L00_N0028",
-      P021_banheiro_feminino_ginasio: "L00_N0050_banheiro_feminino_ginasio",
-      P022_banheiro_masculino_ginasio: "L00_N0045_banheiro_masculino_ginasio",
-      P023_banheiro_feminino: "L00_N0066",
-      P024_banheiro_masculino: "L00_N0065",
-      P025_banheiro_masculino_feminino: "L00_N0054",
-      P026_elevador_ginasio: "L00_N0019_intersection_entrada_seven_pass_elevador",
-      P027_elevador_templo: "L00_N0077",
-      P028_estacionamento_moto: "L00_N0007_estacionamento_motos",
-      B02_entrada_narnia: "L00_N0014_entrada_narnia_B02",
-      P028_B02_entrada_narnia: "L00_N0014_entrada_narnia_B02",
-      P029_entrada_pedestre_02_batel: "L00_N0082",
-      P030_entrada_estacionamento_av_batel: "L00_N0093_entrada_estacionamento_av_batel",
-      P031_entrada_estacionamento_bento_viana: "L00_N0002_entrada_estacionamento_principal_bento",
-      entrada_ginasio: "L00_N0020_intersection_sevenpass_estaionamento",
-      min_esportes: "L00_N0019_intersection_entrada_seven_pass_elevador",
-      encomun: "B02_node_0012_comunicacao_encomun",
-      sala_albert: "B02_node_0004_albert",
-      L04_poi_0016: "L04_node_0023_auditorio_l01",
-    },
-    // rótulos oficiais na busca (podem diferir do ícone no mapa)
-    poiDisplayNames: {
-      P005_centro_de_formacao: "Centro de Formação CF",
-      min_esportes: "Min. esportes",
-      encomun: "Encomun",
-    },
-    // atalhos de busca → rawId do POI
-    poiSearchAliases: {
-      P005_centro_de_formacao: ["cf", "centro de formacao cf", "centro formacao cf", "formacao cf"],
-      P004_sala_de_oracao_RGO: ["rgo", "sala rgo", "sala de oracao rgo", "oracao", "oração"],
-      min_esportes: ["min esportes", "ministerio esportes", "ministerio de esportes", "esportes"],
-      encomun: ["encomun", "comunicacao", "comunicação", "rede super", "sala 08", "sala 08 b02"],
-      sala_albert: ["sala albert", "albert", "sala abert", "sala 06", "sala 06 b02"],
-      P000_templo: ["templo", "igreja"],
-      P016_jardim: ["jardim"],
-      entrada_ginasio: ["ginasio", "ginásio", "seven pass", "sevenpass"],
-    },
-    // limita opções de rota em pares específicos (evita desvios absurdos no grafo)
-    routeOptionCaps: [
-      {
-        a: ["P005_centro_de_formacao", "P004_sala_de_oracao_RGO"],
-        b: ["min_esportes"],
-        max: 3,
-      },
-    ],
-    // centro visual (planta local ADM) → pin de origem/destino nos andares internos
-    poiIconLocal: {
-      L04_poi_0016: { x: 82, y: 118 },
-    },
-    // entradas do templo — opções de rota “por dentro” do estabelecimento
-    templeEntrances: [
-      { id: "L00_N0084", label: "Entrada 01 principal templo" },
-      { id: "L00_N0068", label: "Entrada 02 principal templo" },
-      { id: "L00_N0016_entrada_lateral_templo_02", label: "Entrada lateral 02 templo" },
-      { id: "L00_N0029", label: "Entrada lateral 03 templo" },
-      { id: "L00_N0013_entrada_lateral_templo_01", label: "Entrada lateral 01 templo" },
-    ],
-    // rotas opcionais nomeadas (par de POIs → via nó(s) externo(s))
-    namedExternalRoutes: [
-      // Jardim / Espaço Servir ↔ Entrada do toldo (e kids/refeitório): por fora, sul do templo
-      {
-        a: ["P016_jardim", "P020_espaco_servir"],
-        b: [
-          "P001_entrada_principal_toldo",
-          "P007_area_kids",
-          "P008_refeitorio_externo",
-        ],
-        via: [
-          "L00_N0027",
-          "L00_N0008_templo_estacionamento",
-          "L00_N0009_templo_entrada_principal_toldo_narnia",
-        ],
-        label: "Por fora da igreja",
-        // trecho leste do templo toca a zona de estacionamento no grafo
-        avoidParking: false,
-        allowParking: true,
-      },
-      // Nárnia / lado leste → Templo: sul do templo → Jardim → entrada lateral oeste
-      {
-        a: [
-          "B02_entrada_narnia",
-          "P028_B02_entrada_narnia",
-          "P014_seven_pass",
-          "P026_elevador_ginasio",
-          "P021_banheiro_feminino_ginasio",
-          "P022_banheiro_masculino_ginasio",
-          "P007_area_kids",
-          "P008_refeitorio_externo",
-          "P025_banheiro_masculino_feminino",
-          "P009_livraria_evangelica",
-          "P010_espaco_conexao",
-          "P011_bercario",
-          "P012_sala_de_oracao_cleusa",
-          "P013_recepcao",
-          "P017_espaco_acolher_ceara",
-          "P019_banheiro_familia",
-          "P002_capela",
-          "P005_centro_de_formacao",
-          "P001_entrada_principal_toldo",
-          "P015_bazar_abasc",
-          "P018_abasc",
-        ],
-        b: [
-          "P027_elevador_templo",
-          "P000_templo",
-          "escada_mesanino_01",
-          "escada_mesanino_02",
-          "L01_node_0001_elevador",
-          "L02_node_0001_elevador",
-        ],
-        via: ["L00_N0027", "L00_N0030"],
-        endNodes: ["L00_N0029"],
-        label: "Pelo jardim",
-        avoidParking: false,
-      },
-      // CF / Sala de Oração RGO → Templo: sai pela lateral Av. Batel e reentra na entrada principal
-      {
-        a: [
-          "P005_centro_de_formacao",
-          "P004_sala_de_oracao_RGO",
-        ],
-        b: [
-          "P000_templo",
-          "P027_elevador_templo",
-          "escada_mesanino_01",
-          "escada_mesanino_02",
-          "L01_node_0001_elevador",
-          "L02_node_0001_elevador",
-          "L03_node_0001",
-          "L04_node_0001_elevador",
-          "L05_node_0001_elevador",
-          "L06_node_0033_elevador",
-        ],
-        via: [
-          "L00_N0032",
-          "L00_N0093_entrada_estacionamento_av_batel",
-          "L00_N0083",
-          "L00_N0082",
-          "L00_N0081",
-        ],
-        endNodes: ["L00_N0084", "L00_N0068"],
-        label: "Entrada/saída · Av. Batel",
-        avoidParking: false,
-        allowParking: true,
-        slot: 4,
-      },
-      // CF / RGO → Jardim / Espaço Servir: lateral Av. Batel (sem dar volta ao templo)
-      {
-        a: [
-          "P005_centro_de_formacao",
-          "P004_sala_de_oracao_RGO",
-        ],
-        b: [
-          "P016_jardim",
-          "P020_espaco_servir",
-        ],
-        via: [
-          "L00_N0032",
-          "L00_N0093_entrada_estacionamento_av_batel",
-          "L00_N0083",
-          "L00_N0082",
-          "L00_N0081",
-        ],
-        endNodes: ["L00_N0030", "L00_N0028"],
-        label: "Entrada/saída · Av. Batel",
-        avoidParking: false,
-        allowParking: true,
-      },
-      // Estacionamento conveniado → Templo: lateral Av. Batel (sem desvio pelo CF)
-      {
-        a: ["P003_estacionamento_01"],
-        b: [
-          "P000_templo",
-          "P027_elevador_templo",
-          "escada_mesanino_01",
-          "escada_mesanino_02",
-          "L01_node_0001_elevador",
-          "L02_node_0001_elevador",
-          "L03_node_0001",
-          "L04_node_0001_elevador",
-          "L05_node_0001_elevador",
-          "L06_node_0033_elevador",
-        ],
-        via: [
-          "L00_N0093_entrada_estacionamento_av_batel",
-          "L00_N0083",
-          "L00_N0082",
-          "L00_N0081",
-        ],
-        endNodes: ["L00_N0084", "L00_N0068"],
-        label: "Entrada/saída · Av. Batel",
-        avoidParking: false,
-        allowParking: true,
-        slot: 4,
-      },
-      // Estacionamento 02 → Templo: lateral Av. Batel
-      {
-        a: ["P006_estacionamento_02"],
-        b: [
-          "P000_templo",
-          "P027_elevador_templo",
-          "escada_mesanino_01",
-          "escada_mesanino_02",
-          "L01_node_0001_elevador",
-          "L02_node_0001_elevador",
-          "L03_node_0001",
-          "L04_node_0001_elevador",
-          "L05_node_0001_elevador",
-          "L06_node_0033_elevador",
-        ],
-        via: [
-          "L00_N0032",
-          "L00_N0093_entrada_estacionamento_av_batel",
-          "L00_N0083",
-          "L00_N0082",
-          "L00_N0081",
-        ],
-        endNodes: ["L00_N0084", "L00_N0068"],
-        label: "Entrada/saída · Av. Batel",
-        avoidParking: false,
-        allowParking: true,
-        slot: 4,
-      },
-      // Estacionamento 02 → Jardim / Espaço Servir: lateral Av. Batel
-      {
-        a: ["P006_estacionamento_02"],
-        b: [
-          "P016_jardim",
-          "P020_espaco_servir",
-        ],
-        via: [
-          "L00_N0032",
-          "L00_N0093_entrada_estacionamento_av_batel",
-          "L00_N0083",
-          "L00_N0082",
-          "L00_N0081",
-        ],
-        endNodes: ["L00_N0030", "L00_N0028"],
-        label: "Entrada/saída · Av. Batel",
-        avoidParking: false,
-        allowParking: true,
-      },
-    ],
-    // Nível lógico (exibição/filtro) × mapa de rota (ícone/grafo)
-    // Espaço Servir fica no B01, mas o acesso caminhável está no L00 (Jardim / lateral templo).
-    poiLevels: {
-      P016_jardim: {
-        level: "L00",
-        mapLevel: "L00",
-        building: "Jardim",
-      },
-      P020_espaco_servir: {
-        level: "B01",
-        mapLevel: "L00",
-        building: "Subsolo 01",
-        accessNote:
-          "Acesso descendo pelo Jardim (L00) ou pela lateral do templo, próximo à entrada de pedestres da Av. Bento Viana",
-      },
-    },
-    // Andares: L00 = térreo/campus; L01–L07 = andares; B01/B02 = subsolos
-    floors: [
-      { id: "L00", label: "L00", title: "Térreo", subtitle: "Ação Social, Aconselhamento, Plantão Pastoral", ready: true },
-      { id: "L01", label: "L01", title: "1º andar", subtitle: "Min. Infantil · TDP (2 a 5 anos)", ready: true, mapUrl: "assets/mapa-L01.svg" },
-      { id: "L02", label: "L02", title: "2º andar", subtitle: "Mulheres e Idosos · TDP (6 e 7 anos)", ready: true, mapUrl: "assets/mapa-L02.svg" },
-      { id: "L03", label: "L03", title: "3º andar", subtitle: "Juventude e Educação Cristã", ready: true, mapUrl: "assets/mapa-L03.svg" },
-      { id: "L04", label: "L04", title: "4º andar", subtitle: "Min. Infantil · Espaço START (8 e 9 anos)", ready: true, mapUrl: "assets/mapa-L04.svg" },
-      { id: "L05", label: "L05", title: "5º andar", subtitle: "Ministérios: Administração, RH, TI, Missões e Eficiente", ready: true, mapUrl: "assets/mapa-L05.svg" },
-      { id: "L06", label: "L06", title: "6º andar", subtitle: "Ministérios: Pastoral, Adoração, Integração, Células, Movimento Discipular, Família", ready: true, mapUrl: "assets/mapa-L06.svg" },
-      { id: "L07", label: "L07", title: "7º andar", subtitle: "Espaço ao Ar Livre", ready: false, hidden: true },
-      { id: "B01", label: "B01", title: "Subsolo 01", subtitle: "Pastoreo, Espaço Servir, Estúdio ensaio", ready: true, mapUrl: "assets/mapa-B01.svg" },
-      { id: "B02", label: "B02", title: "Subsolo 02 · Nárnia", subtitle: "Comunicação, Rádio, Estúdios e Transmissão", ready: true, mapUrl: "assets/mapa-B02.svg" },
-    ],
-    // hubs de elevador por andar (conexão vertical)
-    narniaHub: {
-      L00: "L00_N0014_entrada_narnia_B02",
-      B01: "B01_node_0013_entrada_narnia",
-      B02: "B02_node_0014_entrada_narnia",
-    },
-    /** Atalhos B01↔B02 / B01↔L00 que não passam pela entrada de Nárnia no T. */
-    narniaForbiddenEdges: [
-      "B01_B02_E_acesso_servir",
-      "B01_B02_E_batisterio",
-      "L00_B01_E_escada_batisterio",
-    ],
-    elevatorHubs: {
-      L00: { nodeId: "L00_N0077", label: "Elevador Templo" },
-      L01: { nodeId: "L01_node_0001_elevador", label: "Elevador (1º andar)" },
-      L02: { nodeId: "L02_node_0001_elevador", label: "Elevador (2º andar)" },
-      L03: { nodeId: "L03_node_0001", label: "Elevador (3º andar)" },
-      L04: { nodeId: "L04_node_0001_elevador", label: "Elevador (4º andar)" },
-      L05: { nodeId: "L05_node_0001_elevador", label: "Elevador (5º andar)" },
-      L06: { nodeId: "L06_node_0033_elevador", label: "Elevador (6º andar)" },
-    },
-    // hubs da escada lateral — L00 = ícone Escadas ao lado do Berçário START
-    stairHubs: {
-      L00: { nodeId: "L00_N0075", label: "Escadas (Berçário START)" },
-      L01: { nodeId: "L01_node_0040_escada_lateral", label: "Escada lateral (1º andar)" },
-      L02: { nodeId: "L02_node_0003_escada_laral", label: "Escada lateral (2º andar)" },
-      L03: { nodeId: "L03_node_0003", label: "Escada lateral (3º andar)" },
-      L04: { nodeId: "L04_node_0024_escada_lateral", label: "Escada lateral (4º andar)" },
-      L05: { nodeId: "L05_node_0039_escada_lateral", label: "Escada lateral (5º andar)" },
-      L06: { nodeId: "L06_node_0035_escada_lateral", label: "Escada lateral (6º andar)" },
-    },
-    // filtros da lista de destinos
-    searchGroups: [
-      { id: "all", label: "Todos" },
-      { id: "floor", label: "Neste andar" },
-      { id: "salas", label: "Salas" },
-      { id: "auditorios", label: "Auditórios" },
-      { id: "banheiros", label: "Banheiros" },
-      { id: "elevadores", label: "Elevadores" },
-    ],
-  };
-
+  const CONFIG = globalThis.PIBMapConfig;
   /* ============================================================ ELEMENTOS */
   const $ = (id) => document.getElementById(id);
   const el = {
@@ -471,6 +43,8 @@
     gpsCompass: $("gpsCompass"), gpsCompassArrow: $("gpsCompassArrow"),
     navOverlay: $("navOverlay"), compassArrow: $("compassArrow"),
     navStepText: $("navStepText"), navDistText: $("navDistText"),
+    navDirArrow: $("navDirArrow"), navProgressFill: $("navProgressFill"),
+    navTimeRemain: $("navTimeRemain"), navDistRemain: $("navDistRemain"),
     navPrev: $("navPrev"), navNext: $("navNext"), navExit: $("navExit"), navHint: $("navHint"),
     toast: $("toast"),
   };
@@ -486,6 +60,7 @@
     calibration: null,
     navGraph: null,
     navGraphError: null,
+    navLoader: null,
     calibMode: false, calibStep: 0, calibPoints: [],
     walkingSpeedMps: CONFIG.walkingSpeedMps || 1.2,
     activeLevel: "L00",
@@ -707,6 +282,24 @@
     return `≈ ${label}${accuracy}`;
   }
 
+  function fmtNavTimeShort(lengthUnits) {
+    const meters = lengthUnits * getMetersPerUnit();
+    const cal = Cal();
+    const secs = cal
+      ? cal.calculateWalkingTimeSeconds(meters, state.walkingSpeedMps)
+      : meters / state.walkingSpeedMps;
+    return `${Math.max(1, Math.round(secs / 60))} min`;
+  }
+
+  function navRemainingLength(fromIdx) {
+    const p = state.route?.points;
+    if (!p || p.length < 2) return 0;
+    let len = 0;
+    const start = Math.max(0, Math.min(fromIdx, p.length - 2));
+    for (let j = start; j < p.length - 1; j++) len += dist(p[j], p[j + 1]);
+    return len;
+  }
+
   function toast(msg) {
     clearTimeout(toast._t);
     el.toast.textContent = msg;
@@ -834,20 +427,33 @@
       console.warn("NavigationRouter não carregado");
       return false;
     }
-    try {
-      const res = await fetch(CONFIG.navigationUrl, { cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      state.navGraph = NavigationRouter.createNavigationGraph(data);
-      if (data.metersPerUnit > 0 && !state.calibration) {
-        CONFIG.metersPerUnit = data.metersPerUnit;
+
+    function getNavLoader() {
+      if (!state.navLoader && globalThis.NavigationGraphLoader) {
+        state.navLoader = NavigationGraphLoader.create({ baseUrl: "data/navigation/" });
       }
-      if (data.walkingSpeedMetersPerSecond) {
-        state.walkingSpeedMps = data.walkingSpeedMetersPerSecond;
+      return state.navLoader;
+    }
+
+    async function ensureNavGraphFloors(...levels) {
+      const loader = getNavLoader();
+      const ids = [...new Set(levels.filter(Boolean))];
+      if (!loader || !ids.length) return state.navGraph;
+      try {
+        await loader.ensureFloors(ids);
+        state.navGraph = loader.getGraph();
+        syncPoisFromNavigation(loader.getMeta()?.poiCatalog || [], { injectAllFloors: true });
+      } catch (err) {
+        console.warn("ensureNavGraphFloors:", err);
       }
-      // sincroniza POIs da UI com nodeIds do JSON
+      return state.navGraph;
+    }
+    state.ensureNavGraphFloors = ensureNavGraphFloors;
+
+    function syncPoisFromNavigation(poiSource, { injectAllFloors = false } = {}) {
+      const list = poiSource || [];
       for (const poi of G.pois) {
-        const match = (data.pois || []).find((p) =>
+        const match = list.find((p) =>
           p.rawId === poi.rawId
           || p.id === poi.rawId
           || (p.id && poi.rawId && p.id.endsWith(poi.rawId))
@@ -860,7 +466,13 @@
           if (match.building) poi.building = match.building;
           if (match.accessNote) poi.accessNote = match.accessNote;
           const nid = match.nodeIds[0];
-          if (nid && G.nodes[nid]) {
+          const node = state.navGraph?.nodesById?.get(nid);
+          if (node) {
+            poi.anchor = nid;
+            poi.snap = { x: node.x, y: node.y };
+            poi.x = node.x;
+            poi.y = node.y;
+          } else if (nid && G.nodes[nid]) {
             poi.anchor = nid;
             poi.snap = { x: G.nodes[nid].x, y: G.nodes[nid].y };
           }
@@ -868,16 +480,39 @@
         enrichPoiMeta(poi);
         applyInjectedPoiIcon(poi);
       }
-      // POIs só no JSON (outros andares ou nós ocultos com inject:true)
-      for (const jp of data.pois || []) {
+
+      for (const jp of list) {
         const already = G.pois.some((p) =>
           p.navId === jp.id || p.rawId === jp.rawId || p.id === jp.rawId
         );
         if (already || !jp.nodeIds?.length) continue;
         const nid = jp.nodeIds[0];
-        const node = state.navGraph.nodesById.get(nid);
+        const node = state.navGraph?.nodesById?.get(nid);
+        const lvl = jp.level || node?.level || "L00";
+        const isOtherFloor = lvl !== "L00";
+        if (!node && !injectAllFloors) continue;
+        if (!node && injectAllFloors) {
+          const raw = jp.rawId || jp.id;
+          G.pois.push(enrichPoiMeta({
+            id: String(raw).startsWith(lvl) ? raw : (isOtherFloor ? `${lvl}_${raw}` : raw),
+            rawId: raw,
+            name: jp.name || decodePoiName(jp.rawId || jp.id),
+            x: 0,
+            y: 0,
+            level: lvl,
+            mapLevel: jp.mapLevel,
+            building: jp.building,
+            group: jp.group,
+            cat: jp.cat || "acesso",
+            accessNote: jp.accessNote || null,
+            navNodeIds: jp.nodeIds.slice(),
+            navId: jp.id,
+            anchor: nid,
+            iconHidden: true,
+          }));
+          continue;
+        }
         if (!node) continue;
-        const isOtherFloor = (node.level || "L00") !== "L00";
         if (!isOtherFloor && !jp.inject) continue;
         const raw = jp.rawId || jp.id;
         const poi = enrichPoiMeta({
@@ -905,11 +540,40 @@
       }
       G.pois.forEach((p) => applyInjectedPoiIcon(p));
       G.pois.sort((a, b) => (a.searchLabel || a.name).localeCompare(b.searchLabel || b.name, "pt-BR"));
+    }
+
+    try {
+      const loader = getNavLoader();
+      let result;
+      try {
+        result = await loader.loadInitialLevel();
+      } catch (lazyErr) {
+        console.warn("Navigation lazy load — fallback monolito:", lazyErr.message);
+        result = await loader.loadMonolith(CONFIG.navigationUrl);
+      }
+
+      state.navGraph = result.graph;
+      const meta = result.meta || {};
+      if (meta.metersPerUnit > 0 && !state.calibration) {
+        CONFIG.metersPerUnit = meta.metersPerUnit;
+      }
+      if (meta.walkingSpeedMetersPerSecond) {
+        state.walkingSpeedMps = meta.walkingSpeedMetersPerSecond;
+      }
+
+      syncPoisFromNavigation(result.poiCatalog || result.graph?.raw?.pois || [], {
+        injectAllFloors: !!result.poiCatalog,
+      });
+      try {
+        await globalThis.PIBMapDeferred?.loadLiveNavStack?.();
+      } catch (liveErr) {
+        console.warn("Live nav defer:", liveErr);
+      }
       initLiveNavigation();
       return true;
     } catch (err) {
       state.navGraphError = err;
-      console.error("Falha ao carregar navigation.json:", err);
+      console.error("Falha ao carregar navegação:", err);
       return false;
     }
   }
@@ -2587,8 +2251,13 @@
     }
   }
 
-  function initUserLocation() {
+  async function initUserLocation() {
     if (state.userLocation) return;
+    try {
+      await globalThis.PIBMapDeferred?.loadGpsStack?.();
+    } catch (err) {
+      console.warn("GPS stack defer:", err);
+    }
     if (typeof UserLocationSystem === "undefined") {
       console.warn("UserLocationSystem não carregou (scripts js/ ausentes no deploy?).");
       if (el.locBtn && !el.locBtn._bound) {
@@ -2601,6 +2270,7 @@
       initGpsOrientation();
       return;
     }
+    initLiveNavigation();
     state.userLocation = UserLocationSystem.create({
       overlay: el.overlay,
       getOverlay: () => el.overlay,
@@ -5204,11 +4874,13 @@
     updateNavBtn();
   }
 
-  function drawRoute() {
+  async function drawRoute() {
     const origin = resolvePoi("origin");
     const dest = resolvePoi("dest");
     if (origin) { state.origin = origin; el.originInput.value = origin.searchLabel || origin.name; }
     if (dest) { state.dest = dest; el.destInput.value = dest.searchLabel || dest.name; }
+
+    await state.ensureNavGraphFloors?.(poiLevel(state.origin), poiLevel(state.dest));
 
     // em outro andar sem origem: usa o elevador do andar atual
     if (!state.origin && state.dest && (poiLevel(state.dest) !== state.activeLevel)) {
@@ -5301,8 +4973,13 @@
       updateNavBtn();
       if (doFit) {
         fitSoon(() => {
+          syncNavLayoutMetrics();
           paintActiveRouteLeg();
-          fitRouteInView(route, { navMode: false, preferActiveLeg: true });
+          fitRouteInView(route, {
+            navMode: document.body.classList.contains("is-navigating"),
+            preferActiveLeg: true,
+            fillWidth: isMobileLayout(),
+          });
         });
       }
       if (multi) {
@@ -5443,8 +5120,10 @@
       ? correction
       : rawQ;
     const q = normSearch(effectiveQuery);
+    // Sem texto: não monta centenas de sugestões (evita salto de scroll no mobile e cursor resetado).
+    if (!q) return [];
     const onCampus = isCampusFloor(state.activeLevel);
-    const list = (G.pois || []).filter((p) => {
+    return (G.pois || []).filter((p) => {
       enrichPoiMeta(p);
       if (!isSearchablePoi(p)) return false;
       const poiLvl = p.level || "L00";
@@ -5460,14 +5139,32 @@
       } else if (g !== "all") {
         if ((p.group || searchGroupFromPoi(p.rawId, p.name, p.cat)) !== g) return false;
       }
-      if (!q) return true;
       return poiMatchesSearch(p, effectiveQuery);
-    });
-    if (!q) return list;
-    return list
+    })
       .map((p) => ({ p, score: poiSearchScore(p, effectiveQuery) }))
       .sort((a, b) => b.score - a.score || (a.p.searchLabel || a.p.name).localeCompare(b.p.searchLabel || b.p.name, "pt-BR"))
       .map((x) => x.p);
+  }
+
+  /** Preserva posição do cursor após re-render da lista (scroll/layout no mobile resetava o caret). */
+  function withSearchInputCaret(input, fn) {
+    if (!input) {
+      fn();
+      return;
+    }
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    fn();
+    if (document.activeElement !== input) return;
+    requestAnimationFrame(() => {
+      if (document.activeElement !== input) return;
+      try {
+        const len = input.value.length;
+        const nextStart = Math.min(typeof start === "number" ? start : len, len);
+        const nextEnd = Math.min(typeof end === "number" ? end : len, len);
+        input.setSelectionRange(nextStart, nextEnd);
+      } catch (_) {}
+    });
   }
 
   function renderSuggest(which, query) {
@@ -5489,7 +5186,7 @@
     if (!items.length && which !== "origin") {
       listEl.innerHTML = normSearch(query)
         ? `<li class="s-empty">Nenhum local encontrado para “${String(query).trim()}”.</li>`
-        : `<li class="s-empty">Nenhum local neste filtro.</li>`;
+        : `<li class="s-empty">Digite para buscar um local.</li>`;
       listEl.hidden = false;
       return;
     }
@@ -5546,17 +5243,20 @@
   function enterMobileSearchMode() {
     if (!isMobileLayout() || !el.panel) return;
     clearTimeout(mobileSearchExitTimer);
-    setPanelOpen(true);
+    const wasSearching = el.panel.classList.contains("is-searching");
+    if (!el.panel.classList.contains("open")) setPanelOpen(true);
     el.panel.classList.add("is-searching");
     document.body.classList.add("is-searching-mobile");
     syncVisualViewportVars();
-    // garante que o campo focado fique visível no painel
-    requestAnimationFrame(() => {
-      const active = document.activeElement;
-      if (active && el.panel.contains(active) && typeof active.scrollIntoView === "function") {
-        active.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      }
-    });
+    // scrollIntoView só na 1ª entrada — repetir a cada tecla no mobile resetava o cursor
+    if (!wasSearching) {
+      requestAnimationFrame(() => {
+        const active = document.activeElement;
+        if (active && el.panel.contains(active) && typeof active.scrollIntoView === "function") {
+          active.scrollIntoView({ block: "nearest", inline: "nearest" });
+        }
+      });
+    }
   }
 
   function exitMobileSearchMode() {
@@ -5586,6 +5286,10 @@
         const focused = active === el.originInput || active === el.destInput;
         if (!focused) exitMobileSearchMode();
       }
+      if (document.body.classList.contains("is-navigating") && isMobileLayout()) {
+        syncNavLayoutMetrics();
+        fitSoon(() => fitRouteInView(state.route, { navMode: true, preferActiveLeg: true, fillWidth: true }));
+      }
     };
     if (window.visualViewport) {
       window.visualViewport.addEventListener("resize", onVV);
@@ -5597,9 +5301,9 @@
 
   function refreshOpenSuggest() {
     if (state.activeField === "origin" && el.originList && !el.originList.hidden) {
-      renderSuggest("origin", el.originInput.value);
+      withSearchInputCaret(el.originInput, () => renderSuggest("origin", el.originInput.value));
     } else if (state.activeField === "dest" && el.destList && !el.destList.hidden) {
-      renderSuggest("dest", el.destInput.value);
+      withSearchInputCaret(el.destInput, () => renderSuggest("dest", el.destInput.value));
     }
   }
 
@@ -5782,63 +5486,19 @@
   /* ============================================================ PAN / ZOOM
      Zoom altera width/height do SVG (vetor nítido), NÃO usa scale() CSS
      — scale() CSS rasteriza e deixa o mapa borrado em zoom. */
-  function apply() {
-    const w = G.vbW * state.scale;
-    const h = G.vbH * state.scale;
-    const svg = el.svgHost.querySelector("svg");
-    if (svg) {
-      svg.setAttribute("width", w);
-      svg.setAttribute("height", h);
-    }
-    el.overlay.setAttribute("width", w);
-    el.overlay.setAttribute("height", h);
-    el.canvas.style.width = `${w}px`;
-    el.canvas.style.height = `${h}px`;
-    const followHeading = state.userNav?.isFollowingHeading && isFinite(state.userNav.cameraBearing);
-    if (followHeading) {
-      const ox = w / 2;
-      const oy = h / 2;
-      el.canvas.style.transformOrigin = `${ox}px ${oy}px`;
-      el.canvas.style.transform =
-        `translate(${state.panX}px, ${state.panY}px) rotate(${state.userNav.cameraBearing}deg)`;
-    } else {
-      el.canvas.style.transformOrigin = "";
-      el.canvas.style.transform = `translate(${state.panX}px, ${state.panY}px)`;
-    }
-    refreshRouteMarkerScales();
-    state.userLocation?.refreshPuckScale?.();
-  }
-  function clamp() {
-    const r = el.viewport.getBoundingClientRect();
-    const w = G.vbW * state.scale, h = G.vbH * state.scale, m = 120;
-    state.panX = w <= r.width ? (r.width - w) / 2 : Math.min(m, Math.max(r.width - w - m, state.panX));
-    state.panY = h <= r.height ? (r.height - h) / 2 : Math.min(m, Math.max(r.height - h - m, state.panY));
-  }
-  function fit() {
-    const r = el.viewport.getBoundingClientRect();
-    if (!r.width || !r.height || !G.vbW || !G.vbH) return;
-    const mobile = innerWidth <= 860;
-    const mp = mobileMapPadding();
-    const padLeft = mobile ? mp.padLeft : 36;
-    const padRight = mobile ? mp.padRight : 36;
-    const padTop = mobile ? mp.padTop : 36;
-    const padBottom = mobile ? mp.padBottom : 36;
-    const availW = Math.max(40, r.width - padLeft - padRight);
-    const availH = Math.max(40, r.height - padTop - padBottom);
-    const sc = Math.min(availW / G.vbW, availH / G.vbH);
-    state.minScale = Math.max(0.08, sc * 0.55);
-    state.maxScale = Math.max(state.maxScale || 8, sc * 12, 10);
-    state.scale = sc;
-    state.panX = padLeft + (availW - G.vbW * sc) / 2;
-    state.panY = padTop + (availH - G.vbH * sc) / 2;
-    apply();
-  }
-
-  /** Agenda fit após o layout (viewport estável). */
-  function fitSoon(fn) {
-    const run = typeof fn === "function" ? fn : fit;
-    requestAnimationFrame(() => requestAnimationFrame(run));
-  }
+  const mapCtrl = globalThis.PIBMapMapController?.create?.({
+    state,
+    G,
+    el,
+    refreshRouteMarkerScales,
+    mobileMapPadding,
+  }) || {};
+  const apply = mapCtrl.apply || function () {};
+  const clamp = mapCtrl.clamp || function () {};
+  const fit = mapCtrl.fit || function () {};
+  const fitSoon = mapCtrl.fitSoon || function (fn) { requestAnimationFrame(() => requestAnimationFrame(fn || fit)); };
+  const zoomAt = mapCtrl.zoomAt || function () {};
+  const viewportPoint = mapCtrl.viewportPoint || function () { return { x: 0, y: 0 }; };
 
   function fitToPoints(pts, opts = {}) {
     if (!pts?.length) return;
@@ -5877,9 +5537,21 @@
 
     const availW = Math.max(60, r.width - padLeft - padRight);
     const availH = Math.max(60, r.height - padTop - padBottom);
-    const nextScale = Math.min(
+    const scaleW = availW / w;
+    const scaleH = availH / h;
+    const widthMargin = opts.widthMargin ?? (opts.fillWidth ? 0.94 : 0.9);
+    let nextScale;
+    if (opts.fillWidth) {
+      // Prioriza preencher a largura útil (como apps de navegação).
+      nextScale = scaleW * widthMargin;
+      const heightCap = scaleH * 1.06;
+      if (nextScale > heightCap && h > w * 1.25) nextScale = heightCap;
+    } else {
+      nextScale = Math.min(scaleW, scaleH) * widthMargin;
+    }
+    nextScale = Math.min(
       state.maxScale,
-      Math.max(state.minScale * 0.35, Math.min(availW / w, availH / h) * 0.9),
+      Math.max(state.minScale * 0.35, nextScale),
     );
     state.scale = nextScale;
 
@@ -5908,6 +5580,8 @@
 
   /** Enquadra a rota (preferência: trecho do andar ativo). */
   function fitRouteInView(route, opts = {}) {
+    const mobile = innerWidth <= 860;
+    const fillWidth = opts.fillWidth ?? mobile;
     let pts = [];
     const legs = route?.legs || [];
     const activeLeg = legs.find((l) => l.level === state.activeLevel);
@@ -5932,11 +5606,11 @@
       } else if (state.dest && isFinite(state.dest.x) && poiLevel(state.dest) === state.activeLevel) {
         extras.push(state.dest);
       }
-      fitToPoints(pts.concat(extras), opts);
+      fitToPoints(pts.concat(extras), { ...opts, fillWidth });
       return;
     }
     const leg = (route?.legs || []).find((l) => l.level === state.activeLevel) || route?.legs?.[0];
-    if (leg?.points?.length) fitToPoints(leg.points, opts);
+    if (leg?.points?.length) fitToPoints(leg.points, { ...opts, fillWidth });
   }
 
   /** Zoom no trecho atual da navegação (com olhar um pouco à frente). */
@@ -5950,27 +5624,11 @@
     if (pts.length < 2 && p[i + 1]) pts.push(p[i + 1]);
     fitToPoints(pts, {
       navMode: true,
-      minSpan: 48,
-      padTop: innerWidth <= 860 ? 72 : 120,
-      padBottom: innerWidth <= 860 ? 140 : 220,
+      minSpan: innerWidth <= 860 ? 56 : 48,
+      fillWidth: innerWidth <= 860,
     });
   }
 
-  function zoomAt(factor, cx, cy) {
-    const r = el.viewport.getBoundingClientRect();
-    cx = cx ?? r.width / 2; cy = cy ?? r.height / 2;
-    const mx = (cx - state.panX) / state.scale, my = (cy - state.panY) / state.scale;
-    state.scale = Math.min(state.maxScale, Math.max(state.minScale, state.scale * factor));
-    state.panX = cx - mx * state.scale; state.panY = cy - my * state.scale;
-    clamp(); apply();
-  }
-  function viewportPoint(e) {
-    const r = el.viewport.getBoundingClientRect();
-    // SVG width/height = vbW/vbH * scale; viewBox pode começar em (vbX, vbY) nos andares
-    const x = (e.clientX - r.left - state.panX) / state.scale + (G.vbX || 0);
-    const y = (e.clientY - r.top - state.panY) / state.scale + (G.vbY || 0);
-    return { x, y };
-  }
 
   /* ============================================================ NAVEGACAO / BUSSOLA */
   function bearingBetween(a, b) {
@@ -5987,14 +5645,24 @@
     if (!canStartNavigation()) return;
     if (navSegments() < 1) { toast("Rota inválida para navegação."); return; }
     state.navIdx = 0;
-    if (innerWidth <= 860) el.panel.classList.remove("open");
+    if (isMobileLayout()) {
+      el.panel.classList.add("open", "panel--nav-compact");
+      el.originInput?.setAttribute("readonly", "readonly");
+      el.destInput?.setAttribute("readonly", "readonly");
+      if (el.summary) el.summary.hidden = false;
+    } else {
+      el.panel.classList.remove("open");
+    }
     el.navOverlay.hidden = false;
     el.navOverlay.classList.add("is-open");
     el.navOverlay.setAttribute("aria-hidden", "false");
     document.body.classList.add("is-navigating");
     updateNavBtn();
     requestOrientation();
-    updateNav({ fitCamera: true });
+    requestAnimationFrame(() => {
+      syncNavLayoutMetrics();
+      updateNav({ fitCamera: true, fitFullRoute: isMobileLayout() });
+    });
 
     state.userLocation?.startFollowing?.().catch(() => {
       state.userLocation?.start?.({ silent: true });
@@ -6008,6 +5676,10 @@
     el.navOverlay.classList.remove("is-open");
     el.navOverlay.setAttribute("aria-hidden", "true");
     document.body.classList.remove("is-navigating");
+    el.panel.classList.remove("panel--nav-compact");
+    el.originInput?.removeAttribute("readonly");
+    el.destInput?.removeAttribute("readonly");
+    syncNavLayoutMetrics();
     state.navIdx = 0;
     updateNavBtn();
     if (msg) toast(msg);
@@ -6050,9 +5722,12 @@
     if (!from || !to) return;
 
     const mapBearing = bearingBetween(from, to);
-    el.compassArrow.style.transform = `rotate(${mapBearing - state.heading}deg)`;
+    const arrowRot = `rotate(${mapBearing - state.heading}deg)`;
+    el.compassArrow.style.transform = arrowRot;
+    if (el.navDirArrow) el.navDirArrow.style.transform = arrowRot;
 
     const segLen = dist(from, to);
+    const remaining = navRemainingLength(i);
     const isLast = i >= total - 1;
     if (isLast) {
       el.navStepText.textContent = `Chegando: ${state.dest?.name || "destino"}`;
@@ -6060,7 +5735,15 @@
       const t = turnLabel(p[i], p[i + 1], p[i + 2] || to);
       el.navStepText.textContent = t.txt;
     }
-    el.navDistText.textContent = `${fmtMeters(segLen)} · trecho ${i + 1} de ${total}`;
+    el.navDistText.textContent = isMobileLayout()
+      ? `${fmtMeters(segLen)} até o próximo ponto`
+      : `${fmtMeters(segLen)} · trecho ${i + 1} de ${total}`;
+    if (el.navTimeRemain) el.navTimeRemain.textContent = fmtNavTimeShort(remaining);
+    if (el.navDistRemain) el.navDistRemain.textContent = fmtMeters(remaining);
+    if (el.navProgressFill) {
+      const pct = total > 0 ? Math.round((i / total) * 100) : 0;
+      el.navProgressFill.style.width = `${pct}%`;
+    }
     el.navHint.textContent = state._hasOrientation
       ? "Aponte o celular à frente: a seta indica a direção."
       : "Bússola indisponível — a seta usa o norte do mapa.";
@@ -6068,7 +5751,20 @@
     el.navPrev.disabled = i <= 0;
     el.navNext.textContent = isLast ? "Chegar" : "Próximo";
 
-    if (opts.fitCamera) fitSoon(() => fitNavSegment());
+    if (opts.fitCamera) {
+      fitSoon(() => {
+        syncNavLayoutMetrics();
+        if (isMobileLayout()) {
+          fitRouteInView(state.route, { navMode: true, preferActiveLeg: true, fillWidth: true });
+        } else if (opts.fitFullRoute) {
+          fitRouteInView(state.route, { navMode: true, preferActiveLeg: true });
+        } else {
+          fitNavSegment();
+        }
+      });
+    } else if (isMobileLayout()) {
+      syncNavLayoutMetrics();
+    }
   }
 
   function requestOrientation() {
@@ -6382,6 +6078,7 @@
       }
     }
 
+    await state.ensureNavGraphFloors?.(floor.id);
     await showFloorMap(floor.id);
     if (state.route) paintActiveRouteLeg();
     updateFloorChrome();
@@ -6416,8 +6113,23 @@
 
   function mobilePanelInsetPx() {
     if (!isMobileLayout() || !el.panel?.classList.contains("open")) return 0;
+    if (document.body.classList.contains("is-navigating")) return 0;
     const w = el.panel.offsetWidth || Math.min(360, innerWidth * 0.88);
     return w + 16;
+  }
+
+  function syncNavLayoutMetrics() {
+    const root = document.documentElement;
+    if (!isMobileLayout() || !document.body.classList.contains("is-navigating")) {
+      root.style.removeProperty("--nav-top-h");
+      root.style.removeProperty("--nav-bottom-h");
+      return;
+    }
+    const topH = el.panel?.getBoundingClientRect().height || 210;
+    const card = el.navOverlay?.querySelector(".nav-card");
+    const bottomH = (card?.getBoundingClientRect().height || 220) + 12;
+    root.style.setProperty("--nav-top-h", `${Math.ceil(topH)}px`);
+    root.style.setProperty("--nav-bottom-h", `${Math.ceil(bottomH)}px`);
   }
 
   function mobileMapPadding(opts = {}) {
@@ -6430,10 +6142,28 @@
         padBottom: opts.padBottom ?? 36,
       };
     }
+    if (document.body.classList.contains("is-navigating")) {
+      const root = document.documentElement;
+      const cs = getComputedStyle(root);
+      const top = parseFloat(root.style.getPropertyValue("--nav-top-h"))
+        || parseFloat(cs.getPropertyValue("--nav-top-h"))
+        || 210;
+      const bottom = parseFloat(root.style.getPropertyValue("--nav-bottom-h"))
+        || parseFloat(cs.getPropertyValue("--nav-bottom-h"))
+        || 230;
+      const side = opts.fillWidth ? 14 : 44;
+      return {
+        padLeft: opts.padLeft ?? side,
+        padRight: opts.padRight ?? side,
+        padTop: opts.padTop ?? Math.ceil(top + 12),
+        padBottom: opts.padBottom ?? Math.ceil(bottom + 12),
+      };
+    }
     const inset = mobilePanelInsetPx();
+    const side = opts.fillWidth ? 14 : 12;
     return {
-      padLeft: opts.padLeft ?? (12 + inset),
-      padRight: opts.padRight ?? 12,
+      padLeft: opts.padLeft ?? (side + inset),
+      padRight: opts.padRight ?? side,
       padTop: opts.padTop ?? 12,
       padBottom: opts.padBottom ?? (opts.navMode ? 140 : 24),
     };
@@ -6629,14 +6359,16 @@
       input.setAttribute("spellcheck", "false");
       input.addEventListener("focus", () => {
         enterMobileSearchMode();
-        renderSuggest(input.id === "originInput" ? "origin" : "dest", input.value);
+        withSearchInputCaret(input, () => {
+          renderSuggest(input.id === "originInput" ? "origin" : "dest", input.value);
+        });
       });
       input.addEventListener("input", () => {
         const which = input.id === "originInput" ? "origin" : "dest";
         state[which] = null;
         if (state.route) clearRoute(true);
         else updateNavBtn();
-        renderSuggest(which, input.value);
+        withSearchInputCaret(input, () => renderSuggest(which, input.value));
       });
       input.addEventListener("blur", () => scheduleExitMobileSearchMode());
     }
@@ -6819,7 +6551,14 @@
     addEventListener("keydown", (e) => {
       if (e.key === "Escape" && el.navOverlay.classList.contains("is-open")) exitNav();
     });
-    addEventListener("resize", () => setTimeout(fit, 120));
+    addEventListener("resize", () => setTimeout(() => {
+      if (document.body.classList.contains("is-navigating") && isMobileLayout()) {
+        syncNavLayoutMetrics();
+        fitRouteInView(state.route, { navMode: true, preferActiveLeg: true, fillWidth: true });
+      } else {
+        fit();
+      }
+    }, 120));
   }
 
   /* ============================================================ INIT */
