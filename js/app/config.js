@@ -148,6 +148,9 @@
       P000_templo: ["templo", "igreja"],
       P016_jardim: ["jardim"],
       entrada_ginasio: ["ginasio", "ginásio", "seven pass", "sevenpass"],
+      B02_entrada_narnia: ["entrada de narnia", "entrada narnia", "porta de narnia", "narnia"],
+      B01_entrada_narnia: ["entrada de narnia b01", "entrada narnia b01", "porta de narnia b01"],
+      B02_entrada_narnia_map: ["entrada narnia b02", "porta de narnia b02"],
     },
     // limita opções de rota em pares específicos (evita desvios absurdos no grafo)
     routeOptionCaps: [
@@ -390,6 +393,23 @@
       B01: "B01_node_0013_entrada_narnia",
       B02: "B02_node_0014_entrada_narnia",
     },
+    narniaGateLabels: {
+      L00: "Porta de Nárnia (Térreo)",
+      B01: "Porta de Nárnia (Subsolo 01)",
+      B02: "Porta de Nárnia (Subsolo 02 · Nárnia)",
+    },
+    /** Ícone exato do lampião / poste — origem e fim de rota na Entrada de Nárnia. */
+    narniaGateIcons: {
+      L00: { x: 434.5, y: 738.2, nodeId: "L00_N0014_entrada_narnia_B02" },
+      B01: { x: 456.19, y: 174.68, nodeId: "B01_node_0013_entrada_narnia" },
+      B02: { x: 303.82, y: 102.53, nodeId: "B02_node_0014_entrada_narnia" },
+    },
+    narniaPoiRawIds: [
+      "B02_entrada_narnia",
+      "B01_entrada_narnia",
+      "B02_entrada_narnia_map",
+      "P028_B02_entrada_narnia",
+    ],
     /** Atalhos B01↔B02 / B01↔L00 que não passam pela entrada de Nárnia no T. */
     narniaForbiddenEdges: [
       "B01_B02_E_acesso_servir",

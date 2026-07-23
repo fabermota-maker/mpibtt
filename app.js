@@ -292,11 +292,20 @@
   }
 
   function navRemainingLength(fromIdx) {
-    const p = state.route?.points;
+    const route = state.route;
+    const p = navViewPoints(route);
     if (!p || p.length < 2) return 0;
     let len = 0;
     const start = Math.max(0, Math.min(fromIdx, p.length - 2));
     for (let j = start; j < p.length - 1; j++) len += dist(p[j], p[j + 1]);
+    const legs = route?.legs || [];
+    if (legs.length > 1) {
+      const cur = navLegIndex(route);
+      for (let i = cur + 1; i < legs.length; i++) {
+        const pts = legs[i].points || [];
+        for (let j = 1; j < pts.length; j++) len += dist(pts[j - 1], pts[j]);
+      }
+    }
     return len;
   }
 
@@ -449,6 +458,7 @@
       return state.navGraph;
     }
     state.ensureNavGraphFloors = ensureNavGraphFloors;
+    state.ensureNavGraphForTrip = ensureNavGraphForTrip;
 
     function syncPoisFromNavigation(poiSource, { injectAllFloors = false } = {}) {
       const list = poiSource || [];
@@ -470,8 +480,10 @@
           if (node) {
             poi.anchor = nid;
             poi.snap = { x: node.x, y: node.y };
-            poi.x = node.x;
-            poi.y = node.y;
+            if (poi.iconX == null && poi.iconY == null) {
+              poi.iconX = node.x;
+              poi.iconY = node.y;
+            }
           } else if (nid && G.nodes[nid]) {
             poi.anchor = nid;
             poi.snap = { x: G.nodes[nid].x, y: G.nodes[nid].y };
@@ -664,13 +676,15 @@
 
   function poiLevel(poi) {
     if (!poi) return "L00";
-    // Nível do mapa/grafo (rota) — não o subsolo lógico do destino
-    if (poi.mapLevel) return poi.mapLevel;
+    // Roteamento: nível do grafo (B01/B02/L01…), não o mapa onde o ícone aparece (mapLevel)
+    if (poi.level) return poi.level;
     if (poi.anchor && state.navGraph?.nodesById.has(poi.anchor)) {
       return state.navGraph.nodesById.get(poi.anchor).level || "L00";
     }
-    if (poi.level && !/^B0/i.test(poi.level)) return poi.level;
-    return levelFromId(poi.rawId || poi.id) || "L00";
+    const fromId = levelFromId(poi.rawId || poi.id);
+    if (fromId) return fromId;
+    if (poi.mapLevel) return poi.mapLevel;
+    return "L00";
   }
 
   /** Nível exibido ao usuário (ex.: B01 Subsolo), independente do mapa L00. */
@@ -864,6 +878,73 @@
     return (CONFIG.narniaHub || {})[levelId] || null;
   }
 
+  function narniaGateIcon(levelId) {
+    return (CONFIG.narniaGateIcons || {})[levelId] || null;
+  }
+
+  function isNarniaEntrancePoi(poi) {
+    if (!poi) return false;
+    const raw = norm(poi.rawId || poi.id || "");
+    const name = norm(poi.name || "");
+    const ids = CONFIG.narniaPoiRawIds || [];
+    if (ids.some((id) => raw === norm(id))) return true;
+    return /entrada.*narnia|narnia.*entrada|porta.*narnia/.test(raw + name);
+  }
+
+  /** Andar do ícone da Porta de Nárnia para este POI. */
+  function narniaLevelForPoi(poi) {
+    if (!poi || !isNarniaEntrancePoi(poi)) return null;
+    const raw = norm(poi.rawId || poi.id || "");
+    if (raw === "b01_entrada_narnia") return "B01";
+    if (raw === "b02_entrada_narnia_map") return "B02";
+    if (/b02_entrada_narnia|p028_b02_entrada_narnia/.test(raw)) return "L00";
+    return poiLevel(poi);
+  }
+
+  function applyNarniaGateIconToPoi(poi) {
+    if (!isNarniaEntrancePoi(poi)) return poi;
+    const lvl = narniaLevelForPoi(poi) || poiLevel(poi);
+    const gate = narniaGateIcon(isBasementFloor(lvl) ? lvl : "L00");
+    if (!gate) return poi;
+    poi.iconX = gate.x;
+    poi.iconY = gate.y;
+    poi.x = gate.x;
+    poi.y = gate.y;
+    return poi;
+  }
+
+  /** Ajusta o fim/início da polyline ao lampião — sem criar diagonal longa fora do grafo. */
+  function refineNarniaEndpoint(pts, levelId, which) {
+    const gate = narniaGateIcon(levelId);
+    const hub = narniaHubNode(levelId);
+    if (!gate || !hub || !pts?.length) return pts;
+    const out = pts.map((p) => ({ x: p.x, y: p.y }));
+    const hubNode = state.navGraph?.nodesById?.get(hub);
+    const hubPt = hubNode ? { x: hubNode.x, y: hubNode.y } : { x: gate.x, y: gate.y };
+    const g = { x: gate.x, y: gate.y };
+    const idx = which === "start" ? 0 : out.length - 1;
+    const tip = out[idx];
+    const nearHub = dist(tip, hubPt) <= 48 || dist(tip, g) <= 48;
+    if (!nearHub) return out;
+    if (dist(tip, g) <= 1.5) return out;
+    if (dist(tip, g) > 28 && crossesWall(tip, g)) return out;
+    out[idx] = g;
+    return out;
+  }
+
+  function shouldRefineNarniaAtBasementGate(levelId, oLvl, dLvl, which) {
+    if (!routeInvolvesBasementTransfer(oLvl, dLvl)) return false;
+    if (levelId === "L00") {
+      if (which === "end") return isBasementFloor(dLvl) && !isBasementFloor(oLvl);
+      if (which === "start") return isBasementFloor(oLvl) && !isBasementFloor(dLvl);
+    }
+    if (isBasementFloor(levelId)) {
+      if (which === "start") return levelId === oLvl && isBasementFloor(dLvl);
+      if (which === "end") return levelId === dLvl && isBasementFloor(oLvl);
+    }
+    return false;
+  }
+
   function mergeWaypointIds(...chains) {
     const out = [];
     for (const chain of chains) {
@@ -962,6 +1043,261 @@
       const e = state.navGraph.edgesById.get(id);
       return e && e.type === "stairs" && /L0[0-6]-L0[1-6]|L00-L01/.test(e.level || "");
     });
+  }
+
+  function narniaGateLabel(levelId) {
+    const labels = CONFIG.narniaGateLabels || {};
+    if (labels[levelId]) return labels[levelId];
+    return `Porta de Nárnia (${floorTitle(levelId)})`;
+  }
+
+  function narniaFloorLabel(levelId) {
+    if (levelId === "L00") return "Térreo";
+    const f = floorById(levelId);
+    return f?.title || levelId;
+  }
+
+  function basementLevelRank(levelId) {
+    return ({ L00: 0, B01: 1, B02: 2 })[levelId] ?? -1;
+  }
+
+  /** Sequência L00 ↔ B01 ↔ B02 entre origem e destino (inclusive). */
+  function basementLevelsBetween(fromLvl, toLvl) {
+    const order = ["L00", "B01", "B02"];
+    const from = isBasementFloor(fromLvl) ? fromLvl : "L00";
+    const to = isBasementFloor(toLvl) ? toLvl : "L00";
+    const i = order.indexOf(from);
+    const j = order.indexOf(to);
+    if (i < 0 || j < 0) return [];
+    if (i === j) return [from];
+    if (i < j) return order.slice(i, j + 1);
+    return order.slice(j, i + 1).reverse();
+  }
+
+  function campusLevelsBetween(oLvl, dLvl) {
+    const order = ["L00", "L01", "L02", "L03", "L04", "L05", "L06"];
+    const i = order.indexOf(oLvl);
+    const j = order.indexOf(dLvl);
+    const out = new Set([oLvl, dLvl].filter(Boolean));
+    if (i < 0 || j < 0) return [...out];
+    const lo = Math.min(i, j);
+    const hi = Math.max(i, j);
+    for (let k = lo; k <= hi; k++) out.add(order[k]);
+    return [...out];
+  }
+
+  /** Andares do grafo necessários para rotas entre origem e destino. */
+  function floorsRequiredForTrip(oLvl, dLvl) {
+    const required = new Set([oLvl, dLvl].filter(Boolean));
+    if (isCrossCampusFloorPair(oLvl, dLvl) || (isAdmFloor(oLvl) && isAdmFloor(dLvl))) {
+      for (const id of campusLevelsBetween(oLvl, dLvl)) required.add(id);
+    }
+    if (routeInvolvesBasementTransfer(oLvl, dLvl)) {
+      required.add("L00");
+      required.add("B01");
+      if (isBasementFloor(oLvl) || isBasementFloor(dLvl) || oLvl === "B02" || dLvl === "B02") {
+        required.add("B02");
+      }
+    }
+    return [...required];
+  }
+
+  async function ensureNavGraphForTrip(oLvl, dLvl) {
+    if (!state.ensureNavGraphFloors) return state.navGraph;
+    const levels = floorsRequiredForTrip(oLvl, dLvl);
+    await state.ensureNavGraphFloors(...levels);
+    return state.navGraph;
+  }
+
+  function rebuildRouteLegs(route = state.route) {
+    if (!route?.nodeIds?.length || !state.navGraph) return route?.legs || [];
+    route.legs = routeLegsFromGraph(route);
+    return route.legs;
+  }
+
+  function routeViaLabel(route, oLvl, dLvl) {
+    if (routeInvolvesBasementTransfer(oLvl, dLvl)) return "via Porta de Nárnia";
+    if (routeUsesLateralStairs(route)) return "via escada lateral";
+    return "via elevador";
+  }
+
+  /** Andar exibido ao traçar rota — sempre começa no andar de origem (caminho até elevador/escada). */
+  function routeInitialViewLevel(route, oLvl, dLvl) {
+    if (oLvl === dLvl) return oLvl;
+
+    if (routeInvolvesBasementTransfer(oLvl, dLvl)) {
+      if (isBasementFloor(oLvl)) return oLvl;
+      if (isAdmFloor(oLvl)) return oLvl;
+      return "L00";
+    }
+
+    return oLvl;
+  }
+
+  /** Trecho da rota no andar ativo (navegação passo a passo). */
+  function activeRouteLeg(route = state.route) {
+    if (!route) return null;
+    return resolveRouteLegForView(route, state.activeLevel).leg;
+  }
+
+  /** Pontos da rota visíveis no andar atual — evita misturar coordenadas B01/B02/L00. */
+  function navViewPoints(route = state.route) {
+    if (!route) return [];
+    const { points } = resolveRouteLegForView(route, state.activeLevel);
+    if (points.length >= 2) return points;
+    const oLvl = poiLevel(state.origin);
+    const dLvl = poiLevel(state.dest);
+    if (oLvl === dLvl && oLvl === state.activeLevel && route.points?.length >= 2) {
+      return route.points;
+    }
+    return points;
+  }
+
+  function navLegIndex(route = state.route) {
+    const legs = route?.legs || [];
+    if (!legs.length) return 0;
+    const idx = legs.findIndex((l) => l.level === state.activeLevel);
+    return idx >= 0 ? idx : 0;
+  }
+
+  /** Trecho da rota correspondente ao índice de navegação (por perna/andar). */
+  function routeLegForNavIdx(route, navIdx) {
+    const legs = route?.legs || [];
+    if (!legs.length) return null;
+    let offset = 0;
+    for (const leg of legs) {
+      const segs = Math.max(0, (leg.points?.length || 0) - 1);
+      if (segs <= 0) continue;
+      if (navIdx < offset + segs) return leg;
+      offset += segs;
+    }
+    return legs[legs.length - 1];
+  }
+
+  /** Ao avançar na navegação, troca o mapa para o andar do trecho (L00 → L05, subsolo, etc.). */
+  function syncRouteFloorToNavProgress(navIdx) {
+    const route = state.route;
+    if (!route) return;
+    const oLvl = poiLevel(state.origin);
+    const dLvl = poiLevel(state.dest);
+    if (oLvl === dLvl) return;
+
+    const leg = routeLegForNavIdx(route, navIdx);
+    if (!leg?.level || leg.level === state.activeLevel) return;
+
+    setActiveLevel(leg.level, { silent: true, keepTrip: true }).then(() => {
+      state.navIdx = 0;
+      paintActiveRouteLeg();
+      fitRouteInView(route, {
+        navMode: document.body.classList.contains("is-navigating"),
+        preferActiveLeg: true,
+        fillWidth: isMobileLayout(),
+      });
+    });
+  }
+
+  /** Avança para a próxima perna da rota (troca de andar), pulando trechos só de elevador. */
+  function advanceToNextRouteLeg() {
+    const route = state.route;
+    if (!route) return false;
+    const legs = route.legs || routeLegsFromGraph(route);
+    route.legs = legs;
+    let idx = navLegIndex(route) + 1;
+    while (idx < legs.length) {
+      const next = legs[idx];
+      const drawable = (next?.edgeIds?.length || 0) > 0 || (next?.points?.length || 0) >= 2;
+      if (next?.level && drawable) {
+        state.navIdx = 0;
+        setActiveLevel(next.level, { silent: true, keepTrip: true }).then(() => {
+          paintActiveRouteLeg();
+          updateNav({ fitCamera: true, fitFullRoute: isMobileLayout() });
+        });
+        return true;
+      }
+      idx += 1;
+    }
+    return false;
+  }
+
+  /** Passos explícitos pela Porta de Nárnia entre Térreo, B01 e B02. */
+  function buildBasementNarniaSteps(oLvl, dLvl) {
+    const steps = [];
+    steps.push({ ico: "S", txt: `Início: ${state.origin.name}`, dist: "" });
+
+    const origBasement = isBasementFloor(oLvl);
+    const destBasement = isBasementFloor(dLvl);
+
+    if (isAdmFloor(oLvl) && routeInvolvesBasementTransfer(oLvl, dLvl)) {
+      const hub = elevatorHub(oLvl);
+      steps.push({
+        ico: "U",
+        txt: `Siga ao elevador${hub ? ` (${hub.label})` : ""} e desça ao Térreo`,
+        dist: "",
+      });
+    }
+
+    const chain = basementLevelsBetween(
+      origBasement ? oLvl : "L00",
+      destBasement ? dLvl : "L00",
+    );
+
+    if (!origBasement && chain.includes("L00")) {
+      steps.push({
+        ico: "U",
+        txt: `Siga até a ${narniaGateLabel("L00")}`,
+        dist: "",
+      });
+    }
+
+    if (origBasement) {
+      steps.push({
+        ico: "U",
+        txt: `Dirija-se à ${narniaGateLabel(oLvl)} — ponto de saída do ${narniaFloorLabel(oLvl)}`,
+        dist: "",
+      });
+    }
+
+    for (let i = 0; i < chain.length - 1; i++) {
+      const from = chain[i];
+      const to = chain[i + 1];
+      const descending = basementLevelRank(to) > basementLevelRank(from);
+      steps.push({
+        ico: "U",
+        txt: descending
+          ? `Desça pela ${narniaGateLabel(from)} e entre na ${narniaGateLabel(to)}`
+          : `Suba pela ${narniaGateLabel(from)} e saia na ${narniaGateLabel(to)}`,
+        dist: "",
+      });
+    }
+
+    if (destBasement) {
+      steps.push({
+        ico: "U",
+        txt: `Da ${narniaGateLabel(dLvl)}, siga até ${state.dest.name}`,
+        dist: "",
+      });
+    } else if (isAdmFloor(dLvl)) {
+      const hub = elevatorHub(dLvl);
+      steps.push({
+        ico: "U",
+        txt: `Use o elevador${hub ? ` (${hub.label})` : ""} até ${floorTitle(dLvl)}`,
+        dist: "",
+      });
+      steps.push({
+        ico: "U",
+        txt: `Do elevador, siga até ${state.dest.name}`,
+        dist: "",
+      });
+    } else if (dLvl === "L00") {
+      steps.push({
+        ico: "U",
+        txt: `Siga até ${state.dest.name}`,
+        dist: "",
+      });
+    }
+
+    steps.push({ ico: "F", txt: `Chegada: ${state.dest.name}`, dist: "" });
+    return steps;
   }
 
   /** POI virtual do elevador do andar (para origem automática / busca). */
@@ -1561,14 +1897,35 @@
   function appendPoiEndpoints(points, origin, dest) {
     const pts = (points || []).map((p) => ({ x: p.x, y: p.y }));
     if (!pts.length) return pts;
+
     const maxSpurO = tol("spurTol", poiToleranceZone(origin));
     const maxSpurD = tol("spurTol", poiToleranceZone(dest));
     const o = poiIcon(origin);
     const d = poiIcon(dest);
-    const oLvl = poiLevel(origin);
-    const dLvl = poiLevel(dest);
-    // não mistura coordenadas de andares diferentes
-    if (o && oLvl === dLvl && dist(o, pts[0]) > 0.8 && dist(o, pts[0]) <= maxSpurO) {
+    const oLvl = origin?.level || poiLevel(origin);
+    const dLvl = dest?.level || poiLevel(dest);
+
+    if (isNarniaEntrancePoi(origin)) {
+      const gateLvl = isBasementFloor(narniaLevelForPoi(origin) || oLvl) ? (narniaLevelForPoi(origin) || oLvl) : "L00";
+      let out = refineNarniaEndpoint(pts, gateLvl, "start");
+      if (d && oLvl === dLvl && !isNarniaEntrancePoi(dest)) {
+        const tip = out[out.length - 1];
+        if (dist(tip, d) > 0.8 && dist(tip, d) <= maxSpurD && !crossesWall(tip, d)) {
+          out.push({ x: d.x, y: d.y });
+        }
+      }
+      return out;
+    }
+    if (isNarniaEntrancePoi(dest)) {
+      const gateLvl = isBasementFloor(narniaLevelForPoi(dest) || dLvl) ? (narniaLevelForPoi(dest) || dLvl) : "L00";
+      let out = pts;
+      if (o && dist(o, out[0]) > 0.8 && dist(o, out[0]) <= maxSpurO && !crossesWall(o, out[0])) {
+        out = [{ x: o.x, y: o.y }, ...out];
+      }
+      return refineNarniaEndpoint(out, gateLvl, "end");
+    }
+
+    if (o && dist(o, pts[0]) > 0.8 && dist(o, pts[0]) <= maxSpurO) {
       if (!crossesWall(o, pts[0])) pts.unshift({ x: o.x, y: o.y });
     }
     if (d && oLvl === dLvl && dist(pts[pts.length - 1], d) > 0.8) {
@@ -1641,42 +1998,139 @@
     return legs;
   }
 
+  /** Escolhe a perna desenhável do andar (evita stub vazio quando há várias pernas no mesmo nível). */
+  function sliceRoutePointsForLevel(route, levelId) {
+    if (!route?.nodeIds?.length || !state.navGraph) return null;
+    const NR = globalThis.NavigationRouter;
+    let start = -1;
+    let end = -1;
+    for (let i = 0; i < route.nodeIds.length; i++) {
+      const lvl = state.navGraph.nodesById.get(route.nodeIds[i])?.level;
+      if (lvl !== levelId) continue;
+      if (start < 0) start = i;
+      end = i;
+    }
+    if (start < 0 || end <= start) return null;
+    const nodeIds = route.nodeIds.slice(start, end + 1);
+    const edgeIds = (route.edgeIds || []).slice(start, end);
+    if (nodeIds.length >= 2 && edgeIds.length >= 1 && NR?.buildRoutePoints) {
+      try {
+        const built = NR.buildRoutePoints(edgeIds, nodeIds, state.navGraph.edgesById);
+        if (built?.length >= 2) return built;
+      } catch { /* fallback abaixo */ }
+    }
+    return nodeIds.map((id) => {
+      const n = state.navGraph.nodesById.get(id);
+      return n ? { x: n.x, y: n.y } : null;
+    }).filter((p) => p && isFinite(p.x) && isFinite(p.y));
+  }
+
+  function pickBestRouteLeg(candidates) {
+    if (!candidates?.length) return null;
+    return candidates.slice().sort((a, b) => {
+      const ae = a.edgeIds?.length || 0;
+      const be = b.edgeIds?.length || 0;
+      if (be !== ae) return be - ae;
+      return (b.points?.length || 0) - (a.points?.length || 0);
+    })[0];
+  }
+
+  /** Perna + pontos para pintar/navegar no andar ativo. */
+  function resolveRouteLegForView(route, activeLevel) {
+    if (!route) return { leg: null, points: [] };
+
+    const buildView = () => {
+      const legs = route.legs || routeLegsFromGraph(route);
+      route.legs = legs;
+
+      let leg = pickBestRouteLeg(legs.filter((l) => l.level === activeLevel));
+      if (!leg && legs.length === 1) leg = legs[0];
+
+      let points = (leg?.points || [])
+        .map((p) => ({ x: p.x, y: p.y }))
+        .filter((p) => isFinite(p.x) && isFinite(p.y));
+
+      if (points.length < 2) {
+        const sliced = sliceRoutePointsForLevel(route, activeLevel);
+        if (sliced?.length >= 2) points = sliced;
+      }
+
+      const oLvl = poiLevel(state.origin);
+      const dLvl = poiLevel(state.dest);
+      if (points.length < 2 && oLvl === dLvl && oLvl === activeLevel && route.points?.length >= 2) {
+        points = route.points
+          .map((p) => ({ x: p.x, y: p.y }))
+          .filter((p) => isFinite(p.x) && isFinite(p.y));
+      }
+
+      return { leg, points };
+    };
+
+    let view = buildView();
+    if (view.points.length < 2 && route.nodeIds?.length >= 2 && state.navGraph) {
+      rebuildRouteLegs(route);
+      view = buildView();
+    }
+    return view;
+  }
+
   function paintActiveRouteLeg() {
     if (!state.route) {
       clearRoutePaint();
       return;
     }
-    const legs = state.route.legs || routeLegsFromGraph(state.route);
-    state.route.legs = legs;
-    const leg = legs.find((l) => l.level === state.activeLevel) || null;
-    if (!leg?.points?.length) {
+    const { points: rawPts } = resolveRouteLegForView(state.route, state.activeLevel);
+    if (!rawPts?.length) {
       clearRoutePaint();
       return;
     }
-    let pts = leg.points.map((p) => ({ x: p.x, y: p.y }));
+    let pts = rawPts.slice();
     if (pts.length === 1) {
       pts = [pts[0], { x: pts[0].x + 0.5, y: pts[0].y }];
     }
-    // spurs só no andar do POI correspondente
-    if (poiLevel(state.origin) === state.activeLevel) {
+    const oLvl = poiLevel(state.origin);
+    const dLvl = poiLevel(state.dest);
+    const lvl = state.activeLevel;
+    const { leg } = resolveRouteLegForView(state.route, lvl);
+
+    if (oLvl === lvl || (isNarniaEntrancePoi(state.origin) && narniaLevelForPoi(state.origin) === lvl)) {
       pts = appendPoiEndpoints(pts, state.origin, {
         ...state.dest,
-        level: state.activeLevel,
+        level: lvl,
         iconX: undefined,
         iconY: undefined,
         x: pts[pts.length - 1].x,
         y: pts[pts.length - 1].y,
       });
-    } else if (poiLevel(state.dest) === state.activeLevel) {
+    } else if (dLvl === lvl || (isNarniaEntrancePoi(state.dest) && narniaLevelForPoi(state.dest) === lvl)) {
       pts = appendPoiEndpoints(pts, {
         ...state.origin,
-        level: state.activeLevel,
+        level: lvl,
         iconX: undefined,
         iconY: undefined,
         x: pts[0].x,
         y: pts[0].y,
       }, state.dest);
     }
+
+    const hub = narniaHubNode(lvl);
+    if (hub && leg?.nodeIds?.includes(hub)) {
+      if (shouldRefineNarniaAtBasementGate(lvl, oLvl, dLvl, "start")) {
+        pts = refineNarniaEndpoint(pts, lvl, "start");
+      }
+      if (shouldRefineNarniaAtBasementGate(lvl, oLvl, dLvl, "end")) {
+        pts = refineNarniaEndpoint(pts, lvl, "end");
+      }
+    }
+    if (isNarniaEntrancePoi(state.origin) && narniaLevelForPoi(state.origin) === lvl) {
+      const gateLvl = isBasementFloor(lvl) ? lvl : "L00";
+      pts = refineNarniaEndpoint(pts, gateLvl, "start");
+    }
+    if (isNarniaEntrancePoi(state.dest) && narniaLevelForPoi(state.dest) === lvl) {
+      const gateLvl = isBasementFloor(lvl) ? lvl : "L00";
+      pts = refineNarniaEndpoint(pts, gateLvl, "end");
+    }
+
     const a = pts[0];
     const b = pts[pts.length - 1];
     paintRouteOnMap(pts.map((p) => `${p.x},${p.y}`).join(" "), a, b, pts);
@@ -1768,11 +2222,11 @@
 
     // se o POI não tem nodeId no JSON, ancora no nó mais próximo do grafo
     if (!startIds.length) {
-      const id = NR.nearestNodeId(poiIcon(origin) || origin, state.navGraph, {});
+      const id = NR.nearestNodeId(poiIcon(origin) || origin, state.navGraph, { level: poiLevel(origin) });
       if (id) startIds = [id];
     }
     if (!endIds.length) {
-      const id = NR.nearestNodeId(poiIcon(dest) || dest, state.navGraph, {});
+      const id = NR.nearestNodeId(poiIcon(dest) || dest, state.navGraph, { level: poiLevel(dest) });
       if (id) endIds = [id];
     }
     if (!startIds.length || !endIds.length) return [];
@@ -3213,6 +3667,7 @@
     poi.accessNote = accessNote;
     // Sempre rótulo curto (ignora searchLabel longo legado)
     poi.searchLabel = poiSuggestTitle(poi);
+    applyNarniaGateIconToPoi(poi);
     return poi;
   }
 
@@ -3904,6 +4359,7 @@
       B01: {
         B01_sala_0001_banheiro_masculino_b01bathroom: "B01_poi_0006",
         B01_sala_0002_banheiro_feminino_b01bathroom: "B01_poi_0001",
+        B01_sala_0003_entrada_de_narnia_b1_e_b2banheiro_b1batisterio_tencomun_b2ensaio_b1pastoreo_b1: "B01_entrada_narnia",
         B01_sala_0004_sala_02_b01_estudio_ensaio: "B01_poi_0012",
         B01_sala_0005_sala_03_b01_pastoreo: "B01_poi_0002",
         B01_sala_0006_sala_03_b01_som_tec: "B01_som_tec",
@@ -4742,13 +5198,18 @@
     F: '<path d="M12 2 4.5 20 12 16l7.5 4z" fill="currentColor"/>',
   };
   function buildSteps(route) {
-    const steps = [];
     const oLvl = poiLevel(state.origin);
     const dLvl = poiLevel(state.dest);
     const legs = route.legs || routeLegsFromGraph(route);
+
+    if (routeInvolvesBasementTransfer(oLvl, dLvl)) {
+      return buildBasementNarniaSteps(oLvl, dLvl);
+    }
+
+    const steps = [];
     steps.push({ ico: "S", txt: `Início: ${state.origin.name}`, dist: "" });
 
-    if (oLvl !== dLvl && legs.length >= 2) {
+    if (oLvl !== dLvl) {
       const viaStairs = routeUsesLateralStairs(route);
       const exitHub = viaStairs ? stairHub(oLvl) : elevatorHub(oLvl);
       const arriveHub = viaStairs ? stairHub(dLvl) : elevatorHub(dLvl);
@@ -4947,7 +5408,7 @@
     if (origin) { state.origin = origin; el.originInput.value = origin.searchLabel || origin.name; }
     if (dest) { state.dest = dest; el.destInput.value = dest.searchLabel || dest.name; }
 
-    await state.ensureNavGraphFloors?.(poiLevel(state.origin), poiLevel(state.dest));
+    await ensureNavGraphForTrip(poiLevel(state.origin), poiLevel(state.dest));
 
     // em outro andar sem origem: usa o elevador do andar atual
     if (!state.origin && state.dest && (poiLevel(state.dest) !== state.activeLevel)) {
@@ -5013,22 +5474,20 @@
     state.routeIdx = idx;
     const route = options[idx];
     state.route = route;
-    route.legs = routeLegsFromGraph(route);
+    rebuildRouteLegs(route);
     setRouteVisualCompleted(false);
 
     const oLvl = poiLevel(state.origin);
     const dLvl = poiLevel(state.dest);
     const multi = oLvl !== dLvl;
-    // se no andar de origem só há o elevador (sem corredor), mostra o trecho do destino
-    const originWalk = (route.legs?.[0]?.edgeIds?.length || 0) > 0;
-    const viewLevel = multi && !originWalk ? dLvl : oLvl;
+    const viewLevel = routeInitialViewLevel(route, oLvl, dLvl);
 
     const finish = () => {
       paintActiveRouteLeg();
       el.summaryDist.textContent = fmtMeters(route.length);
       if (el.summaryTime) el.summaryTime.textContent = fmtRouteTime(route.length);
       el.summaryMeta.textContent = multi
-        ? `${state.origin.name} → ${state.dest.name} · ${routeUsesLateralStairs(route) ? "via escada lateral" : "via elevador"} (${oLvl}→${dLvl})`
+        ? `${state.origin.name} → ${state.dest.name} · ${routeViaLabel(route, oLvl, dLvl)} (${oLvl}→${dLvl})`
         : `${state.origin.name} → ${state.dest.name}`;
       const steps = buildSteps(route);
       el.steps.innerHTML = steps.map((s) => `
@@ -5050,12 +5509,17 @@
         });
       }
       if (multi) {
-        if (routeUsesLateralStairs(route)) {
+        if (routeInvolvesBasementTransfer(oLvl, dLvl)) {
+          const startHint = !isBasementFloor(oLvl) && !isAdmFloor(oLvl)
+            ? "Comece pelo mapa do Térreo (L00)."
+            : `Comece pelo mapa de ${floorTitle(oLvl)}.`;
+          toast(`${startHint} Ao entrar na Porta de Nárnia, o mapa muda para o subsolo. Troque o andar para ver cada trecho.`);
+        } else if (routeUsesLateralStairs(route)) {
           const arrive = stairHub(dLvl);
           toast(`Via escada lateral: saia em ${arrive?.label || floorTitle(dLvl)} e siga até ${state.dest.name}. Troque o andar para ver cada trecho.`);
         } else {
           const arrive = elevatorHub(dLvl);
-          toast(`Via elevador: desça em ${arrive?.label || floorTitle(dLvl)} e siga até ${state.dest.name}. Troque o andar para ver cada trecho.`);
+          toast(`Via elevador: comece em ${floorTitle(oLvl)} até ${elevatorHub(oLvl)?.label || "o elevador"}. Troque o andar para ver cada trecho.`);
         }
       }
     };
@@ -5165,9 +5629,14 @@
       drawRoute();
       return;
     }
-    // troca o mapa ao escolher origem ou destino de outro andar (sem apagar a viagem)
     if (poi && poiLevel(poi) !== state.activeLevel) {
-      setActiveLevel(poiLevel(poi), { silent: true, keepTrip: true });
+      const poiLvl = poiLevel(poi);
+      const originLvl = state.origin ? poiLevel(state.origin) : null;
+      if (which === "dest" && isBasementFloor(poiLvl) && originLvl && !isBasementFloor(originLvl)) {
+        setActiveLevel(originLvl, { silent: true, keepTrip: true });
+      } else {
+        setActiveLevel(poiLvl, { silent: true, keepTrip: true });
+      }
     }
   }
 
@@ -5637,12 +6106,15 @@
 
   /** Pontos da rota no andar atual (o que está pintado). */
   function activeLegPoints(route = state.route) {
-    const legs = route?.legs;
-    if (legs?.length) {
-      const leg = legs.find((l) => l.level === state.activeLevel) || legs[0];
-      if (leg?.points?.length) return leg.points.filter((p) => p && isFinite(p.x) && isFinite(p.y));
+    if (!route) return [];
+    const { points } = resolveRouteLegForView(route, state.activeLevel);
+    if (points.length >= 2) return points;
+    const oLvl = poiLevel(state.origin);
+    const dLvl = poiLevel(state.dest);
+    if (oLvl === dLvl && oLvl === state.activeLevel) {
+      return (route.points || []).filter((p) => p && isFinite(p.x) && isFinite(p.y));
     }
-    return (route?.points || []).filter((p) => p && isFinite(p.x) && isFinite(p.y));
+    return points.filter((p) => p && isFinite(p.x) && isFinite(p.y));
   }
 
   /** Enquadra a rota (preferência: trecho do andar ativo). */
@@ -5650,10 +6122,9 @@
     const mobile = innerWidth <= 860;
     const fillWidth = opts.fillWidth ?? mobile;
     let pts = [];
-    const legs = route?.legs || [];
-    const activeLeg = legs.find((l) => l.level === state.activeLevel);
-    if (activeLeg?.points?.length >= 2) {
-      pts = activeLeg.points.filter((p) => p && isFinite(p.x) && isFinite(p.y));
+    const { points: legPts } = resolveRouteLegForView(route, state.activeLevel);
+    if (legPts.length >= 2) {
+      pts = legPts.filter((p) => p && isFinite(p.x) && isFinite(p.y));
     }
     if (pts.length < 2 && opts.preferActiveLeg !== false) {
       pts = activeLegPoints(route);
@@ -5682,7 +6153,7 @@
 
   /** Zoom no trecho atual da navegação (com olhar um pouco à frente). */
   function fitNavSegment() {
-    const p = state.route?.points;
+    const p = navViewPoints();
     if (!p || p.length < 2) return;
     const total = p.length - 1;
     const i = Math.max(0, Math.min(state.navIdx, total - 1));
@@ -5704,7 +6175,7 @@
   }
 
   function navSegments() {
-    const p = state.route?.points || [];
+    const p = navViewPoints();
     return Math.max(0, p.length - 1);
   }
 
@@ -5712,6 +6183,21 @@
     if (!canStartNavigation()) return;
     if (navSegments() < 1) { toast("Rota inválida para navegação."); return; }
     state.navIdx = 0;
+
+    const ensureStartFloor = () => {
+      const oLvl = poiLevel(state.origin);
+      const dLvl = poiLevel(state.dest);
+      return ensureNavGraphForTrip(oLvl, dLvl).then(() => {
+        rebuildRouteLegs(state.route);
+        const viewLevel = routeInitialViewLevel(state.route, oLvl, dLvl);
+        if (state.activeLevel === viewLevel) return;
+        return setActiveLevel(viewLevel, { silent: true, keepTrip: true });
+      });
+    };
+
+    ensureStartFloor().then(() => {
+    state.navIdx = 0;
+    paintActiveRouteLeg();
     if (isMobileLayout()) {
       el.panel.classList.add("open", "panel--nav-compact");
       el.originInput?.setAttribute("readonly", "readonly");
@@ -5730,16 +6216,21 @@
     }
     if (el.routePickCount) el.routePickCount.hidden = true;
     state.routePickOpen = false;
-    state.userLocation?.setFollowMode?.("follow");
+    state.userLocation?.setFollowMode?.("off");
+    state.userLocation?.hidePuck?.();
+    if (state.origin?.id === "__here__") {
+      state.userLocation?.setFollowMode?.("follow");
+      state.userLocation?.startFollowing?.().catch(() => {
+        state.userLocation?.start?.({ silent: true });
+      });
+    }
     updateNavBtn();
     requestOrientation();
     requestAnimationFrame(() => {
       syncNavLayoutMetrics();
-      updateNav({ fitCamera: true, fitFullRoute: isMobileLayout() });
+      paintActiveRouteLeg();
+      updateNav({ fitCamera: true, fitFullRoute: true });
     });
-
-    state.userLocation?.startFollowing?.().catch(() => {
-      state.userLocation?.start?.({ silent: true });
     });
   }
 
@@ -5768,19 +6259,25 @@
   function navNext() {
     if (!state.route) return;
     const total = navSegments();
-    if (total < 1) { exitNav("Rota inválida."); return; }
+    if (total < 1) {
+      if (advanceToNextRouteLeg()) return;
+      exitNav("Rota inválida.");
+      return;
+    }
     if (state.navIdx >= total - 1) {
+      if (advanceToNextRouteLeg()) return;
       setRouteVisualCompleted(true);
       paintActiveRouteLeg();
       exitNav("Você chegou ao destino!");
       return;
     }
     state.navIdx += 1;
+    syncRouteFloorToNavProgress(state.navIdx);
     updateNav({ fitCamera: true });
   }
 
   function updateNav(opts = {}) {
-    const p = state.route?.points;
+    const p = navViewPoints();
     if (!p || p.length < 2) {
       el.navStepText.textContent = "Sem trechos na rota";
       el.navDistText.textContent = "—";
@@ -5826,13 +6323,7 @@
     if (opts.fitCamera) {
       fitSoon(() => {
         syncNavLayoutMetrics();
-        if (isMobileLayout()) {
-          fitRouteInView(state.route, { navMode: true, preferActiveLeg: true, fillWidth: true });
-        } else if (opts.fitFullRoute) {
-          fitRouteInView(state.route, { navMode: true, preferActiveLeg: true });
-        } else {
-          fitNavSegment();
-        }
+        fitNavSegment();
       });
     } else if (isMobileLayout()) {
       syncNavLayoutMetrics();
@@ -6151,6 +6642,10 @@
     }
 
     await state.ensureNavGraphFloors?.(floor.id);
+    if (state.route && state.origin && state.dest) {
+      await ensureNavGraphForTrip(poiLevel(state.origin), poiLevel(state.dest));
+      rebuildRouteLegs(state.route);
+    }
     await showFloorMap(floor.id);
     if (state.route) paintActiveRouteLeg();
     updateFloorChrome();
@@ -6170,7 +6665,7 @@
     }
     if (el.statusHint) {
       if (state.route && multiTrip) {
-        const via = routeUsesLateralStairs(state.route) ? "via escada lateral" : "via elevador";
+        const via = routeViaLabel(state.route, poiLevel(state.origin), poiLevel(state.dest));
         renderFloorLocaisHint(`${floor.title}: trecho da rota · ${via}`);
       } else {
         renderFloorLocaisHint();

@@ -839,6 +839,11 @@
       updateTrackedPosition,
       refreshPuckScale: () => puck?.updateArrowScale?.(),
       isStarted: () => started,
+      hidePuck: () => {
+        puck?.hide?.();
+        showGpsCompass(false);
+        camera?.setFollowMode("off");
+      },
       setFollowMode: (mode) => {
         camera?.setFollowMode(mode);
         updateLocBtn();

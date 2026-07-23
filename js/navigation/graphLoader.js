@@ -125,12 +125,36 @@
       return graph;
     }
 
+    const CAMPUS_ORDER = ["L00", "L01", "L02", "L03", "L04", "L05", "L06"];
+
+    function campusLevelsBetween(fromLvl, toLvl) {
+      const i = CAMPUS_ORDER.indexOf(fromLvl);
+      const j = CAMPUS_ORDER.indexOf(toLvl);
+      const out = new Set([fromLvl, toLvl].filter(Boolean));
+      if (i < 0 || j < 0) return [...out];
+      const lo = Math.min(i, j);
+      const hi = Math.max(i, j);
+      for (let k = lo; k <= hi; k++) out.add(CAMPUS_ORDER[k]);
+      return [...out];
+    }
+
+    /** Carrega todos os andares + conectores entre origem e destino (elevador/escada). */
+    async function ensureFloorRange(fromLvl, toLvl, extraLevels = []) {
+      const ids = new Set([
+        ...campusLevelsBetween(fromLvl, toLvl),
+        ...(extraLevels || []),
+      ]);
+      return ensureFloors([...ids]);
+    }
+
     return {
       loadMeta,
       loadInitialLevel,
       loadMonolith,
       loadFloorData,
       ensureFloors,
+      ensureFloorRange,
+      campusLevelsBetween,
       getGraph: () => graph,
       getMeta: () => meta,
       isLoaded: (levelId) => loaded.has(levelId),
